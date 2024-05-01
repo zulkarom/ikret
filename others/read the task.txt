@@ -1,0 +1,11 @@
+untuk projek bisnest.my
+
+buat landing page dulu 
+
+duplicate this website
+https://www.brandery.org
+
+sama ada guna folder template - copy dari brandery tp menu mobile tak jadi
+atau other-template folder - kena ikut mcm brandery layout
+
+content ada dalam content folder + pic

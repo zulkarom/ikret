@@ -1,0 +1,1 @@
+ALTER TABLE `sector_supplier` DROP FOREIGN KEY `sector_supplier_ibfk_2`; ALTER TABLE `sector_supplier` ADD CONSTRAINT `sector_supplier_ibfk_2` FOREIGN KEY (`supplier_id`) REFERENCES `supplier`(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;

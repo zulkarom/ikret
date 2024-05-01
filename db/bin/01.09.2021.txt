@@ -1,0 +1,1 @@
+ALTER TABLE `agency` ADD `nama_agensi` VARCHAR(225) NOT NULL AFTER `entrepreneur_id`, ADD `tarikh_terima` DATE NOT NULL AFTER `nama_agensi`;

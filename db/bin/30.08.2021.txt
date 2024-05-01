@@ -1,0 +1,5 @@
+ALTER TABLE `module_kategori` ADD `description` TEXT NOT NULL AFTER `kategori_name`;
+
+ALTER TABLE `module` ADD `description` TEXT NOT NULL AFTER `module_name`;
+
+ALTER TABLE `admin_anjur` ADD `description` TEXT NOT NULL AFTER `location`;
