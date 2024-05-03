@@ -58,6 +58,7 @@ class RegisterForm extends Model
         
         $user = new User();  
         $user->username = $this->email;
+        $user->matric = $this->matric;
         $user->fullname = strtoupper($this->fullname);
         $user->phone = $this->phone;
         $user->email = $this->email;

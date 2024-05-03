@@ -30,10 +30,11 @@ class Member extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['id', 'program_reg_id'], 'required'],
-            [['id', 'program_reg_id'], 'integer'],
+            [['member_name', 'member_matric'], 'required'],
+
+            [['program_reg_id'], 'integer'],
             [['member_name', 'member_matric'], 'string', 'max' => 255],
-            [['program_reg_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramReg::class, 'targetAttribute' => ['program_reg_id' => 'id']],
+            [['program_reg_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramRegistration::class, 'targetAttribute' => ['program_reg_id' => 'id']],
         ];
     }
 
@@ -43,10 +44,9 @@ class Member extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
             'program_reg_id' => 'Program Reg ID',
-            'member_name' => 'Member Name',
-            'member_matric' => 'Member Matric',
+            'member_name' => 'Full Name',
+            'member_matric' => 'Matric No.',
         ];
     }
 
@@ -55,8 +55,8 @@ class Member extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getProgramReg()
+    public function getRegistration()
     {
-        return $this->hasOne(ProgramReg::class, ['id' => 'program_reg_id']);
+        return $this->hasOne(ProgramRegistration::class, ['id' => 'program_reg_id']);
     }
 }

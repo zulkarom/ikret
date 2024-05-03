@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\FileHelper;
+use yii\web\UploadedFile;
 
 /**
  * This is the model class for table "program_reg".
@@ -29,6 +31,9 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     const STATUS_REGISTERED = 10;
     const STATUS_COMPLETE = 20;
 
+    public $poster_instance;
+    public $payment_instance;
+
     /**
      * {@inheritdoc}
      */
@@ -54,6 +59,19 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
 
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
+
+            [['payment_instance'], 'file',
+            'maxSize' => 1024 * 1024 * 2, // 2MB
+            'extensions' => 'pdf', 
+            'mimeTypes' => 'application/pdf',
+            ],
+
+            [['poster_instance'], 'file',
+            'maxSize' => 1024 * 1024 * 5, // 5MB
+            'extensions' => 'pdf', 
+            'mimeTypes' => 'application/pdf',
+            ],
+
         ];
     }
 
@@ -73,7 +91,10 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'institution' => 'Institution',
             'project_desc' => 'Project Description',
             'competition_type' => 'Participation on Competition',
-            'poster_file' => 'Poster File',
+            'poster_file' => 'Upload Poster',
+            'poster_instance' => 'Upload Poster',
+            'payment_file' => 'Upload Proof of Payment',
+            'payment_instance' => 'Upload Proof of Payment'
         ];
     }
 
@@ -133,5 +154,34 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function uploadFile($type){ // payment/poster
+     
+        $inst_property = $type . '_instance';
+        $attr_db = $type . '_file';
+        $name = Yii::$app->user->identity->matric . '_' . time();
+        $path =  $this->program_id . '/'.$type;
+        $instance = UploadedFile::getInstance($this, $inst_property);
+        if($instance){
+            
+            $old_path = Yii::getAlias('@upload/' . $this->$attr_db);
+                if (is_file($old_path)) {
+                    unlink($old_path);
+                }
+            
+            $directory = Yii::getAlias('@upload/' . $path. '/');
+            if (!is_dir($directory)) {
+                FileHelper::createDirectory($directory);
+            }
+
+            $ext = $instance->extension;
+            $fileName = $name.'.' . $ext;
+            $filePath = $directory . $fileName;
+                if ($instance->saveAs($filePath)) {
+                    //assigning value here
+                    $this->$attr_db =  $path . '/' . $fileName;
+                }
+        }
     }
 }
