@@ -7,7 +7,7 @@ use yii\helpers\Url;
 $this->title = 'Programme Registered';
 ?>
   <div class="pagetitle">
-<h1>Registered Programs</h1></div>
+<h1>List of Programs</h1></div>
 
     </div><!-- End Page Title -->
 
@@ -29,6 +29,8 @@ $this->title = 'Programme Registered';
             <td><a href="'.Url::to(['program/view-register', 'id' => $program->program->id, 'reg' => $program->id]).'" class="btn btn-warning btn-sm">View</a></td></tr>';
             $i++;
           }
+        }else{
+          echo '<tr><td colspan="4"><i>You have not registered to any program so far.</i></td></tr>';
         }
         
         
@@ -45,7 +47,7 @@ $this->title = 'Programme Registered';
             <div class="table-responsive">
     <table class="table">
     <tbody>
-        <tr><th>No.</th><th>List of Available Events/Programmes</th><th></th></tr>
+        <tr><th>No.</th><th>List of Available Programs</th><th></th></tr>
         <?php 
         $i = 1;
         foreach($programs as $program){

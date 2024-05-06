@@ -13,7 +13,7 @@ use yii\helpers\Url;
         $menu[] = ['name' => 'Register', 'url' => ['/site/register'], 'icon' => 'bi bi-card-list'];
       }else{
         $menu[] = ['name' => 'Participant Menu'];
-        $menu[] = ['name' => 'Registered Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
+        $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
         $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
         $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
         $menu[] = ['name' => 'Certificate', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];

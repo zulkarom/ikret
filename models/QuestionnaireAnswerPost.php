@@ -5,7 +5,7 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "questionnaire_ans".
+ * This is the model class for table "questionnaire_ans_post".
  *
  * @property int $id
  * @property int $user_id
@@ -15,19 +15,22 @@ use Yii;
  * @property int|null $q3
  * @property int|null $q4
  * @property int|null $q5
- * @property string|null $q6
+ * @property int|null $q6
  * @property string|null $q7
+ * @property string|null $q8
+ * @property string|null $q9
+ * @property string|null $submitted_at
  *
  * @property User $user
  */
-class QuestionnaireAnswer extends \yii\db\ActiveRecord
+class QuestionnaireAnswerPost extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'questionnaire_ans';
+        return 'questionnaire_ans_post';
     }
 
     /**
@@ -36,12 +39,10 @@ class QuestionnaireAnswer extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5','q6', 'q7', 'q8', 'q9'], 'required'],
-
-            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5'], 'integer'],
-
-            [['q7', 'q8', 'q9'], 'string', 'min' => 20],
-
+            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6','q7', 'q8', 'q9', 'q10', 'q11'], 'required'],
+            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5', 'q8', 'q9', 'q10'], 'integer'],
+            [['q6', 'q7', 'q11'], 'string', 'min' => 20],
+            [['submitted_at'], 'safe'],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
@@ -60,14 +61,15 @@ class QuestionnaireAnswer extends \yii\db\ActiveRecord
             'q3' => 'Likert Question',
             'q4' => 'Likert Question',
             'q5' => 'Likert Question',
-            'q6' => 'Likert Question',
+            'q8' => 'Likert Question',
+            'q9' => 'Likert Question',
+            '910' => 'Likert Question',
+            'q6' => 'Answer for this open-ended question',
             'q7' => 'Answer for this open-ended question',
-            'q8' => 'Answer for this open-ended question',
-            'q9' => 'Answer for this open-ended question',
+            'q11' => 'Answer for this open-ended question',
+            'submitted_at' => 'Submitted At',
         ];
     }
-
-    
 
     /**
      * Gets query for [[User]].

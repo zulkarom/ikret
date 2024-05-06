@@ -33,6 +33,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
     public $poster_instance;
     public $payment_instance;
+    public $group_member;
 
     /**
      * {@inheritdoc}
@@ -48,11 +49,16 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'program_id', 'project_name', 'project_desc', 'competition_type', 'institution'], 'required'],
+            [self::getProgramFields(1), 'required', 'on' => 'program1'],
+            [self::getProgramFields(2), 'required', 'on' => 'program2'],
+            [self::getProgramFields(3), 'required', 'on' => 'program3'],
+            [self::getProgramFields(4), 'required', 'on' => 'program4'],
+            [self::getProgramFields(5), 'required', 'on' => 'program5'],
+            [self::getProgramFields(6), 'required', 'on' => 'program6'],
 
-            [['user_id', 'program_id', 'participant_cat', 'competition_type', 'status'], 'integer'],
+            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk'], 'integer'],
 
-            [['institution', 'poster_file', 'project_desc'], 'string'],
+            [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program'], 'string'],
 
             [['project_name', 'group_name', 'advisor'], 'string', 'max' => 255],
 
@@ -86,15 +92,24 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'program_id' => 'Program ID',
             'project_name' => 'Project Title',
             'group_name' => 'Group Name',
-            'participant_cat' => 'Participant Cat',
-            'advisor' => 'Advisor',
+            'participant_cat_local' => 'Category of Participant',
+            'participant_cat_group' => 'Category of Participant',
+            'participant_cat_umk' => 'Category of Participant',
+            'advisor' => 'Name of Project Advisor (Lecturer)',
             'institution' => 'Institution',
             'project_desc' => 'Project Description',
             'competition_type' => 'Participation on Competition',
             'poster_file' => 'Upload Poster',
-            'poster_instance' => 'Upload Poster',
-            'payment_file' => 'Upload Proof of Payment',
-            'payment_instance' => 'Upload Proof of Payment'
+            'poster_instance' => 'Submission of Poster',
+            'payment_file' => 'Proof of Payment',
+            'payment_instance' => 'Upload Proof of Payment',
+            'competition_cat' => 'Category of Competition',
+            'booth_number' => 'Booth ID',
+            'advisor_dropdown' => 'Lecturer\'s Name',
+            'nric' => 'Identification Card Number',
+            'participant_mode' => 'Mode of Participation',
+            'participant_program' => 'Participant\'s Program'
+            
         ];
     }
 
@@ -126,6 +141,96 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return '<span class="badge bg-'.$color.'">'. $this->statusText .'</span>';
     }
 
+    public static function getProgramFields($program_id){
+        $array = [];
+        switch($program_id){
+            case 1:
+            $array = ['project_name', 'project_desc', 'participant_cat_local', 'competition_type', 'institution', 'advisor', 'group_member', 'poster_file', 'payment_file'];
+            break;
+
+            case 2:
+            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'payment_file'];
+            break;
+
+            case 3:
+            $array = ['advisor_dropdown', 'booth_number', 'group_member', 'payment_file'];
+            break;
+
+            case 4:
+            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file'];
+            break;
+
+            case 5:
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file'];
+            break;
+
+            case 6:
+            $array = ['project_name', 'group_member'];
+            break;
+        }
+        return $array;
+    }
+
+    public static function listCategoryCome(){
+        return [
+            1 => 'E-Preneur / Dr. Fatihah Mohd & Dr. Yusmazida',
+            2 => 'Business Product Pitching / Dr. Noor Raihani Binti Zainol',
+            3 => 'Product Marketing Creative Video Competition / Dr. Azira Hanani Binti Ab Rahman',
+            4 => 'Most Viable Student  /  Dr. Wan Farha Binti Wan Zulkiffli',
+            5 => 'Takaful Product Innovation / Mrs. Farah Hanan Binti Muhamad',
+            6 => 'TaxPro Idea Competition / Dr. Amira Binti Jamil',
+            7 => 'Poster Presentation / Dr. Siti Fariha Binti Muhamad'
+        ];
+    }
+
+    public static function listNeweekAdvisor(){
+        return [
+            1 => '(L1) DR NURUL IZYAN BINTI MAT DAUD',
+            2 => '(L2) PN FARAH HANAN BINTI MUHAMAD/ DR NURUL IZYAN BINTI MAT DAUD',
+            3 => '(L3) DR SOLOMON GBENE ZATO',
+            4 => '(L4) PN NIK MADEEHA BINTI NIK MOHD MUNIR',
+            5 => '(H1) DR NOR ASMA BINTI AHMAD',
+            6 => '(H2) DR MOHD NAZRI BIN MUHAYIDDIN/ PN NUR \'AMIRAH BINTI MOHD YAZIZ',
+            7 => '(H3) PROF DR NARESH KUMAR A/L SAMY',
+            8 => '(D1) EN. ROOSHIHAN BIN ABDUL RAHIM MERICAN/ EN. TS. MAHATHIR BIN MUHAMAD'
+        ];
+    }
+
+    public static function listParticipantMode(){
+        return [
+            1 => 'Physical',
+            2 => 'Online'
+        ];
+    }
+
+    public static function listParticipantUMK(){
+        return [
+            1 => 'UMK Student',
+            2 => 'Non-UMK Student'
+        ];
+    }
+
+    public static function listParticipantProgram(){
+        return [
+            1 => 'SAA',
+            2 => 'SAB',
+            3 => 'SAE',
+            4 => 'SAK',
+            5 => 'SAL',
+            6 => 'SAR',
+            99 => 'Others',
+        ];
+    }
+
+    public static function listNeweekBooth(){
+        $array = [];
+        for($x=1;$x<=104;$x++){
+            $array[] = 'NW'.$x;
+        }
+        return $array;
+    }
+
+
     /**
      * Gets query for [[Program]].
      *
@@ -154,6 +259,19 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function flashError(){
+        if($this->getErrors()){
+            foreach($this->getErrors() as $error){
+                if($error){
+                    foreach($error as $e){
+                        Yii::$app->session->addFlash('error', $e);
+                    }
+                }
+            }
+        }
+
     }
 
     public function uploadFile($type){ // payment/poster

@@ -11,6 +11,9 @@ use yii\web\Response;
 use app\models\Program;
 use app\models\ProgramRegistration;
 use app\models\Questionnaire;
+use app\models\QuestionnaireAnswer;
+use app\models\QuestionnaireAnswerPost;
+use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
 
@@ -44,6 +47,11 @@ class ProgramController extends Controller
     {
         //Yii::$app->session->addFlash('success', "hai");
 
+        $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if(!$check){
+            Yii::$app->session->addFlash('info', "You need to answer pre-event questionnaire before registering to any program below.");
+        }
+
         $registered = ProgramRegistration::find()
         ->where(['user_id' => Yii::$app->user->identity->id])
         ->all();
@@ -72,30 +80,117 @@ class ProgramController extends Controller
 
     public function actionPrequestion()
     {
-        $quest_likert = Questionnaire::findAll(['pre_post' => 1, 'question_type' => 1]);
-        $quest_essay = Questionnaire::findAll(['pre_post' => 1, 'question_type' => 2]);
+        $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if($check){
+            Yii::$app->session->addFlash('error', "You have answered this pre-event question.");
+            return $this->render('empty');
+        }
+        $quest_likert = Questionnaire::find()
+        ->where(['pre_post' => 1, 'question_type' => 1])
+        ->orderBy('question_order ASC')
+        ->all();
+
+        $quest_essay = Questionnaire::find()
+        ->where(['pre_post' => 1, 'question_type' => 2])
+        ->orderBy('question_order ASC')
+        ->all();
+
+        $model = new QuestionnaireAnswer();
+        $model->user_id = Yii::$app->user->identity->id;
+        //time zone
+
+        if ($model->load(Yii::$app->request->post())) {
+            $model->submitted_at = new Expression('NOW()');
+            if($model->save()){
+                Yii::$app->session->addFlash('success', "Thank you, your pre-event questionnaire has been successfully submitted. Please proceed to program registration.");
+                return $this->redirect(['index']);
+            }else{
+                if($model->getErrors()){
+                    foreach($model->getErrors() as $error){
+                        if($error){
+                            foreach($error as $e){
+                                Yii::$app->session->addFlash('error', $e);
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
 
         return $this->render('prequestion',[
             'quest_likert' => $quest_likert,
-            'quest_essay' => $quest_essay
+            'quest_essay' => $quest_essay,
+            'model' => $model
         ]);
     }
 
-    public function actionPostquestion()
+    public function actionPostquestion($fresh = false)
     {
+        //check dah register event
+        $check = ProgramRegistration::find()->where(['user_id' => Yii::$app->user->identity->id])
+        ->andWhere(['>', 'status', 0])
+        ->one();
+        if(!$check){
+            Yii::$app->session->addFlash('error', "Please proceed to program registration first before post-event questionnaire.");
+            return $this->render('empty');
+        }
+
+        $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if($check){
+            if(!$fresh){
+                Yii::$app->session->addFlash('error', "You have answered this post-event question.");
+            }
+            
+            return $this->render('empty');
+        }
+
         $quest_likert = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 1]);
         $quest_essay = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 2]);
 
+        $model = new QuestionnaireAnswerPost();
+        $model->user_id = Yii::$app->user->identity->id;
+
+        if ($model->load(Yii::$app->request->post())) {
+            $model->submitted_at = new Expression('NOW()');
+            if($model->save()){
+                Yii::$app->session->addFlash('success', "Thank you, your post-event questionnaire has been successfully submitted.");
+                return $this->redirect(['postquestion', 'freash' => 1]);
+            }else{
+                if($model->getErrors()){
+                    foreach($model->getErrors() as $error){
+                        if($error){
+                            foreach($error as $e){
+                                Yii::$app->session->addFlash('error', $e);
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+
         return $this->render('postquestion',[
             'quest_likert' => $quest_likert,
-            'quest_essay' => $quest_essay
+            'quest_essay' => $quest_essay,
+            'model' => $model
         ]);
     }
 
 
     public function actionRegister($id){
+        date_default_timezone_set("Asia/Kuala_Lumpur");
+        $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if(!$check){
+            Yii::$app->session->addFlash('info', "You need to answer pre-event questionnaire before registering to the program.");
+            return $this->redirect(['prequestion']);
+        }
+
         $model = $this->findModel($id);
         $register = new ProgramRegistration();
+        $register->group_member =1;
+        $register->scenario = 'program'.$id;
+        $register->status == 0;
         $defaultMember = new Member();
         $defaultMember->member_name = Yii::$app->user->identity->fullname;
         $defaultMember->member_matric = Yii::$app->user->identity->matric;
@@ -106,16 +201,22 @@ class ProgramController extends Controller
         $register->user_id = Yii::$app->user->identity->id;
 
         if($register->load(Yii::$app->request->post())){
+            $register->project_name = $this->myTrim($register->project_name);
             $register->created_at = time();
             $register->updated_at = time();
 
             $action =  Yii::$app->request->post('action');
 
             if($action == 'submit'){
-                $register->status = 20;
+                $register->status = 10;
+                $register->submitted_at = new Expression('NOW()');
             }else if($action == 'draft'){
                 $register->status = 0;
             }
+
+            $register->uploadFile('payment');
+            $register->uploadFile('poster');
+
 
             $members = Model::createMultiple(Member::class);
             Model::loadMultiple($members, Yii::$app->request->post());
@@ -123,15 +224,13 @@ class ProgramController extends Controller
             $valid = $register->validate();
             
             $valid = Model::validateMultiple($members) && $valid;
-            
+            //$valid = true;
             if ($valid) {
-
+               
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
-                    $register->uploadFile('payment');
-                    $register->uploadFile('poster');
-
-                    if ($flag = $register->save(false)) {
+                    
+                    if ($flag = $register->save()) {
 
                         foreach ($members as $i => $member) {
                             if ($flag === false) {
@@ -145,6 +244,8 @@ class ProgramController extends Controller
                             }
                         }
 
+                    }else{
+                        $register->flashError();
                     }
 
                     if ($flag) {
@@ -168,6 +269,8 @@ class ProgramController extends Controller
                     $transaction->rollBack();
                     
                 }
+            }else{
+                $register->flashError();
             }
 
         }
@@ -179,22 +282,35 @@ class ProgramController extends Controller
         ]);
     }
 
+    private function myTrim($str){
+        $str = str_replace(array("\r", "\n"), ' ', $str);
+        $str = preg_replace('/\s+/', ' ', $str);
+        $str = trim($str);
+        $str = rtrim($str, '.'); // buang noktah
+        return $str;
+    }
+
 
     public function actionViewRegister($id, $reg){
-        
+        date_default_timezone_set("Asia/Kuala_Lumpur");
         $model = $this->findModel($id);
         $register = $this->findRegistration($reg);
         $members = $register->members;
         //print_r(Yii::$app->request->post());die();
         if ($register->load(Yii::$app->request->post())){
+            $register->project_name = $this->myTrim($register->project_name);
             $register->updated_at = time();
             $action =  Yii::$app->request->post('action');
 
         if($action == 'submit'){
             $register->status = 10;
+            $register->submitted_at = new Expression('NOW()');
         }else if($action == 'draft'){
             $register->status = 0;
         }
+
+        $register->uploadFile('payment');
+        $register->uploadFile('poster');
 
         $oldIDs = ArrayHelper::map($members, 'id', 'id');
             
@@ -212,8 +328,7 @@ class ProgramController extends Controller
             if ($valid) {
 
                 $transaction = Yii::$app->db->beginTransaction();
-                $register->uploadFile('payment');
-                $register->uploadFile('poster');
+                
                 try {
                     if ($flag = $register->save(false)) {
                         if (! empty($deletedIDs)) {
@@ -250,6 +365,8 @@ class ProgramController extends Controller
                     $transaction->rollBack();
                     
                 }
+            }else{
+                $register->flashError();
             }
 
         }

@@ -16,7 +16,9 @@ $this->title = 'Pre-Event Questionnaire';
     
     <?=$this->render('_questionnaire', [    
         'quest_likert' => $quest_likert,
-        'quest_essay' => $quest_essay
+        'quest_essay' => $quest_essay,
+        'model' => $model,
+        'pre_post' => 1
     ]);
     ?>
     

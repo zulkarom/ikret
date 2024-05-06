@@ -30,7 +30,7 @@ class Member extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['member_name', 'member_matric'], 'required'],
+            [['member_name'], 'required'],
 
             [['program_reg_id'], 'integer'],
             [['member_name', 'member_matric'], 'string', 'max' => 255],
