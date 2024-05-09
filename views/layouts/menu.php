@@ -6,21 +6,45 @@ use yii\helpers\Url;
     <ul class="sidebar-nav" id="sidebar-nav">
       <?php
       
+      $menu[] = ['name' => 'Home', 'url' => ['/'], 'icon' => 'bi bi-house'];
 
       if(Yii::$app->user->isGuest){
-        $menu[] = ['name' => 'Home', 'url' => ['/'], 'icon' => 'bi bi-house'];
+        
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
         $menu[] = ['name' => 'Register', 'url' => ['/site/register'], 'icon' => 'bi bi-card-list'];
       }else{
-        $menu[] = ['name' => 'Participant Menu'];
-        $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
-        $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
-        $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
-        $menu[] = ['name' => 'Certificate', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
+
+        if(Yii::$app->user->identity->isParticipant){
+          $menu[] = ['name' => 'Participant Menu'];
+          $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
+          $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
+          $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
+          $menu[] = ['name' => 'Certificate', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
+        }
+
+        if(Yii::$app->user->identity->isCommittee){
+          $menu[] = ['name' => 'Committee Menu'];
+          $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
+
+        }
+        
+
+        if(Yii::$app->user->identity->isAdmin){
+          $menu[] = ['name' => 'Admin Menu'];
+          $menu[] = ['name' => 'Program Registration', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
+          $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
+          $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
+
+        }
+
         $menu[] = ['name' => 'User Menu'];
-        $menu[] = ['name' => 'Profile', 'url' => ['/site/logout'], 'icon' => 'bi bi-person'];
-        $menu[] = ['name' => 'Change Password', 'url' => ['/site/logout'], 'icon' => 'bi bi-lock'];
+        $menu[] = ['name' => 'Profile', 'url' => ['/user/index'], 'icon' => 'bi bi-file-earmark-person'];
+        $menu[] = ['name' => 'Add Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
+        $menu[] = ['name' => 'Change Password', 'url' => ['/user/change-password'], 'icon' => 'bi bi-lock'];
         $menu[] = ['name' => 'Logout', 'url' => ['/site/logout'], 'icon' => 'bi bi-box-arrow-right'];
+
+
+
       }
       
 

@@ -23,9 +23,12 @@ $this->title = 'Programme Registered';
         if($registered){
           $i = 1;
           foreach($registered as $program){
-            echo ' <tr><td>'.$i.'. </td><td>'.$program->program->program_name.'<br />
-            <i>Project Title: '. $program->project_name .'</i>
-            </td><td>'.$program->statusLabel.'</td>
+            echo ' <tr><td>'.$i.'. </td><td>'.$program->program->program_name;
+            if($program->project_name){
+              echo '<br /><i>Project Title: '. $program->project_name .'</i>';
+            }
+            
+            echo '</td><td>'.$program->statusLabel.'</td>
             <td><a href="'.Url::to(['program/view-register', 'id' => $program->program->id, 'reg' => $program->id]).'" class="btn btn-warning btn-sm">View</a></td></tr>';
             $i++;
           }

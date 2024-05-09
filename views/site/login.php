@@ -70,10 +70,10 @@ $this->title = 'I-CREATE - Login';
                     </div>
                     <br />
                     <div class="col-12">
-                      <p class="small mb-0">I forgot my password <a href="pages-register.html">Recover Password</a></p>
+                      <p class="small mb-0">I forgot my password <a href="<?=Url::to(['/site/forgot-password'])?>">Recover Password</a></p>
                     </div>
                     <div class="col-12">
-                      <p class="small mb-0">Don't have account? <a href="pages-register.html">Create an account</a></p>
+                      <p class="small mb-0">Don't have account? <a href="<?=Url::to(['/site/register'])?>">Create an account</a></p>
                     </div>
                     <?php ActiveForm::end(); ?>
 

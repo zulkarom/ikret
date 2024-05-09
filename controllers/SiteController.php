@@ -9,7 +9,11 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\PasswordResetRequestForm;
 use app\models\RegisterForm;
+use app\models\ResetPasswordForm;
+use InvalidArgumentException;
+use yii\web\BadRequestHttpException;
 
 class SiteController extends Controller
 {
@@ -74,11 +78,48 @@ class SiteController extends Controller
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
-            return $this->redirect(['program/index']);
+            return $this->redirect(['site/index']);
         }
 
         $model->password = '';
         return $this->render('login', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionForgotPassword()
+    {
+        $model = new PasswordResetRequestForm();
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if ($model->sendEmail()) {
+                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
+                
+                return $this->redirect(['/site/login']);
+            } else {
+                Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+            }
+        }
+        
+        return $this->render('forgot_password', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionResetPassword($token)
+    {
+        try {
+            $model = new ResetPasswordForm($token);
+        } catch (InvalidArgumentException $e) {
+            throw new BadRequestHttpException($e->getMessage());
+        }
+        
+        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+            Yii::$app->session->setFlash('success', 'Your new password has been successfully created.');
+            
+            return $this->redirect(['/site/login']);
+        }
+        
+        return $this->render('reset_password', [
             'model' => $model,
         ]);
     }

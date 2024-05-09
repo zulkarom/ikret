@@ -59,8 +59,11 @@ class User extends ActiveRecord implements IdentityInterface
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
 
             //Admin Update
-            [['username','email'], 'unique'],
-            
+            [['username','email', 'matric'], 'unique'],
+
+            [['email'], 'email'],
+
+            [['phone', 'matric', 'fullname'], 'string'],
             
             [['username', 'fullname'], 'required', 'on' => 'update'],
             
@@ -74,7 +77,8 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             'fullname' => 'Full Name',
-            'nric' => 'NRIC'
+            'nric' => 'NRIC',
+            'matric' => 'Student/Staff ID'
         ];
     }
 
@@ -251,6 +255,33 @@ class User extends ActiveRecord implements IdentityInterface
             }
         }
         
+    }
+
+    public function getIsAdmin(){
+        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'admin', 'status' => 10]);
+        if($role){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public function getIsCommittee(){
+        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'committee', 'status' => 10]);
+        if($role){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public function getIsParticipant(){
+        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'participant', 'status' => 10]);
+        if($role){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 }

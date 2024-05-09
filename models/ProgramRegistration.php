@@ -108,7 +108,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'advisor_dropdown' => 'Lecturer\'s Name',
             'nric' => 'Identification Card Number',
             'participant_mode' => 'Mode of Participation',
-            'participant_program' => 'Participant\'s Program'
+            'participant_program' => 'Participant\'s Program',
+            'group_member' => 'Individual/ Group Members'
             
         ];
     }
@@ -171,6 +172,15 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $array;
     }
 
+    public function getListLabel($fname, $key){
+        $text = '';
+        $array = $this->$fname();
+        if(array_key_exists($key, $array)){
+            $text = $array[$key];
+        }
+        return $text;
+    }
+
     public static function listCategoryCome(){
         return [
             1 => 'E-Preneur / Dr. Fatihah Mohd & Dr. Yusmazida',
@@ -200,6 +210,27 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return [
             1 => 'Physical',
             2 => 'Online'
+        ];
+    }
+
+    public static function listParticipantLocal(){
+        return [
+            1 => 'Local',
+            2 => 'International'
+        ];
+    }
+
+    public static function listParticipantGroup(){
+        return [
+            1 => 'Individual', 
+            2 => 'Group'
+        ];
+    }
+
+    public static function listCompetitionType(){
+        return [
+            1 => 'Community Project Ideation', 
+            2 => 'Community Project Implementation'
         ];
     }
 

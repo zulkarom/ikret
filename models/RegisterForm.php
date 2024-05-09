@@ -68,9 +68,20 @@ class RegisterForm extends Model
         $user->status = 10;
 
         if($user->save()){
-            //auto login
-            Yii::$app->user->login($user);
-            return true;
+            $role = new UserRole();
+            $role->role_name = 'participant';
+            $role->user_id = $user->id;
+            if($role->save()){
+                //auto login
+                Yii::$app->user->login($user);
+                return true;
+            }else{
+                Yii::$app->session->addFlash('error', "failed to create user role");
+            }
+            
+        }else{
+            $user->flashError();
+            Yii::$app->session->addFlash('error', "failed to create user");
         }
     
         

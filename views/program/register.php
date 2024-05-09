@@ -10,9 +10,6 @@ $this->title = 'Registration - ' . $model->program_name;
 
 ?>
 
-<div class="row">
-
-    <div class="col-md-10">
 
 
     <div class="d-flex justify-content-center py-4">
@@ -21,25 +18,13 @@ $this->title = 'Registration - ' . $model->program_name;
                   <span class="d-none d-lg-block"><?=$model->program_name?></span>
                 </a>
               </div><!-- End Logo -->
+              <?php $arr_fields = $register->getProgramFields($register->program_id);?>
 
-<?php if($register->status > 0){?>
-              <div class="card profile">
-              <div class="card-header">Registration Details</div>
-            <div class="card-body profile-overview pt-4">
-
-            <div class="row">
-              <div class="col-lg-3 col-md-4 label ">Submitted at</div>
-              <div class="col-lg-9 col-md-8"><?=$register->submitted_at?></div>
-            </div>
-         
-            <div class="row">
-              <div class="col-lg-3 col-md-4 label ">Project Title</div>
-              <div class="col-lg-9 col-md-8"><?=$register->project_name?></div>
-            </div>
-
-            </div>
-          </div>
-<?php } ?>
+              <?=$this->render('_view_register', [    
+        'register' => $register,
+        'arr_fields' => $arr_fields
+    ]);
+    ?>
 
               <div class="card">
               <div class="card-header">Program Information</div>
@@ -58,7 +43,7 @@ $this->title = 'Registration - ' . $model->program_name;
                     <p class="small">Enter your project details to register in this program.</p>
                   </div>
 
-    <?php $arr_fields = $register->getProgramFields($register->program_id);?>
+
 
                   <?php $form = ActiveForm::begin(['class' => 'row g-3 needs-validation','id' => 'dynamic-form', 'options' => ['enctype' => 'multipart/form-data']]); ?>
 
@@ -89,10 +74,7 @@ $this->title = 'Registration - ' . $model->program_name;
             <?php 
                     if(in_array('participant_cat_local',$arr_fields)){
                     echo $form
-            ->field($register, 'participant_cat_local')->radioList([
-              1 => 'Local', 
-              2 => 'International'
-          ]);
+            ->field($register, 'participant_cat_local')->radioList($register->listParticipantLocal());
         }
           ?>
             </div>
@@ -104,10 +86,7 @@ $this->title = 'Registration - ' . $model->program_name;
             <?php 
                     if(in_array('participant_cat_group',$arr_fields)){
                     echo $form
-            ->field($register, 'participant_cat_group')->radioList([
-              1 => 'Individual', 
-              2 => 'Group'
-          ]);
+            ->field($register, 'participant_cat_group')->radioList($register->listParticipantGroup());
         }
           ?>
             </div>
@@ -150,7 +129,7 @@ $this->title = 'Registration - ' . $model->program_name;
 <?php 
         if(in_array('booth_number',$arr_fields)){
         echo $form
-->field($register, 'booth_number')->dropDownList($register->listNeweekBooth(), ['prompt' => 'Selct Booth']);
+->field($register, 'booth_number')->dropDownList($register->listNeweekBooth(), ['prompt' => 'Select Booth']);
 }
 ?>
 
@@ -255,7 +234,8 @@ if(in_array('group_member',$arr_fields)){
     ]); ?>
 
     
-<label class="form-label pt-0">Individual/ Group Members <span style="color:red">*</span></label>
+<label class="form-label pt-0"><?=$register->getAttributeLabel('group_member')?> <span style="color:red">*</span></label>
+<i>(Make sure the group leader is on top. If individual participant, make sure put only your name)</i>
     <table class="table">
         <thead>
             <tr>
@@ -276,7 +256,7 @@ if(in_array('group_member',$arr_fields)){
                             echo Html::activeHiddenInput($member, "[{$i}]id");
                         }
                     ?>
-                    <?= $form->field($member, "[{$i}]member_name")->label(false) ?>
+                    <?= $form->field($member, "[{$i}]member_name")->textInput(['style' => 'text-transform: uppercase'])->label(false) ?>
                 </td>
                 
                 <td class="vcenter">
@@ -316,7 +296,7 @@ if(in_array('group_member',$arr_fields)){
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->poster_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['download-poster-file','id' => $register->id]));
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['download-poster-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
@@ -329,7 +309,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->payment_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment_file','id' => $register->id]));
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment_file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
@@ -365,9 +345,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
     <?php } ?>
 
-    </div>
-    
-</div>
+
              
 
 <?php

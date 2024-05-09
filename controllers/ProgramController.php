@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\models\Certificate;
+use app\models\CertificateTemplate;
 use app\models\Member;
 use app\models\Model;
 use Yii;
@@ -13,6 +15,7 @@ use app\models\ProgramRegistration;
 use app\models\Questionnaire;
 use app\models\QuestionnaireAnswer;
 use app\models\QuestionnaireAnswerPost;
+use app\models\Upload;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
@@ -62,8 +65,6 @@ class ProgramController extends Controller
         ->where(['NOT IN', 'id', $arr])
         ->all();
 
-        
-
         return $this->render('index',[
             'programs' => $programs,
             'registered' => $registered
@@ -72,19 +73,31 @@ class ProgramController extends Controller
 
     public function actionCertificate()
     {
-        Yii::$app->session->addFlash('info', "The certificate will be available after the program date. Please be noted that you need to complete post-event questionnaire before getting the access to the certificate.");
+        $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if(!$check){
+            Yii::$app->session->addFlash('info', "The certificate will be available after the program date. Please be noted that you need to complete post-event questionnaire before getting the access to the certificate.");
+            return $this->render('empty');
+        }
+
+        $registered = ProgramRegistration::find()
+        ->where(['user_id' => Yii::$app->user->identity->id])
+        ->all();
 
         return $this->render('certificate',[
+            'registered' => $registered
         ]);
     }
 
-    public function actionPrequestion()
+    public function actionPrequestion($fresh = false)
     {
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if($check){
-            Yii::$app->session->addFlash('error', "You have answered this pre-event question.");
+            if(!$fresh){
+                Yii::$app->session->addFlash('error', "You have answered this pre-event question.");
+            }
             return $this->render('empty');
         }
+
         $quest_likert = Questionnaire::find()
         ->where(['pre_post' => 1, 'question_type' => 1])
         ->orderBy('question_order ASC')
@@ -131,6 +144,7 @@ class ProgramController extends Controller
         $check = ProgramRegistration::find()->where(['user_id' => Yii::$app->user->identity->id])
         ->andWhere(['>', 'status', 0])
         ->one();
+
         if(!$check){
             Yii::$app->session->addFlash('error', "Please proceed to program registration first before post-event questionnaire.");
             return $this->render('empty');
@@ -155,7 +169,7 @@ class ProgramController extends Controller
             $model->submitted_at = new Expression('NOW()');
             if($model->save()){
                 Yii::$app->session->addFlash('success', "Thank you, your post-event questionnaire has been successfully submitted.");
-                return $this->redirect(['postquestion', 'freash' => 1]);
+                return $this->redirect(['postquestion', 'fresh' => 1]);
             }else{
                 if($model->getErrors()){
                     foreach($model->getErrors() as $error){
@@ -236,6 +250,7 @@ class ProgramController extends Controller
                             if ($flag === false) {
                                 break;
                             }
+                            $member->member_name = strtoupper($member->member_name);
                             //do not validate this in model
                             $member->program_reg_id = $register->id;
 
@@ -254,11 +269,11 @@ class ProgramController extends Controller
 
                         if($action == 'submit'){
                             Yii::$app->session->addFlash('success', "Registration successful.");
-                            return $this->redirect(['index']);
                         }else if($action == 'draft'){
                             Yii::$app->session->addFlash('success', "The information has been successfully saved.");
-                            return $this->redirect(['view-register', 'id' => $register->program_id, 'reg' => $register->id]);
+                            
                         }
+                        return $this->redirect(['view-register', 'id' => $register->program_id, 'reg' => $register->id]);
 
                     } else {
                         $transaction->rollBack();
@@ -289,7 +304,6 @@ class ProgramController extends Controller
         $str = rtrim($str, '.'); // buang noktah
         return $str;
     }
-
 
     public function actionViewRegister($id, $reg){
         date_default_timezone_set("Asia/Kuala_Lumpur");
@@ -338,6 +352,8 @@ class ProgramController extends Controller
                             if ($flag === false) {
                                 break;
                             }
+
+                            $member->member_name = strtoupper($member->member_name);
                             //do not validate this in model
                             $member->program_reg_id = $register->id;
 
@@ -352,11 +368,13 @@ class ProgramController extends Controller
                         $transaction->commit();
                         if($action == 'submit'){
                             Yii::$app->session->addFlash('success', "Registration successful.");
-                            return $this->redirect(['index']);
+                            
                         }else if($action == 'draft'){
                             Yii::$app->session->addFlash('success', "The information has been successfully saved.");
-                            return $this->redirect(['view-register', 'id' => $register->program_id, 'reg' => $register->id]);
+                            
                         }
+                        return $this->refresh();
+
                     } else {
                         $transaction->rollBack();
                     }
@@ -394,6 +412,18 @@ class ProgramController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    protected function findMember($reg, $m)
+    {
+        $model = Member::find()
+        ->where(['id' => $m, 'program_reg_id' => $reg])
+        ->one();
+        if ($model !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
     protected function findRegistration($id)
     {
         if (($model = ProgramRegistration::findOne($id)) !== null) {
@@ -401,6 +431,25 @@ class ProgramController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDownloadPosterFile($id){
+        $model = $this->findRegistration($id);
+        Upload::download($model, 'poster', 'Poster_iCreate');
+    }
+
+    public function actionDownloadPaymentFile($id){
+        $model = $this->findRegistration($id);
+        Upload::download($model, 'payment', 'Payment_iCreate');
+    }
+
+    public function actionCertParticipation($reg,$m){
+        $pdf = new Certificate;
+        $reg = $this->findRegistration($reg);
+        $member = $this->findMember($reg, $m);
+        $pdf->template = CertificateTemplate::findOne(1);
+        $pdf->model = $member;
+        $pdf->generatePdf();
     }
 
 }

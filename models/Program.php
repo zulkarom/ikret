@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "program".
@@ -40,5 +41,9 @@ class Program extends \yii\db\ActiveRecord
             'id' => 'ID',
             'program_name' => 'Program Name',
         ];
+    }
+
+    public static function listPrograms(){
+        return ArrayHelper::map(self::find()->all(),'id', 'program_name');
     }
 }
