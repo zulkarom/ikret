@@ -3,13 +3,12 @@
 namespace app\controllers;
 
 use app\models\ProgramRegistration;
-use app\models\ProgramRegistrationSearch;
 use app\models\UserRole;
+use app\models\LetterPdf;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
 /**
  * ProgramRegistrationController implements the CRUD actions for ProgramRegistration model.
@@ -110,7 +109,11 @@ class CommitteeController extends Controller
     }
 
     public function actionLetterPdf($id){
-
+        $model = $this->findRole($id);
+        $pdf = new LetterPdf;
+        $pdf->model = $model;
+        $pdf->generatePdf();
+        exit;
     }
 
     /**
@@ -179,6 +182,15 @@ class CommitteeController extends Controller
     protected function findModel($id)
     {
         if (($model = ProgramRegistration::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function findRole($id)
+    {
+        if (($model = UserRole::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

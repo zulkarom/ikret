@@ -27,6 +27,12 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
 
         }
+
+        if(Yii::$app->user->identity->isManager){
+          $menu[] = ['name' => 'Manager Menu'];
+          $menu[] = ['name' => 'List of Registration', 'url' => ['/program-registration/manager'], 'icon' => 'bi bi-list-stars'];
+
+        }
         
 
         if(Yii::$app->user->identity->isAdmin){
