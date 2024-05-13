@@ -45,7 +45,7 @@ use yii\helpers\Url;
 
         $menu[] = ['name' => 'User Menu'];
         $menu[] = ['name' => 'Profile', 'url' => ['/user/index'], 'icon' => 'bi bi-file-earmark-person'];
-        $menu[] = ['name' => 'Add Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
+        $menu[] = ['name' => 'Add User Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
         $menu[] = ['name' => 'Change Password', 'url' => ['/user/change-password'], 'icon' => 'bi bi-lock'];
         $menu[] = ['name' => 'Logout', 'url' => ['/site/logout'], 'icon' => 'bi bi-box-arrow-right'];
 

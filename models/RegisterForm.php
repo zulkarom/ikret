@@ -70,6 +70,7 @@ class RegisterForm extends Model
         if($user->save()){
             $role = new UserRole();
             $role->role_name = 'participant';
+            $role->status = 10;
             $role->user_id = $user->id;
             if($role->save()){
                 //auto login
