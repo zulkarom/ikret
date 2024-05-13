@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationSearch;
+use app\models\UserRole;
+use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -38,6 +40,7 @@ class ProgramRegistrationController extends Controller
      */
     public function actionIndex()
     {
+        if(!Yii::$app->user->identity->isAdmin) return false;
         $searchModel = new ProgramRegistrationSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -58,6 +61,24 @@ class ProgramRegistrationController extends Controller
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
+    }
+
+    public function actionManager(){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        if($role->program_id){
+            $searchModel = new ProgramRegistrationSearch();
+            $searchModel->program_id = $role->program_id;
+            $dataProvider = $searchModel->search($this->request->queryParams);
+    
+            return $this->render('manager', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'role' => $role
+            ]);
+        }
+
+        
     }
 
     /**
