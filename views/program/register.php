@@ -352,18 +352,12 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
 $js = <<<'EOD'
 
-jQuery(".dynamicform_wrapper").on("afterInsert", function(e, item) {
-    $( ".krajee-datepicker" ).each(function() {
-       $(this).removeData().kvDatepicker('destroy');
-        $(this).kvDatepicker(eval($(this).attr('data-krajee-kvdatepicker')));
-  });          
-});
-
-
 
 jQuery(".dynamicform_wrapper").on("afterInsert", function(e, item) {
     var first = $(item).find("input")[0];
     first.setAttribute("value", "");
+    var second = $(item).find("input")[1];
+    second.setAttribute("value", "");
 });
 
 
