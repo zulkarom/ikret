@@ -59,7 +59,7 @@ class ProgramController extends Controller
         ->where(['user_id' => Yii::$app->user->identity->id])
         ->all();
 
-        $arr = ArrayHelper::map($registered, 'id', 'id');
+        $arr = ArrayHelper::map($registered, 'program_id', 'program_id');
 
         $programs = Program::find()
         ->where(['NOT IN', 'id', $arr])
