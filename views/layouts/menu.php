@@ -1,4 +1,6 @@
 <?php
+
+use app\models\UserRole;
 use yii\helpers\Url;
 
 ?>
@@ -25,19 +27,30 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isCommittee){
           $menu[] = ['name' => 'Committee Menu'];
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
+          $menu[] = ['name' => 'Certificate', 'url' => ['/committee/cert'], 'icon' => 'bi bi-award'];
 
         }
 
         if(Yii::$app->user->identity->isManager){
-          $menu[] = ['name' => 'Manager Menu'];
-          $menu[] = ['name' => 'List of Registration', 'url' => ['/program-registration/manager'], 'icon' => 'bi bi-list-stars'];
+          $pro = UserRole::find()->where(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10])->all();
+          if($pro){
+            $menu[] = ['name' => 'Manager Menu'];
+            foreach($pro as $p){
+              if($p->program){
+                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.')', 'url' => ['/program-registration/manager','id' => $p->id], 'icon' => 'bi bi-list-stars'];
+              }
+              
+            }
+          }
+          
+          
 
         }
         
 
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu'];
-          $menu[] = ['name' => 'Program Registration', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
+          $menu[] = ['name' => 'Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
 
@@ -45,7 +58,7 @@ use yii\helpers\Url;
 
         $menu[] = ['name' => 'User Menu'];
         $menu[] = ['name' => 'Profile', 'url' => ['/user/index'], 'icon' => 'bi bi-file-earmark-person'];
-        $menu[] = ['name' => 'Add User Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
+        $menu[] = ['name' => 'User Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
         $menu[] = ['name' => 'Change Password', 'url' => ['/user/change-password'], 'icon' => 'bi bi-lock'];
         $menu[] = ['name' => 'Logout', 'url' => ['/site/logout'], 'icon' => 'bi bi-box-arrow-right'];
 

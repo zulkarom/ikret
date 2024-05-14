@@ -203,7 +203,7 @@ class ProgramController extends Controller
         $model = $this->findModel($id);
         $register = new ProgramRegistration();
         $register->group_member =1;
-        $register->scenario = 'program'.$id;
+        
         $register->status == 0;
         $defaultMember = new Member();
         $defaultMember->member_name = Yii::$app->user->identity->fullname;
@@ -214,19 +214,21 @@ class ProgramController extends Controller
         $register->program_id = $model->id;
         $register->user_id = Yii::$app->user->identity->id;
 
+        $register->scenario = 'draft';
+        $register->status = 0;
+
+        $action =  Yii::$app->request->post('action');
+            if($action == 'submit'){
+                $register->status = 10;
+                $register->scenario = 'program'.$id;
+                $register->submitted_at = new Expression('NOW()');
+            }
+
         if($register->load(Yii::$app->request->post())){
+            $register->group_member = 1;
             $register->project_name = $this->myTrim($register->project_name);
             $register->created_at = time();
             $register->updated_at = time();
-
-            $action =  Yii::$app->request->post('action');
-
-            if($action == 'submit'){
-                $register->status = 10;
-                $register->submitted_at = new Expression('NOW()');
-            }else if($action == 'draft'){
-                $register->status = 0;
-            }
 
             $register->uploadFile('payment');
             $register->uploadFile('poster');
@@ -253,6 +255,7 @@ class ProgramController extends Controller
                             $member->member_name = strtoupper($member->member_name);
                             //do not validate this in model
                             $member->program_reg_id = $register->id;
+                            
 
                             if (!($flag = $member->save(false))) {
                                 break;
@@ -286,6 +289,7 @@ class ProgramController extends Controller
                 }
             }else{
                 $register->flashError();
+                $register->status = 0;
             }
 
         }
@@ -310,18 +314,22 @@ class ProgramController extends Controller
         $model = $this->findModel($id);
         $register = $this->findRegistration($reg);
         $members = $register->members;
+
+        $action =  Yii::$app->request->post('action');
+            if($action == 'submit'){
+                $register->status = 10;
+                $register->scenario = 'program'.$id;
+         
+                $register->submitted_at = new Expression('NOW()');
+            }
+
         //print_r(Yii::$app->request->post());die();
         if ($register->load(Yii::$app->request->post())){
+            $register->group_member = 1;
             $register->project_name = $this->myTrim($register->project_name);
             $register->updated_at = time();
             $action =  Yii::$app->request->post('action');
 
-        if($action == 'submit'){
-            $register->status = 10;
-            $register->submitted_at = new Expression('NOW()');
-        }else if($action == 'draft'){
-            $register->status = 0;
-        }
 
         $register->uploadFile('payment');
         $register->uploadFile('poster');
@@ -385,6 +393,7 @@ class ProgramController extends Controller
                 }
             }else{
                 $register->flashError();
+                $register->status = 0;
             }
 
         }

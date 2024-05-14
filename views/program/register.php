@@ -234,9 +234,9 @@ if(in_array('group_member',$arr_fields)){
     ]); ?>
 
     
-<label class="form-label pt-0"><?=$register->getAttributeLabel('group_member')?> <span style="color:red">*</span></label>
+<label class="form-label pt-0"><?=$register->getAttributeLabel('group_member')?> </label><br />
 <i>(Make sure the group leader is on top. If individual participant, make sure put only your name)</i>
-    <table class="table">
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Full Name</th>

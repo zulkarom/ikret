@@ -18,8 +18,18 @@ use yii\helpers\Url;
       <div class="col-lg-9 col-md-8"><?=$register->submitted_at?></div>
     </div>
 
+    <div class="row">
+      <div class="col-lg-3 col-md-4 label ">Program</div>
+      <div class="col-lg-9 col-md-8"><?=$register->program->program_name?></div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-3 col-md-4 label ">Registration by</div>
+      <div class="col-lg-9 col-md-8"><?=$register->user->fullname?></div>
+    </div>
+
     <?php
-    showFieldUser($register->user, 'fullname');
+    ///showFieldUser($register->user, 'fullname');
     showFieldUser($register->user, 'matric');
     showFieldUser($register->user, 'phone');
     showFieldUser($register->user, 'email');
@@ -95,7 +105,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
   <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel('payment_file')?></div>
   <div class="col-lg-9 col-md-8">
   <?php 
-if($register->poster_file){
+if($register->payment_file){
 echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>

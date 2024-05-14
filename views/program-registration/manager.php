@@ -5,12 +5,12 @@ use yii\grid\GridView;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-
-$this->title = 'List of Program Registrations';
+$program = $role->program;
+$this->title = 'Registration ('.$program->program_abbr.')';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">
-<h1>List of Registration</h1></div>
+<h1><?=$this->title?></h1></div>
 
     </div><!-- End Page Title -->
 

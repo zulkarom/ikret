@@ -37,11 +37,11 @@ $this->title = 'I-CREATE - Register';
                     <div class="col-12">
 
                     <?= $form
-            ->field($model, 'fullname', ['addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])->textInput(['style' => 'text-transform: uppercase'])?>
+            ->field($model, 'fullname', ['template' => '{label}{input}<i style="font-size:11px">This input will be used in certificates</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])->textInput(['style' => 'text-transform: uppercase'])?>
             </div>
             <div class="col-12">
             <?= $form
-            ->field($model, 'matric', ['addon' => ['append' => ['content'=>'<i class="bi bi-credit-card"></i>']]])
+            ->field($model, 'matric', ['template' => '{label}{input}<i style="font-size:11px">For external participant/juries, you may use email.</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-credit-card"></i>']]])
       
             ->textInput() ?>
             </div>
@@ -60,7 +60,7 @@ $this->title = 'I-CREATE - Register';
 
             <div class="col-12">
             <?= $form
-            ->field($model, 'password', ['addon' => ['append' => ['content'=>'<i class="bi bi-lock"></i>']]])
+            ->field($model, 'password', ['template' => '{label}{input}<i style="font-size:11px">A password is necessary for login purpose</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-lock"></i>']]])
     
             ->passwordInput() ?>
             </div>

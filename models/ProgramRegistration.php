@@ -56,6 +56,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [self::getProgramFields(5), 'required', 'on' => 'program5'],
             [self::getProgramFields(6), 'required', 'on' => 'program6'],
 
+            [['user_id', 'program_id'], 'required', 'on' => 'draft'],
+
             [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk'], 'integer'],
 
             [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program'], 'string'],
@@ -280,6 +282,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function getMembers()
     {
         return $this->hasMany(Member::class, ['program_reg_id' => 'id']);
+    }
+
+    public function getJuries()
+    {
+        return $this->hasMany(Jury::class, ['reg_id' => 'id']);
     }
 
     /**

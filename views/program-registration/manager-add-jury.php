@@ -5,13 +5,11 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
-$this->title = 'Update Program Registration: ' . $model->id;
+$this->title = 'Add Jury';
 $this->params['breadcrumbs'][] = ['label' => 'Program Registrations', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->id, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
-
-
 <div class="pagetitle">
 <h1><?=$this->title?></h1></div>
 
@@ -22,7 +20,7 @@ $this->params['breadcrumbs'][] = 'Update';
     <div class="card">
             <div class="card-body pt-4">
 
-    <?= $this->render('_form', [
+    <?= $this->render('_form_jury', [
         'model' => $model,
     ]) ?>
 
@@ -33,5 +31,4 @@ $this->params['breadcrumbs'][] = 'Update';
 
 
     </section>
-
 

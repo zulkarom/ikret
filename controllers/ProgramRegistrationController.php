@@ -2,10 +2,14 @@
 
 namespace app\controllers;
 
+use app\models\Jury;
 use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationSearch;
+use app\models\User;
 use app\models\UserRole;
 use Yii;
+use yii\db\Expression;
+use yii\db\Query;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -63,12 +67,51 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
-    public function actionManager(){
+    public function actionManagerView($id){
+
+        return $this->render('manager-view', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
+    public function actionManagerAddJury($id){
+        $model = new Jury();
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->save();
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->render('manager-add-jury', [
+            'model' => $model
+        ]);
+    }
+
+    public function actionUserListJson($q = null, $id = null){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $out = ['results' => ['id' => '', 'text' => '']];
+        if (!is_null($q)) {
+            $query = new Query();
+            $query->select(new Expression('`id`, `fullname` AS `text`'))
+                ->from('user')
+                ->where(['like', 'fullname', $q])
+                ->limit(20);
+            $command = $query->createCommand();
+            $data = $command->queryAll();
+            $out['results'] = array_values($data);
+        }elseif ($id > 0) {
+            $out['results'] = ['id' => $id, 'text' => User::find($id)->fullname];
+        }
+        return $out;
+    }
+
+    public function actionManager($id){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
-        if($role->program_id){
+        $role = UserRole::findOne(['id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        if($role->program){
             $searchModel = new ProgramRegistrationSearch();
-            $searchModel->program_id = $role->program_id;
+            $searchModel->programx_id = $role->program_id;
             $dataProvider = $searchModel->search($this->request->queryParams);
     
             return $this->render('manager', [
