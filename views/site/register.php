@@ -37,24 +37,40 @@ $this->title = 'I-CREATE - Register';
                     <div class="col-12">
 
                     <?= $form
-            ->field($model, 'fullname', ['template' => '{label}{input}<i style="font-size:11px">This input will be used in certificates</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])->textInput(['style' => 'text-transform: uppercase'])?>
+            ->field($model, 'fullname', ['template' => '{label}{input}<i style="font-size:11px">Make sure you type your name correctly since it will be used in certificates.<br />Include title if any</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])->textInput(['style' => 'text-transform: uppercase'])?>
             </div>
-            <div class="col-12">
-            <?= $form
-            ->field($model, 'matric', ['template' => '{label}{input}<i style="font-size:11px">For external participant/juries, you may use email.</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-credit-card"></i>']]])
-      
-            ->textInput() ?>
-            </div>
+
             <div class="col-12">
             <?= $form
             ->field($model, 'email', ['addon' => ['append' => ['content'=>'<i class="bi bi-envelope"></i>']]])
-      
             ->textInput() ?>
             </div>
+
             <div class="col-12">
             <?= $form
             ->field($model, 'phone', ['addon' => ['append' => ['content'=>'<i class="bi bi-phone"></i>']]])
-      
+            ->textInput() ?>
+            </div>
+
+            <div class="col-12">
+
+<?php 
+        echo $form
+->field($model, 'is_internal')->dropDownList($model->listCategory(),['prompt' => 'Select Category']);
+?>
+</div>
+
+            <div class="col-12" id="con-matric" style="display:none">
+
+            <?=$form
+            ->field($model, 'matric')
+            ->textInput() ?>
+            </div>
+
+            <div class="col-12" id="con-institution" style="display:none">
+
+            <?=$form
+            ->field($model, 'institution')
             ->textInput() ?>
             </div>
 
@@ -76,7 +92,7 @@ $this->title = 'I-CREATE - Register';
             
                     <div class="col-12">
           
-                      <?= Html::submitButton('Register iCreate', ['class' => 'btn btn-primary w-100', 'name' => 'login-button']) ?>
+                      <?= Html::submitButton('REGISTER I-CREATE', ['class' => 'btn btn-primary w-100', 'name' => 'login-button']) ?>
                     </div>
                     <br />
    
@@ -95,4 +111,22 @@ $this->title = 'I-CREATE - Register';
     </div>
     
 </div>
-             
+
+<?php 
+$this->registerJs('
+
+$("#registerform-is_internal").change(function(){
+  var val = $(this).val();
+  if(val == 1){
+    $("#con-matric").show();
+    $("#con-institution").hide();
+  }else if(val == 2){
+    $("#con-matric").hide();
+    $("#con-institution").show();
+  }
+
+});
+
+');
+
+?>

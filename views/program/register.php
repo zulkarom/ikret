@@ -1,17 +1,20 @@
 <?php
+
+use app\models\Mentor;
+use app\models\User;
+use kartik\select2\Select2;
 use yii\helpers\Html;
 //use yii\bootstrap5\ActiveForm;
 use kartik\widgets\ActiveForm;
 use wbraganca\dynamicform\DynamicFormWidget;
 use yii\helpers\Url;
+use yii\web\JsExpression;
+
 $web = Yii::getAlias('@web');
 
 $this->title = 'Registration - ' . $model->program_name;
 
 ?>
-
-
-
     <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
           
@@ -43,9 +46,17 @@ $this->title = 'Registration - ' . $model->program_name;
                     <p class="small">Enter your project details to register in this program.</p>
                   </div>
 
+                  <?php $form = ActiveForm::begin(['class' => 'row g-3 needs-validation','id' => 'dynamic-form', 'action' => Url::to(['register']), 'options' => ['enctype' => 'multipart/form-data']]); ?>
 
+                  <input type="hidden" name="program_id" value="<?=$model->id?>" />
 
-                  <?php $form = ActiveForm::begin(['class' => 'row g-3 needs-validation','id' => 'dynamic-form', 'options' => ['enctype' => 'multipart/form-data']]); ?>
+                  <?php 
+                  if(!$register->isNewRecord){
+                      echo '<input type="hidden" name="reg_id" value="'.$register->id.'" />';
+                  }
+                  ?>
+
+                   
 
                     <div class="col-12">
 
@@ -289,6 +300,94 @@ if(in_array('group_member',$arr_fields)){
     <?php DynamicFormWidget::end(); ?>
   </div>
 
+  <br />
+
+  <div class="row">
+      <div class="col-md-6"><?php 
+                    if(in_array('mentor_main',$arr_fields)){
+
+                      //cari mentor
+                      $userDesc = '';
+                      if(!$register->isNewRecord){
+                        $main = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => 1]);
+                        if($main){
+                          if($main->user){
+                            $userDesc = $main->user->fullname;
+                            $register->mentor_main = $main->user_id;
+                          }
+                        }
+                      }
+                  
+                  $url = Url::to(['/program-registration/mentor-list-json']);
+                  echo $form->field($register, 'mentor_main')->widget(Select2::classname(), [
+                      'initValueText' => $userDesc, // set the initial display text
+                      'options' => ['placeholder' => 'Find a main mentor ...'],
+                  'pluginOptions' => [
+                      'allowClear' => true,
+                      'minimumInputLength' => 3,
+                      'language' => [
+                          'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+                      ],
+                      'ajax' => [
+                          'url' => $url,
+                          'dataType' => 'json',
+                          'data' => new JsExpression('function(params) { return {q:params.term}; }')
+                      ],
+                      'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                      'templateResult' => new JsExpression('function(user) { return user.text; }'),
+                      'templateSelection' => new JsExpression('function (user) { return user.text; }'),
+                  ],
+                  ]);
+                  
+
+
+
+
+                    } ?></div>
+      <div class="col-md-6"><?php 
+                    if(in_array('mentor_co',$arr_fields)){
+
+
+         //cari mentor
+         $userDesc = '';
+         if(!$register->isNewRecord){
+           $main = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => 0]);
+           if($main){
+              if($main->user){
+                $userDesc = $main->user->fullname;
+                $register->mentor_co = $main->user_id;
+              }
+             
+           }
+         }
+     
+     $url = Url::to(['/program-registration/mentor-list-json']);
+     echo $form->field($register, 'mentor_co')->widget(Select2::classname(), [
+         'initValueText' => $userDesc, // set the initial display text
+         'options' => ['placeholder' => 'Find a co mentor ...'],
+     'pluginOptions' => [
+         'allowClear' => true,
+         'minimumInputLength' => 3,
+         'language' => [
+             'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
+         ],
+         'ajax' => [
+             'url' => $url,
+             'dataType' => 'json',
+             'data' => new JsExpression('function(params) { return {q:params.term}; }')
+         ],
+         'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+         'templateResult' => new JsExpression('function(user) { return user.text; }'),
+         'templateSelection' => new JsExpression('function (user) { return user.text; }'),
+     ],
+     ]);
+
+
+
+
+                    } ?></div>
+  </div>
+
 
 
     <?php if(in_array('poster_file', $arr_fields)){?>
@@ -309,7 +408,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->payment_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment_file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
@@ -358,6 +457,8 @@ jQuery(".dynamicform_wrapper").on("afterInsert", function(e, item) {
     first.setAttribute("value", "");
     var second = $(item).find("input")[1];
     second.setAttribute("value", "");
+    var third = $(item).find("input")[2];
+    third.setAttribute("value", "");
 });
 
 
@@ -367,4 +468,3 @@ EOD;
 
 $this->registerJs($js);
 ?>
-

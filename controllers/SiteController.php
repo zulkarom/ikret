@@ -10,9 +10,11 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\PasswordResetRequestForm;
+use app\models\QuestionnaireAnswer;
 use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
 use InvalidArgumentException;
+use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
 
 class SiteController extends Controller
@@ -60,7 +62,13 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        //Yii::$app->session->addFlash('success', "hai");
+        if (!Yii::$app->user->isGuest) {
+            $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+            if(!$check){
+                Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
+            }
+        }
+        
         return $this->render('index');
     }
 

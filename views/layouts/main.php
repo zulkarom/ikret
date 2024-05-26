@@ -57,15 +57,24 @@ $web = Yii::getAlias('@web');
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
-      &copy; Copyright <strong><span>iCreate 2024</span></strong>. All Rights Reserved
+      &copy; Copyright <strong><span>I-CREATE 2024</span></strong>. All Rights Reserved
     </div>
     <div class="credits">
       <!-- All the links in the footer should remain intact. -->
       <!-- You can delete the links only if you purchased the pro version. -->
       <!-- Licensing information: https://bootstrapmade.com/license/ -->
       <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-      Template by <a href="https://bootstrapmade.com/" target="_blank">BootstrapMade</a> 
+      <?php 
+      
+      if(Yii::$app->user->isGuest){
+        ?>
+Template by <a href="https://bootstrapmade.com/" target="_blank">BootstrapMade</a> 
       System by <a href="https://skyhint.com/" target="_blank">Skyhint Design</a>
+        <?php
+      }
+        
+      ?>
+      
     </div>
   </footer><!-- End Footer -->
 

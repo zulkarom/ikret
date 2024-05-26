@@ -33,13 +33,7 @@ $this->title = 'Request for Additional User Role';
 
                       <?php $form = ActiveForm::begin(); ?>
 
-<?= $form->field($model, 'role_name')->dropDownList([
-            'participant' => 'Participant',
-            'manager' => 'Manager', // need to have program id
-           // 'jury' => 'Jury',
-            'committee' => 'Committee',
-            //'admin' => 'Administrator'//
-], ['prompt' => 'Select Role']) ?>
+<?= $form->field($model, 'role_name')->dropDownList($model->listRolesRequest(), ['prompt' => 'Select Role']) ?>
 
 <div style="display:none" id="con-program">
 <?= $form->field($model, 'program_id')->dropDownList(Program::listPrograms(), ['prompt' => 'Select Program']) ?>

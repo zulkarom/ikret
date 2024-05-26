@@ -1,0 +1,5 @@
+ALTER TABLE `user`  ADD `is_internal` TINYINT(1) NULL DEFAULT NULL  AFTER `phone`,  ADD `institution` VARCHAR(255) NULL DEFAULT '1'  AFTER `is_internal`;
+
+ALTER TABLE `user` DROP INDEX `matric`;
+
+ALTER TABLE `program_reg` CHANGE `participant_cat_local` `participant_cat_local` TINYINT(1) NULL DEFAULT '1' COMMENT '1=local,2=int';

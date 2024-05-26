@@ -15,6 +15,8 @@ class RegisterForm extends Model
     public $password_repeat;
     public $matric;
     public $email;
+    public $is_internal;
+    public $institution;
 
     /**
      * @inheritdoc
@@ -24,14 +26,36 @@ class RegisterForm extends Model
         return [
 			
             [['matric', 'fullname'], 'string'],
+
             ['email', 'email'],
             ['phone', 'number'],
 
+            ['is_internal', 'integer'],
+
             ['password_repeat', 'compare', 'compareAttribute' => 'password'],
 
-            [['fullname','matric', 'phone', 'password', 'password_repeat', 'email'], 'required'],
+            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'is_internal'], 'required'],
+
+            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'is_internal', 'institution'], 'required', 'on' => 'external'],
+
+            [['matric'], 'required', 'when' => function($model){
+                return $model->is_internal == '1';},
+                'whenClient' => "function (attribute, value) {
+        return $('#registerform-is_internal').val() == '1';
+                         }",
+            ],
+
+            [['institution'], 'required', 'when' => function($model){
+                return $model->is_internal == '2';},
+                'whenClient' => "function (attribute, value) {
+        return $('#registerform-is_internal').val() == '2';
+                         }",
+            ],
+            
 
             [['password'], 'string', 'min' => 6],
+
+            [['institution'], 'string'],
 
         ];
     }
@@ -41,6 +65,7 @@ class RegisterForm extends Model
         $label = parent::attributeLabels();
         $label['matric'] = 'Student/Staff ID';
         $label['fullname'] = 'Full Name';
+        $label['is_internal'] = 'Category';
         $label['password_repeat'] = 'Password Repeat';
         return $label;
     }
@@ -62,6 +87,7 @@ class RegisterForm extends Model
         $user->fullname = strtoupper($this->fullname);
         $user->phone = $this->phone;
         $user->email = $this->email;
+        $user->institution = $this->institution;
         $user->setPassword($this->password);
         $user->generateAuthKey();
         ///auto activate for now
@@ -87,5 +113,8 @@ class RegisterForm extends Model
     
         
         return false;
+}
+public static function listCategory(){
+    return User::listCategory();
 }
 }

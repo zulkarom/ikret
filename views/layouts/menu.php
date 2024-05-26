@@ -41,6 +41,10 @@ use yii\helpers\Url;
               }
               
             }
+
+            $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
+
+
           }
           
           
@@ -50,9 +54,15 @@ use yii\helpers\Url;
 
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu'];
-          $menu[] = ['name' => 'Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
-          $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
+
+          
+          $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
+
+          $menu[] = ['name' => 'Program Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
+
+          $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
+          
 
         }
 

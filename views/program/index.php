@@ -29,7 +29,7 @@ $this->title = 'Programme Registered';
             }
             
             echo '</td><td>'.$program->statusLabel.'</td>
-            <td><a href="'.Url::to(['program/view-register', 'id' => $program->program->id, 'reg' => $program->id]).'" class="btn btn-warning btn-sm">View</a></td></tr>';
+            <td><a href="'.Url::to(['program/register-form', 'id' => $program->program->id, 'reg' => $program->id]).'" class="btn btn-warning btn-sm">View</a></td></tr>';
             $i++;
           }
         }else{
@@ -54,7 +54,7 @@ $this->title = 'Programme Registered';
         <?php 
         $i = 1;
         foreach($programs as $program){
-          echo ' <tr><td>'.$i.'. </td><td>'.$program->program_name.'</td><td><a href="'.Url::to(['program/register', 'id' => $program->id]).'" class="btn btn-primary btn-sm">Register</a></td></tr>';
+          echo ' <tr><td>'.$i.'. </td><td>'.$program->program_name.'</td><td><a href="'.Url::to(['program/register-form', 'id' => $program->id]).'" class="btn btn-primary btn-sm">Register</a></td></tr>';
           $i++;
         }
         

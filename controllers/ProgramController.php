@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\Certificate;
 use app\models\CertificateTemplate;
 use app\models\Member;
+use app\models\Mentor;
 use app\models\Model;
 use Yii;
 use yii\filters\AccessControl;
@@ -18,6 +19,7 @@ use app\models\QuestionnaireAnswerPost;
 use app\models\Upload;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 use yii\web\NotFoundHttpException;
 
 class ProgramController extends Controller
@@ -52,7 +54,7 @@ class ProgramController extends Controller
 
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if(!$check){
-            Yii::$app->session->addFlash('info', "You need to answer pre-event questionnaire before registering to any program below.");
+            Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
         }
 
         $registered = ProgramRegistration::find()
@@ -192,7 +194,8 @@ class ProgramController extends Controller
     }
 
 
-    public function actionRegister($id){
+    public function actionRegisterForm($id, $reg = null){
+
         date_default_timezone_set("Asia/Kuala_Lumpur");
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if(!$check){
@@ -201,41 +204,92 @@ class ProgramController extends Controller
         }
 
         $model = $this->findModel($id);
-        $register = new ProgramRegistration();
-        $register->group_member =1;
+
+        if($reg){
+            $register = $this->findRegistration($reg);
+            $members = $register->members;
+        }else{
+            $register = new ProgramRegistration();
+            $defaultMember = new Member();
+            $defaultMember->member_name = Yii::$app->user->identity->fullname;
+            $defaultMember->member_matric = Yii::$app->user->identity->matric;
+            $members = [$defaultMember];
+            $register->program_id = $model->id;
+            $register->user_id = Yii::$app->user->identity->id;
+            $register->status = 0;
+        }
         
-        $register->status == 0;
-        $defaultMember = new Member();
-        $defaultMember->member_name = Yii::$app->user->identity->fullname;
-        $defaultMember->member_matric = Yii::$app->user->identity->matric;
-       /// echo $defaultMember->member_matric;die();
-        $members = [$defaultMember];
+        $register->scenario = 'draft';
+        
+        
+        return $this->render('register', [
+            'model' => $model,
+            'register' => $register,
+            'members' => (empty($members)) ? [$defaultMember] : $members
+        ]);
+    }
 
-        $register->program_id = $model->id;
-        $register->user_id = Yii::$app->user->identity->id;
+    /**
+     * method ni hanya utk post - khusus untuk store data
+     */
+    public function actionRegister(){
+        $id = Yii::$app->request->post('program_id');
+        $reg = Yii::$app->request->post('reg_id');
+        date_default_timezone_set("Asia/Kuala_Lumpur");
+        $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+        if(!$check){
+            Yii::$app->session->addFlash('info', "You need to answer pre-event questionnaire before registering to the program.");
+            return $this->redirect(['prequestion']);
+        }
 
+        $model = $this->findModel($id);
+
+        if($reg){
+            $register = $this->findRegistration($reg);
+            $members = $register->members;
+        }else{
+            $register = new ProgramRegistration();
+            $defaultMember = new Member();
+            $defaultMember->member_name = Yii::$app->user->identity->fullname;
+            $defaultMember->member_matric = Yii::$app->user->identity->matric;
+            $members = [$defaultMember];
+            $register->program_id = $model->id;
+            $register->user_id = Yii::$app->user->identity->id;
+        }
+        
         $register->scenario = 'draft';
         $register->status = 0;
 
-        $action =  Yii::$app->request->post('action');
+
+        if($register->load(Yii::$app->request->post())){
+            $action =  Yii::$app->request->post('action');
             if($action == 'submit'){
                 $register->status = 10;
                 $register->scenario = 'program'.$id;
                 $register->submitted_at = new Expression('NOW()');
             }
 
-        if($register->load(Yii::$app->request->post())){
             $register->group_member = 1;
             $register->project_name = $this->myTrim($register->project_name);
-            $register->created_at = time();
+            if($register->isNewRecord){
+                $register->created_at = time();
+            }
+            
             $register->updated_at = time();
-
             $register->uploadFile('payment');
             $register->uploadFile('poster');
+
+            if(!$register->isNewRecord){
+                $oldIDs = ArrayHelper::map($members, 'id', 'id');
+            }
 
 
             $members = Model::createMultiple(Member::class);
             Model::loadMultiple($members, Yii::$app->request->post());
+
+            if(!$register->isNewRecord){
+                $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($members, 'id', 'id')));
+            }
         
             $valid = $register->validate();
             
@@ -247,6 +301,11 @@ class ProgramController extends Controller
                 try {
                     
                     if ($flag = $register->save()) {
+                        if(!$register->isNewRecord){
+                            if (! empty($deletedIDs)) {
+                                Member::deleteAll(['id' => $deletedIDs]);
+                            }
+                        }
 
                         foreach ($members as $i => $member) {
                             if ($flag === false) {
@@ -262,6 +321,9 @@ class ProgramController extends Controller
                             }
                         }
 
+                        //mentor
+                            $flag = $this->processMentor($register);
+
                     }else{
                         $register->flashError();
                     }
@@ -274,9 +336,11 @@ class ProgramController extends Controller
                             Yii::$app->session->addFlash('success', "Registration successful.");
                         }else if($action == 'draft'){
                             Yii::$app->session->addFlash('success', "The information has been successfully saved.");
-                            
                         }
-                        return $this->redirect(['view-register', 'id' => $register->program_id, 'reg' => $register->id]);
+
+
+                        return $this->redirect(['register-form', 'id' => $register->program_id, 'reg' => $register->id]);
+                        
 
                     } else {
                         $transaction->rollBack();
@@ -293,13 +357,72 @@ class ProgramController extends Controller
             }
 
         }
-        
+        //kena render jgk in case ada error
         return $this->render('register', [
             'model' => $model,
             'register' => $register,
             'members' => (empty($members)) ? [$defaultMember] : $members
         ]);
     }
+
+    private function processMentor($model){
+        if($model->mentor_main){
+            //check dah ada ke
+            $main = Mentor::findOne(['program_reg_id' => $model->id, 'is_main' => 1]);
+            if($main){
+                $main->user_id = $model->mentor_main;
+                if(!$main->save()){
+                    return false;
+                }
+            }else{
+                $main = new Mentor();
+                $main->program_reg_id = $model->id;
+                $main->user_id = $model->mentor_main;
+                $main->is_main = 1;
+                if(!$main->save()){
+                    return false;
+                }
+            }
+        }else{
+            //del
+            $main = Mentor::findOne(['program_reg_id' => $model->id, 'is_main' => 1]);
+            if($main){
+                $main->delete();
+            }
+        }
+        if($model->mentor_co){
+            if($model->mentor_co != $model->mentor_main){
+                //check dah ada ke
+                $co = Mentor::findOne(['program_reg_id' => $model->id, 'is_main' => 0]);
+                if($co){
+                    $co->user_id = $model->mentor_co;
+                    if(!$co->save()){
+                        return false;
+                    }
+                }else{
+                    $co = new Mentor();
+                    $co->program_reg_id = $model->id;
+                    $main->user_id = $model->mentor_co;
+                    $co->is_main = 0;
+                    if(!$co->save()){
+                        return false;
+                    }
+                }
+            }else{
+                Yii::$app->session->addFlash('error', "Main & Co mentor cannot be the same person!");
+                return false;
+            }
+            
+        }else{
+            //del
+            $co = Mentor::findOne(['program_reg_id' => $model->id, 'is_main' => 0]);
+            if($co){
+                $co->delete();
+            }
+        }
+    return true;
+    }
+
 
     private function myTrim($str){
         $str = str_replace(array("\r", "\n"), ' ', $str);
@@ -319,7 +442,6 @@ class ProgramController extends Controller
             if($action == 'submit'){
                 $register->status = 10;
                 $register->scenario = 'program'.$id;
-         
                 $register->submitted_at = new Expression('NOW()');
             }
 
@@ -335,7 +457,6 @@ class ProgramController extends Controller
         $register->uploadFile('poster');
 
         $oldIDs = ArrayHelper::map($members, 'id', 'id');
-            
             
             $members = Model::createMultiple(Member::classname(), $members);
             

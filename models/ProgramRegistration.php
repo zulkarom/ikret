@@ -34,6 +34,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public $poster_instance;
     public $payment_instance;
     public $group_member;
+    public $mentor_main;
+    public $mentor_co;
 
     /**
      * {@inheritdoc}
@@ -58,7 +60,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
 
-            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk'], 'integer'],
+            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co'], 'integer'],
 
             [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program'], 'string'],
 
@@ -111,7 +113,9 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'nric' => 'Identification Card Number',
             'participant_mode' => 'Mode of Participation',
             'participant_program' => 'Participant\'s Program',
-            'group_member' => 'Individual/ Group Members'
+            'group_member' => 'Individual/ Group Members',
+            'mentor_main' => 'Main Mentor (optional)',
+            'mentor_co' => 'Co Mentor (optional)',
             
         ];
     }
@@ -147,28 +151,28 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public static function getProgramFields($program_id){
         $array = [];
         switch($program_id){
-            case 1:
-            $array = ['project_name', 'project_desc', 'participant_cat_local', 'competition_type', 'institution', 'advisor', 'group_member', 'poster_file', 'payment_file'];
+            case 1: //impact
+            $array = ['project_name', 'project_desc', 'participant_cat_local', 'competition_type', 'group_member', 'mentor_main', 'mentor_co'];
             break;
 
-            case 2:
-            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'payment_file'];
+            case 2: //come
+            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'mentor_main', 'mentor_co'];
             break;
 
-            case 3:
-            $array = ['advisor_dropdown', 'booth_number', 'group_member', 'payment_file'];
+            case 3: //neweek
+            $array = ['advisor_dropdown', 'booth_number', 'group_member', 'mentor_main', 'mentor_co'];
             break;
 
-            case 4:
-            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file'];
+            case 4: //aifif
+            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file', 'mentor_main', 'mentor_co'];
             break;
 
-            case 5:
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file'];
+            case 5: //rise
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'mentor_main', 'mentor_co'];
             break;
 
-            case 6:
-            $array = ['project_name', 'group_member'];
+            case 6: //jfed
+            $array = ['project_name', 'group_member', 'mentor_main', 'mentor_co'];
             break;
         }
         return $array;

@@ -96,7 +96,18 @@ class UserRole extends \yii\db\ActiveRecord
             'manager' => 'Manager', // need to have program id
             'jury' => 'Jury',
             'committee' => 'Committee',
+            'mentor' => 'Mentor',
             'admin' => 'Administrator'//
+        ];
+    }
+
+    public static function listRolesRequest(){
+        return [
+            'participant' => 'Participant',
+            'manager' => 'Manager', 
+            'jury' => 'Jury',
+            'committee' => 'Committee',
+            'mentor' => 'Mentor',
         ];
     }
 

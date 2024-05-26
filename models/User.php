@@ -30,6 +30,8 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_INACTIVE = 9;
     const STATUS_ACTIVE = 10;
 
+    public $passwordRaw;
+
 
     /**
      * {@inheritdoc}
@@ -59,11 +61,11 @@ class User extends ActiveRecord implements IdentityInterface
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
 
             //Admin Update
-            [['username','email', 'matric'], 'unique'],
+            [['username','email'], 'unique'],
 
             [['email'], 'email'],
 
-            [['phone', 'matric', 'fullname'], 'string'],
+            [['phone', 'matric', 'fullname', 'passwordRaw'], 'string'],
             
             [['username', 'fullname'], 'required', 'on' => 'update'],
             
@@ -78,7 +80,9 @@ class User extends ActiveRecord implements IdentityInterface
         return [
             'fullname' => 'Full Name',
             'nric' => 'NRIC',
-            'matric' => 'Student/Staff ID'
+            'matric' => 'Student/Staff ID',
+            'passwordRaw' => 'New Password',
+            'is_internal' => 'Category'
         ];
     }
 
@@ -117,6 +121,21 @@ class User extends ActiveRecord implements IdentityInterface
             ['username' => $username, ],
             ['email' => $username, ]
         ])->one();
+    }
+
+    public static function listCategory(){
+        return [
+            1 => 'UMK Student/Staff',
+            2 => 'Non-UMK Institution'
+        ];
+    }
+
+    public function getCategoryText(){
+        $text = '';
+        if(array_key_exists($this->is_internal, $this->listCategory())){
+            $text = $this->listCategory()[$this->is_internal];
+        }
+        return $text;
     }
 
     /**

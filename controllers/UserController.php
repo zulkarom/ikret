@@ -2,26 +2,14 @@
 
 namespace app\controllers;
 
-use app\models\Certificate;
-use app\models\CertificateTemplate;
 use app\models\ChangePasswordForm;
-use app\models\Member;
-use app\models\Model;
+use app\models\JurySearch;
 use Yii;
-use yii\filters\AccessControl;
 use yii\web\Controller;
-use yii\web\Response;
-use app\models\Program;
-use app\models\ProgramRegistration;
-use app\models\Questionnaire;
-use app\models\QuestionnaireAnswer;
-use app\models\QuestionnaireAnswerPost;
-use app\models\Upload;
 use app\models\User;
 use app\models\UserRole;
-use Reflector;
+use app\models\UserSearch;
 use yii\db\Expression;
-use yii\helpers\ArrayHelper;
 use yii\web\NotFoundHttpException;
 
 class UserController extends Controller
@@ -38,7 +26,7 @@ class UserController extends Controller
                     [
                         'allow' => true,
                         'roles' => ['@'],
-                    ],
+                    ]
                 ],
             ],
         ];
@@ -66,6 +54,60 @@ class UserController extends Controller
         return $this->render('index',[
             'model' => $model
         ]);
+    }
+
+    public function actionAll(){
+        if(!Yii::$app->user->identity->isAdmin) return false;
+        $searchModel = new UserSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('all', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionJury(){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $searchModel = new JurySearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('jury', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionUpdate($id){
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+
+            if($model->passwordRaw){
+                $model->setPassword($model->passwordRaw);
+            }
+
+            if($model->save()){
+                Yii::$app->session->addFlash('success', "Data Updated");
+                return $this->refresh();
+            }
+            
+        }
+
+        return $this->render('update', [
+            'model' => $model,
+        ]);
+    }
+
+    protected function findModel($id)
+    {
+        if (($model = User::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 
     public function actionRemoveRole($id){
@@ -99,12 +141,38 @@ class UserController extends Controller
 
             if($model->role_name == 'participant'){
                 $model->status = 10;
+                if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'participant'])){
+                    Yii::$app->session->addFlash('error', "Duplicate request!");
+                    return $this->refresh();
+                }
+            }
+
+            if($model->role_name == 'jury'){
+                $model->status = 10;
+                if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'jury'])){
+                    Yii::$app->session->addFlash('error', "Duplicate request!");
+                    return $this->refresh();
+                }
+            }
+
+            if($model->role_name == 'mentor'){
+                $model->status = 10;
+                if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'mentor'])){
+                    Yii::$app->session->addFlash('error', "Duplicate request!");
+                    return $this->refresh();
+                }
             }
 
             if($model->role_name == 'manager'){
+                
                 if(!$model->program_id){
                     Yii::$app->session->addFlash('error', "Please select a program");
                     return $this->refresh();
+                }else{
+                    if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_id' => $model->program_id])){
+                        Yii::$app->session->addFlash('error', "Duplicate request!");
+                        return $this->refresh();
+                    }
                 }
             }
 
@@ -112,10 +180,17 @@ class UserController extends Controller
                 if(!$model->committee_id){
                     Yii::$app->session->addFlash('error', "Please select a committee");
                     return $this->refresh();
-                }else if($model->committee->is_jawatankuasa == 1){
-                    if(!$model->is_leader){
-                        Yii::$app->session->addFlash('error', "Please choose whether you are a leader or a member");
-                    return $this->refresh();
+                }else{
+                    if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'committee', 'committee_id' => $model->committee_id])){
+                        Yii::$app->session->addFlash('error', "Duplicate request!");
+                        return $this->refresh();
+                    }
+
+                    if($model->committee->is_jawatankuasa == 1){
+                        if(!$model->is_leader){
+                            Yii::$app->session->addFlash('error', "Please choose whether you are a leader or a member");
+                            return $this->refresh();
+                        }
                     }
                 }
             }

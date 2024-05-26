@@ -106,6 +106,27 @@ class ProgramRegistrationController extends Controller
         return $out;
     }
 
+    public function actionMentorListJson($q = null, $id = null){
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $out = ['results' => ['id' => '', 'text' => '']];
+        if (!is_null($q)) {
+            $query = new Query();
+            $query->select(new Expression('u.id, u.fullname AS text'))
+                ->from('user u')
+                ->innerJoin('user_role r','r.user_id = u.id')
+                ->where(['like', 'u.fullname', $q])
+                ->andWhere(['r.role_name' => 'mentor'])
+                ->limit(20);
+            $command = $query->createCommand();
+            $data = $command->queryAll();
+            $out['results'] = array_values($data);
+        }elseif ($id > 0) {
+            $out['results'] = ['id' => $id, 'text' => User::find($id)->fullname];
+        }
+        return $out;
+    }
+
     public function actionManager($id){
         if(!Yii::$app->user->identity->isManager) return false;
         $role = UserRole::findOne(['id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
