@@ -225,6 +225,7 @@ class ProgramController extends Controller
         return $this->render('register', [
             'model' => $model,
             'register' => $register,
+            'err' => false,
             'members' => (empty($members)) ? [$defaultMember] : $members
         ]);
     }
@@ -241,13 +242,15 @@ class ProgramController extends Controller
             Yii::$app->session->addFlash('info', "You need to answer pre-event questionnaire before registering to the program.");
             return $this->redirect(['prequestion']);
         }
-
+        
         $model = $this->findModel($id);
-
+        
         if($reg){
+            //echo 'reg';die();
             $register = $this->findRegistration($reg);
             $members = $register->members;
         }else{
+            //echo 'not reg';die();
             $register = new ProgramRegistration();
             $defaultMember = new Member();
             $defaultMember->member_name = Yii::$app->user->identity->fullname;
@@ -343,10 +346,11 @@ class ProgramController extends Controller
                         
 
                     } else {
+                        $register->status = 0;
                         $transaction->rollBack();
                     }
                 } catch (\Exception $e) {
-                    
+                    $register->status = 0;
                     Yii::$app->session->addFlash('error', $e->getMessage());
                     $transaction->rollBack();
                     
@@ -361,6 +365,7 @@ class ProgramController extends Controller
         return $this->render('register', [
             'model' => $model,
             'register' => $register,
+            'err' => true,
             'members' => (empty($members)) ? [$defaultMember] : $members
         ]);
     }

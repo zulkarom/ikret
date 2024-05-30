@@ -2,9 +2,12 @@
 
 namespace app\controllers;
 
-use app\models\Jury;
+use app\models\JuryAssign;
+use app\models\JuryAssignSearch;
 use app\models\ProgramRegistration;
+use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
+use app\models\RubricAnswer;
 use app\models\User;
 use app\models\UserRole;
 use Yii;
@@ -54,6 +57,121 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
+    public function actionJuryAssignment()
+    {
+        if(!Yii::$app->user->identity->isJury) return false;
+
+        $searchModel = new JuryAssignSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('jury-assignment', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+    public function actionJuryDelete($id){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $assign = $this->findAssignment($id);
+        $reg = $assign->registration;
+
+        $role = UserRole::findOne(['program_id' => $reg->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if($role && $role->program){
+            
+            if($assign->status == 0){
+                if($assign->delete()){
+                    Yii::$app->session->addFlash('success', "Assignment Deleted");
+                    
+                }
+            }
+        }
+
+        return $this->redirect(['manager', 'id' => $reg->program_id]);
+    }
+
+    public function actionJuryJudge($id){
+        date_default_timezone_set("Asia/Kuala_Lumpur");
+        $assign = $this->findAssignment($id);
+        $register = $assign->registration;
+        //kita ubah status kepada judging once buka
+        if($assign->status == 0){
+            $assign->status = 10;
+            $assign->save();
+        }
+        
+
+        //kita create terus klu takde
+        $ada = RubricAnswer::findOne([
+            'rubric_id' => $assign->rubric_id,
+            'assignment_id' => $assign->id
+        ]);
+        if($ada){
+            $model = $ada;
+        }else{
+            $model = new RubricAnswer([
+            'rubric_id' => $assign->rubric_id,
+            'assignment_id' => $assign->id,
+            'created_at' => new Expression('NOW()'),
+            ]);
+            $model->save();
+        }
+
+        if ($assign->status <= 10 && $this->request->isPost && $model->load($this->request->post())) {
+            
+            $action = $this->request->post('action');
+            $model->updated_at = new Expression('NOW()');
+            if($action == 'submit'){
+                
+                if($model->isComplete){
+                    $model->submitted_at = new Expression('NOW()');
+                    $transaction = Yii::$app->db->beginTransaction();
+                    try {
+                        if($model->save()){
+                            $assign->status = 20;
+                            //put score in jury assign
+                            $assign->score = $model->scoreValue;
+                            if($assign->save()){
+                                //calc average put score in registration
+                                $register->setScoreAndAward();
+                                $register->save();
+                                
+                            }else{
+                                Yii::$app->session->addFlash('error', "Failed to update status");
+                            }
+                        }
+                        
+                        $transaction->commit();
+                        Yii::$app->session->addFlash('success', "Thank you, you have completed the judging session for this participant.");
+                        return $this->refresh();
+                        
+                    }
+                    catch (\Exception $e) 
+                    {
+                        $transaction->rollBack();
+                        Yii::$app->session->addFlash('error', $e->getMessage());
+                    }
+                    
+                }else{
+                    Yii::$app->session->addFlash('error', "You need to complete all first before submitting.");
+                }
+            }else{
+                if($model->save()){
+                    Yii::$app->session->addFlash('success', "Data Updated");
+                    return $this->refresh();
+                }
+                
+            }
+            
+            
+            
+        }
+
+        return $this->render('jury-judge', [
+            'assign' => $assign,
+            'model' => $model
+        ]);
+    }
+
     /**
      * Displays a single ProgramRegistration model.
      * @param int $id ID
@@ -75,7 +193,7 @@ class ProgramRegistrationController extends Controller
     }
 
     public function actionManagerAddJury($id){
-        $model = new Jury();
+        $model = new JuryAssign();
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->save();
@@ -127,18 +245,87 @@ class ProgramRegistrationController extends Controller
         return $out;
     }
 
+    public function actionManagerFlag($id,$flag){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $reg = $this->findModel($id);
+        if($flag == 1){
+            $reg->flag = 1;
+        }else{
+            $reg->flag = 0;
+        }
+        if($reg->save()){
+            Yii::$app->session->addFlash('success', "Flagged Participants Updated");
+        }
+        return $this->redirect(['manager', 'id' => $reg->program_id]);
+    }
+
     public function actionManager($id){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
-        if($role->program){
-            $searchModel = new ProgramRegistrationSearch();
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if($role && $role->program){
+
+            $model = new JuryAssign();
+
+                if ($this->request->isPost && $model->load($this->request->post())) {
+                    //echo '<pre>';
+                    $users = $model->users;
+                    $post = Yii::$app->request->post();
+
+                    if(isset($post['selection'])){
+                        $kira_juri = 0;
+                        $selection = $post['selection'];
+                        foreach($selection as $select){
+
+                            if($users){
+                                foreach($users as $u){
+                                    //validate dh assign ke belum
+                                    $ada = JuryAssign::findOne(['user_id' => $u, 'reg_id' => $select]);
+                                    if($ada){
+                                        $name = $ada->user->fullname;
+                                        $peserta = $ada->registration->participantText;
+                                        Yii::$app->session->addFlash('error', $name . ' had been assigned to ' . $peserta);
+                                    }else{
+                                        $jury = new JuryAssign([
+                                            'user_id' => $u,
+                                            'reg_id' => $select,
+                                            'stage' => $model->stage,
+                                            'method' => $model->method,
+                                            'location' => $model->location,
+                                            'date_start' => $model->date_start,
+                                            'date_end' => $model->date_end,
+                                            'rubric_id' => $model->rubric_id,
+                                            'note' => $model->note,
+                                            'link' => $model->link,
+                                            'created_at' => time(),
+                                            'updated_at' => time(),
+                                        ]);
+                                        if($jury->save()){
+                                            $kira_juri++;
+                                        }else{
+                                            $jury->flashError();
+                                        }
+                                        
+                                    }
+                                    
+                                }
+                            }
+
+                        }
+                        Yii::$app->session->addFlash('success', "Juries (".$kira_juri.") have been assigned to participants");
+                    }
+                    return $this->refresh();
+                }
+        
+            $searchModel = new ProgramRegistrationManagerSearch();
             $searchModel->programx_id = $role->program_id;
             $dataProvider = $searchModel->search($this->request->queryParams);
     
             return $this->render('manager', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'role' => $role
+                'role' => $role,
+                'model' => $model
             ]);
         }
 
@@ -211,6 +398,15 @@ class ProgramRegistrationController extends Controller
     protected function findModel($id)
     {
         if (($model = ProgramRegistration::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function findAssignment($id)
+    {
+        if (($model = JuryAssign::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "user_role".
@@ -162,5 +163,13 @@ class UserRole extends \yii\db\ActiveRecord
    public function getUser() 
    { 
        return $this->hasOne(User::class, ['id' => 'user_id']); 
-   } 
+   }
+
+   public static function listJury(){
+    $user = User::find()->alias('u')
+    ->select('u.id, u.fullname')
+    ->innerJoin('user_role r', 'r.user_id = u.id')
+    ->where(['r.role_name' => 'jury'])->all();
+    return ArrayHelper::map($user, 'id', 'fullname');
+   }
 }

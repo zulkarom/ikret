@@ -24,6 +24,13 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Certificate', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
         }
 
+        if(Yii::$app->user->identity->isJury){
+          $menu[] = ['name' => 'Jury Menu'];
+          $menu[] = ['name' => 'List of Assignments', 'url' => ['/program-registration/jury-assignment'], 'icon' => 'bi bi-file-earmark-medical'];
+
+
+        }
+
         if(Yii::$app->user->identity->isCommittee){
           $menu[] = ['name' => 'Committee Menu'];
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
@@ -37,12 +44,13 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'Manager Menu'];
             foreach($pro as $p){
               if($p->program){
-                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.')', 'url' => ['/program-registration/manager','id' => $p->id], 'icon' => 'bi bi-list-stars'];
+                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.')', 'url' => ['/program-registration/manager','id' => $p->program_id], 'icon' => 'bi bi-list-stars'];
               }
               
             }
 
             $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
+            $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
 
           }

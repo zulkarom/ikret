@@ -51,24 +51,26 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [self::getProgramFields(1), 'required', 'on' => 'program1'],
-            [self::getProgramFields(2), 'required', 'on' => 'program2'],
-            [self::getProgramFields(3), 'required', 'on' => 'program3'],
-            [self::getProgramFields(4), 'required', 'on' => 'program4'],
-            [self::getProgramFields(5), 'required', 'on' => 'program5'],
-            [self::getProgramFields(6), 'required', 'on' => 'program6'],
+            [self::getProgramRequiredFields(1), 'required', 'on' => 'program1'],
+            [self::getProgramRequiredFields(2), 'required', 'on' => 'program2'],
+            [self::getProgramRequiredFields(3), 'required', 'on' => 'program3'],
+            [self::getProgramRequiredFields(4), 'required', 'on' => 'program4'],
+            [self::getProgramRequiredFields(5), 'required', 'on' => 'program5'],
+            [self::getProgramRequiredFields(6), 'required', 'on' => 'program6'],
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
 
-            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co'], 'integer'],
+            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'competition_cat', 'award'], 'integer'],
 
-            [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program'], 'string'],
+            [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
 
             [['project_name', 'group_name', 'advisor'], 'string', 'max' => 255],
 
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
 
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
+
+            [['score'], 'number'],
 
             [['payment_instance'], 'file',
             'maxSize' => 1024 * 1024 * 2, // 2MB
@@ -108,7 +110,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'payment_file' => 'Proof of Payment',
             'payment_instance' => 'Upload Proof of Payment',
             'competition_cat' => 'Category of Competition',
-            'booth_number' => 'Booth ID',
+            'booth_number' => 'Group ID/Booth ID', //for dropdownlist
             'advisor_dropdown' => 'Lecturer\'s Name',
             'nric' => 'Identification Card Number',
             'participant_mode' => 'Mode of Participation',
@@ -116,20 +118,21 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'group_member' => 'Individual/ Group Members',
             'mentor_main' => 'Main Mentor (optional)',
             'mentor_co' => 'Co Mentor (optional)',
+            'group_code' => 'Group ID' //textinput
             
         ];
     }
 
     public static function getStatusArray(){
         return [
-            0 => 'DRAFT', 
-            10 => 'REGISTERED',
-            20=> 'COMPLETE'
+            self::STATUS_DRAFT => 'DRAFT', 
+            self::STATUS_REGISTERED => 'REGISTERED',
+            self::STATUS_COMPLETE => 'COMPLETE'
         ];
     }
 
     public static function getStatusColor(){
-	    return [0 => 'danger', 10 => 'primary', 20 => 'success'];
+	    return [self::STATUS_DRAFT => 'danger', self::STATUS_REGISTERED => 'primary', self::STATUS_COMPLETE => 'success'];
 	}
 
     public function getStatusText(){
@@ -148,6 +151,36 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return '<span class="badge bg-'.$color.'">'. $this->statusText .'</span>';
     }
 
+    public static function getProgramRequiredFields($program_id){
+        $array = [];
+        switch($program_id){
+            case 1: //impact
+            $array = ['project_name', 'project_desc', 'participant_cat_local', 'competition_type', 'group_member'];
+            break;
+
+            case 2: //come
+            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'group_code'];
+            break;
+
+            case 3: //neweek
+            $array = ['advisor_dropdown', 'booth_number', 'group_member'];
+            break;
+
+            case 4: //aifif
+            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file'];
+            break;
+
+            case 5: //rise
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'group_code'];
+            break;
+
+            case 6: //jfed
+            $array = ['project_name', 'group_member', 'group_code'];
+            break;
+        }
+        return $array;
+    }
+
     public static function getProgramFields($program_id){
         $array = [];
         switch($program_id){
@@ -156,7 +189,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 2: //come
-            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'mentor_main', 'mentor_co'];
+            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
 
             case 3: //neweek
@@ -168,14 +201,90 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 5: //rise
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'mentor_main', 'mentor_co'];
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
 
             case 6: //jfed
-            $array = ['project_name', 'group_member', 'mentor_main', 'mentor_co'];
+            $array = ['project_name', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
         }
         return $array;
+    }
+
+    public function getShortFields(){
+        $program_id = $this->program_id;
+        $array = [];
+        switch($program_id){
+            case 1: //impact
+            $array = ['project_name', 'competition_type'];
+            break;
+
+            case 2: //come
+            $array = ['project_name', 'competition_cat',  'group_code', 'group_name'];
+            break;
+
+            case 3: //neweek
+            $array = ['booth_number'];
+            break;
+
+            case 4: //aifif 
+            $array = ['participant_mode', 'participant_program'];
+            break;
+
+            case 5: //rise
+            $array = ['project_name', 'group_code', 'group_name'];
+            break;
+
+            case 6: //jfed
+            $array = ['project_name', 'group_code', 'group_name'];
+            break;
+        }
+        return $array;
+    }
+
+    public function getParticipantText(){
+        $kira = count($this->members);
+        $html = $this->user->fullname;
+        if($kira > 1){
+            $mem = $kira - 1;
+            $html .= ' & ' . $mem . ' OTHERS';
+        }
+        return $html;
+    }
+
+    public function getShortFieldsHtml(){
+        $array = $this->getShortFields();
+
+        //mula2 dapatkan nama participant & count group
+        $html = $this->participantText;
+        //ok project name
+        $html .= '<ul>';
+        if(in_array('project_name', $array)){
+            $html .= '<li><i>Project Title:</i> '.$this->project_name.'</li>';
+        }
+        if(in_array('group_code', $array)){
+           $html .= '<li><i>Group ID:</i> '.$this->group_code.'</li>';
+        }
+        if(in_array('group_name', $array)){
+            if($this->group_name){
+                $html .= '<li><i>Group Name:</i> '.$this->group_name.'</li>';
+            }
+         }
+        if(in_array('competition_type', $array)){
+            $html .= '<li><i>Competition Type:</i> '.$this->getListLabel('listCompetitionType', $this->competition_type).'</li>';
+        }
+        if(in_array('competition_cat', $array)){
+            //split
+            $str = $this->getListLabel('listCategoryCome', $this->competition_cat);
+            $str_arr = explode('/', $str);
+            $str = trim($str_arr[0]);
+
+            $html .= '<li><i>Competition:</i> '.$str.'</li>';
+        }
+        $html .= '<ul>';
+
+
+        return $html;
     }
 
     public function getListLabel($fname, $key){
@@ -262,9 +371,31 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public static function listNeweekBooth(){
         $array = [];
         for($x=1;$x<=104;$x++){
-            $array[] = 'NW'.$x;
+            $array['NW'.$x] = 'NW'.$x;
         }
         return $array;
+    }
+
+    /**
+     * GOLD	100 - 80
+     * SILVER	79 - 60
+     * BRONZE	59 - 0
+     */
+    public static function listAward(){
+        return [
+            80 => 'GOLD',
+            60 => 'SILVER',
+            0 => 'BRONZE'
+        ];
+    }
+
+    public function awardText(){
+        $text = '';
+        $array = $this->listAward();
+        if(array_key_exists($this->award, $array)){
+            $text = $array[$this->award];
+        }
+        return $text;
     }
 
 
@@ -290,7 +421,44 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
     public function getJuries()
     {
-        return $this->hasMany(Jury::class, ['reg_id' => 'id']);
+        return $this->hasMany(JuryAssign::class, ['reg_id' => 'id']);
+    }
+
+    public function getAverageJuriesScore(){
+        $juries = $this->juries;
+        $kira_juri = 0;
+        $score = 0;
+        if($juries){
+            foreach($juries as $j){
+                if($j->status == 20){
+                    $kira_juri++;
+                    $score += $j->score;
+                }
+            }
+        }
+        if($kira_juri == 0){
+            return 0;
+        }
+        $avg = $score / $kira_juri;
+        $avg = round($avg,2);
+        $avg = $avg + 0;
+        return $avg;
+    }
+
+    public function setScoreAndAward(){
+        $score = $this->averageJuriesScore;
+        $this->score = $score;
+        $this->award = self::calcAward($score);
+    }
+
+    public static function calcAward($per){
+        $list = ProgramRegistration::listAward();
+        foreach($list as $key => $val){
+            if($per >= $key){
+                return $key;
+            }
+        }
+        return 0;
     }
 
     /**

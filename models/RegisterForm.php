@@ -17,6 +17,9 @@ class RegisterForm extends Model
     public $email;
     public $is_internal;
     public $institution;
+    public $role_name = 'participant';
+    public $self_register = true;
+    public $button_label = 'Register';
 
     /**
      * @inheritdoc
@@ -77,9 +80,19 @@ class RegisterForm extends Model
      */
     public function signup()
     {
+        if(!$this->self_register){
+            $this->password = 'X123456789';
+            $this->password_repeat = 'X123456789';
+        }
+        //print_r($this->getErrors());
+       
         if (!$this->validate()) {
+            //print_r($this->getErrors());
+            //die();
             return null;
         }
+
+        
         
         $user = new User();  
         $user->username = $this->email;
@@ -88,19 +101,28 @@ class RegisterForm extends Model
         $user->phone = $this->phone;
         $user->email = $this->email;
         $user->institution = $this->institution;
-        $user->setPassword($this->password);
+        if($this->self_register){
+            $user->setPassword($this->password);
+        }else{
+            
+            $user->setPassword(time());
+        }
+        
         $user->generateAuthKey();
         ///auto activate for now
         $user->status = 10;
 
         if($user->save()){
             $role = new UserRole();
-            $role->role_name = 'participant';
+            $role->role_name = $this->role_name;
             $role->status = 10;
             $role->user_id = $user->id;
             if($role->save()){
                 //auto login
-                Yii::$app->user->login($user);
+                if($this->self_register){
+                    Yii::$app->user->login($user);
+                }
+                //berjaya register
                 return true;
             }else{
                 Yii::$app->session->addFlash('error', "failed to create user role");

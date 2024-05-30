@@ -9,7 +9,7 @@ use app\models\ProgramRegistration;
 /**
  * ProgramRegistrationSearch represents the model behind the search form of `app\models\ProgramRegistration`.
  */
-class ProgramRegistrationSearch extends ProgramRegistration
+class ProgramRegistrationManagerSearch extends ProgramRegistration
 {
     public $fullnameSearch;
     public $dateSearch;
@@ -22,6 +22,13 @@ class ProgramRegistrationSearch extends ProgramRegistration
         return [
             [['programx_id'], 'integer'],
             [['fullnameSearch','dateSearch'], 'string'],
+        ];
+    }
+
+    public function attributeLabels()
+    {
+        return [
+            'fullnameSearch' => 'Participant Name',
         ];
     }
 
@@ -45,7 +52,7 @@ class ProgramRegistrationSearch extends ProgramRegistration
     {
         $query = ProgramRegistration::find()->alias('a')
         ->joinWith(['user u'])
-        ->where(['>', 'a.status', 0]);
+        ->where(['>', 'a.status', 0])->orderBy('a.flag DESC, a.submitted_at DESC');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

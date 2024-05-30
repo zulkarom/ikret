@@ -4,12 +4,14 @@ namespace app\controllers;
 
 use app\models\ChangePasswordForm;
 use app\models\JurySearch;
+use app\models\RegisterForm;
 use Yii;
 use yii\web\Controller;
 use app\models\User;
 use app\models\UserRole;
 use app\models\UserSearch;
 use yii\db\Expression;
+use yii\db\Query;
 use yii\web\NotFoundHttpException;
 
 class UserController extends Controller
@@ -56,8 +58,10 @@ class UserController extends Controller
         ]);
     }
 
+
+
     public function actionAll(){
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdmin or !Yii::$app->user->identity->isManager) return false;
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -69,13 +73,68 @@ class UserController extends Controller
 
     public function actionJury(){
         if(!Yii::$app->user->identity->isManager) return false;
+
+        $userRole = new UserRole();
+
+        if ($this->request->isPost && $userRole->load($this->request->post())) {
+            //verify dia dah add ke belum
+            $ada = UserRole::findOne(['user_id' => $userRole->user_id, 'role_name' => 'jury']);
+            if($ada){
+                Yii::$app->session->addFlash('error', "The user already a jury");
+            }else{
+                $userRole->status = 10;
+                $userRole->role_name = 'jury';
+                $userRole->approve_at = new Expression('NOW()');
+                if($userRole->save()){
+                    Yii::$app->session->addFlash('success', "Jury Added");
+                    return $this->refresh();
+                }
+            }
+            
+
+        }
+        $userRole->user_id = null;
+
+        $newUser = new RegisterForm(['self_register' => false, 'role_name' => 'jury', 'button_label' => 'Register & Add Jury']);
+
+        if ($this->request->isPost && $newUser->load($this->request->post())) {
+            if($newUser->signup()){
+                Yii::$app->session->addFlash('success', "The new registered user has been added as jury");
+                return $this->refresh();
+            }
+            //set password
+        }
+        
+
         $searchModel = new JurySearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('jury', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'userRole' => $userRole,
+            'newUser' => $newUser
         ]);
+    }
+
+    public function actionUserListJson($q = null, $id = null) {
+        
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $out = ['results' => ['id' => '', 'text' => '']];
+        if (!is_null($q)) {
+            $query = new Query();
+            $query->select(new Expression('`id`, `fullname` AS `text`'))
+                ->from('user')
+                ->where(['like', 'fullname', $q])
+                ->limit(20);
+            $command = $query->createCommand();
+            $data = $command->queryAll();
+            $out['results'] = array_values($data);
+        }elseif ($id > 0) {
+            $out['results'] = ['id' => $id, 'text' => User::find($id)->fullname];
+        }
+        return $out;
     }
 
     public function actionUpdate($id){

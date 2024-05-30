@@ -1,11 +1,10 @@
 <?php
 
-use app\models\User;
+use app\models\UserRole;
+use kartik\date\DatePicker;
 use kartik\select2\Select2;
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
-use yii\helpers\Url;
-use yii\web\JsExpression;
-use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
@@ -14,42 +13,70 @@ use yii\widgets\ActiveForm;
 
 <div class="program-registration-form">
 
-    <?php $form = ActiveForm::begin(); ?>
 
-    <?php 
-    
-    $userDesc = $model->user_id ? User::findOne($model->user_id)->fullname : '';
 
-$url = Url::to(['/program-registration/user-list-json']);
-echo $form->field($model, 'user_id')->widget(Select2::classname(), [
-    'initValueText' => $userDesc, // set the initial display text
-    'options' => ['placeholder' => 'Find user ...'],
-'pluginOptions' => [
-    'allowClear' => true,
-    'minimumInputLength' => 3,
-    'language' => [
-        'errorLoading' => new JsExpression("function () { return 'Waiting for results...'; }"),
-    ],
-    'ajax' => [
-        'url' => $url,
-        'dataType' => 'json',
-        'data' => new JsExpression('function(params) { return {q:params.term}; }')
-    ],
-    'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
-    'templateResult' => new JsExpression('function(user) { return user.text; }'),
-    'templateSelection' => new JsExpression('function (user) { return user.text; }'),
-],
-]);
+    <?=$form->field($model, 'users')->widget(Select2::classname(), [
+        'data' => UserRole::listJury(),
+        'options' => ['multiple' => true,'placeholder' => 'Search for jury ...'],
+        'pluginOptions' => [
+            'allowClear' => true
+        ],
+    ])?>
 
-    
+    <div class="row">
 
-    ?>
+    <div class="col-md-5">
+        <?= $form->field($model, 'rubric_id')->dropDownList($model->listRubrics(),['prompt' => 'Choose Rubric']) ?>
+        </div>
 
-<br />
-    <div class="form-group">
-        <?= Html::submitButton('Add Jury', ['class' => 'btn btn-success']) ?>
+        <div class="col-md-3">
+        <?= $form->field($model, 'stage')->dropDownList($model->listStage()) ?>
+        </div>
+        <div class="col-md-4"><?= $form->field($model, 'method')->dropDownList($model->listMethod()) ?></div>
     </div>
 
-    <?php ActiveForm::end(); ?>
+    <div class="row">
+        <div class="col-md-3"><?=$form->field($model, 'date_start')->widget(DatePicker::classname(), [
+    'removeButton' => false,
+    'pickerIcon' => '<i class="bi bi-calendar"></i>',
+    'pluginOptions' => [
+        'autoclose'=>true,
+        'format' => 'yyyy-mm-dd',
+        'todayHighlight' => true,
+        
+    ],
+]);
+?></div>
+        <div class="col-md-3"><?=$form->field($model, 'date_end')->widget(DatePicker::classname(), [
+    'removeButton' => false,
+    'pickerIcon' => '<i class="bi bi-calendar"></i>',
+    'pluginOptions' => [
+        'autoclose'=>true,
+        'format' => 'yyyy-mm-dd',
+        'todayHighlight' => true,
+        
+    ],
+    
+    
+]);
+?></div>
+        <div class="col-md-6"><?= $form->field($model, 'location')->textInput() ?></div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6"><?= $form->field($model, 'note')->textarea(['rows' => 3]) ?></div>
+        <div class="col-md-6"><?= $form->field($model, 'link')->textarea(['rows' => 3]) ?></div>
+    </div>
+    <?php 
+    /*  <label for="keep-data" style="margin-bottom: 10px;"><input type="checkbox" name="keep-data" id="keep-data"> Keep current data in this form after submitting</label>*/
+    ?>
+    
+<br />
+
+    <div class="form-group">
+        <?= Html::submitButton('Assign Jury to Selected Participants', ['class' => 'btn btn-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
+    </div>
+
+    
 
 </div>

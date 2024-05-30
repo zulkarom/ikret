@@ -21,13 +21,30 @@ $this->params['breadcrumbs'][] = $this->title;
                 </a>
               </div>
 
-
-              <div class="card">
+              <?php 
+              /* 
+               <div class="card">
               <div class="card-header">Juries Assignment</div>
                       <div class="card-body pt-4">
-                          <a href="<?=Url::to(['manager-add-jury', 'id' => $model->id])?>" class="btn btn-sm btn-outline-primary">Add Jury</a>
+                         <?php 
+                         $juries = $model->juries;
+                         $html = '';
+                         if($juries){
+                             $html .= '<ul>';
+                             foreach($juries as $jury){
+                                 $html .= $jury->infoHtml(true);
+                             }
+                             $html .= '<ul>';
+                         }
+                         echo $html;
+                         
+                         ?>
                       </div>
                   </div>
+              */
+              
+              ?>
+             
 
 
               <?php $arr_fields = $model->getProgramFields($model->program_id);?>

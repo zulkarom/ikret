@@ -63,7 +63,7 @@ if(!Yii::$app->user->isGuest){
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
               <h6><?=Yii::$app->user->identity->fullname?></h6>
-              <span>iCreate User</span>
+              <span>I-CREATE USER</span>
             </li>
             <li>
               <hr class="dropdown-divider">

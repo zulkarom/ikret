@@ -2,26 +2,23 @@
 
 namespace app\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use app\models\ProgramRegistration;
 
 /**
  * ProgramRegistrationSearch represents the model behind the search form of `app\models\ProgramRegistration`.
  */
-class ProgramRegistrationSearch extends ProgramRegistration
+class JuryAssignSearch extends User
 {
-    public $fullnameSearch;
-    public $dateSearch;
-    public $programx_id;
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['programx_id'], 'integer'],
-            [['fullnameSearch','dateSearch'], 'string'],
+            [['is_internal'], 'integer'],
+            [['fullname','email'], 'string'],
         ];
     }
 
@@ -43,9 +40,9 @@ class ProgramRegistrationSearch extends ProgramRegistration
      */
     public function search($params)
     {
-        $query = ProgramRegistration::find()->alias('a')
-        ->joinWith(['user u'])
-        ->where(['>', 'a.status', 0]);
+        $query = JuryAssign::find()->alias('a')
+        ->innerJoin('user u','u.id = a.user_id')
+        ->where(['a.user_id' => Yii::$app->user->identity->id]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -58,12 +55,16 @@ class ProgramRegistrationSearch extends ProgramRegistration
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'a.program_id' => $this->programx_id,
-        ]);
+        /* $query->andFilterWhere([
+            'is_internal' => $this->is_internal,
+        ]); */
 
-        $query->andFilterWhere(['like', 'a.submitted_at', $this->submitted_at])
-        ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);
+        /* $query->andFilterWhere(['like', 'fullname', $this->fullname]);
+        
+        $query->andFilterWhere(['or', 
+            ['like', 'email', $this->email],
+            ['like', 'phone', $this->email]
+        ]); */
 
         return $dataProvider;
     }

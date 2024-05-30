@@ -51,7 +51,7 @@ $this->title = 'Registration - ' . $model->program_name;
                   <input type="hidden" name="program_id" value="<?=$model->id?>" />
 
                   <?php 
-                  if(!$register->isNewRecord){
+                  if(!$register->isNewRecord && !$err){
                       echo '<input type="hidden" name="reg_id" value="'.$register->id.'" />';
                   }
                   ?>
@@ -246,7 +246,7 @@ if(in_array('group_member',$arr_fields)){
 
     
 <label class="form-label pt-0"><?=$register->getAttributeLabel('group_member')?> </label><br />
-<i>(Make sure the group leader is on top. If individual participant, make sure put only your name)</i>
+<i>(Make sure you type the full name (include title if any) correctly since it will be used in certificates. Put the group leader on the top of the list. If individual participant, make sure put only your name)</i>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -301,6 +301,17 @@ if(in_array('group_member',$arr_fields)){
   </div>
 
   <br />
+  <?php if(in_array('group_code', $arr_fields) || in_array('group_name', $arr_fields)){ ?>
+<div class="row">
+    <div class="col-md-6">  <?php if(in_array('group_code', $arr_fields)){
+    echo $form->field($register, 'group_code')->textInput();
+   }?></div>
+    <div class="col-md-6">  <?php if(in_array('group_code', $arr_fields)){
+    echo $form->field($register, 'group_name')->textInput();
+   }?></div>
+</div>
+<?php } ?>
+<br />
 
   <div class="row">
       <div class="col-md-6"><?php 
@@ -309,11 +320,19 @@ if(in_array('group_member',$arr_fields)){
                       //cari mentor
                       $userDesc = '';
                       if(!$register->isNewRecord){
+                        
                         $main = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => 1]);
                         if($main){
                           if($main->user){
                             $userDesc = $main->user->fullname;
                             $register->mentor_main = $main->user_id;
+                          }
+                        }else{
+                          if($register->mentor_main){
+                            $u = User::findOne($register->mentor_main);
+                            if($u){
+                              $userDesc = $u->fullname;
+                            }
                           }
                         }
                       }
@@ -358,6 +377,13 @@ if(in_array('group_member',$arr_fields)){
                 $register->mentor_co = $main->user_id;
               }
              
+           }else{
+            if($register->mentor_co){
+              $u = User::findOne($register->mentor_co);
+              if($u){
+                $userDesc = $u->fullname;
+              }
+            }
            }
          }
      
@@ -387,6 +413,7 @@ if(in_array('group_member',$arr_fields)){
 
                     } ?></div>
   </div>
+
 
 
 
