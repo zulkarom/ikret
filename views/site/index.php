@@ -8,7 +8,7 @@ $this->title = 'HOME - I-CREATE - The International Convention on Resourceful En
 ?>
   <div class="pagetitle">
       <div align="center" style="text-align:center">
-      <img src="<?=Yii::getAlias('@web')?>/images/logo-subs.png" style="max-width:500px" width="100%" />
+      <img src="<?=Yii::getAlias('@web')?>/images/logo-icreate-subs.png" style="max-width:500px" width="100%" />
       </div>
 
     </div><!-- End Page Title -->
