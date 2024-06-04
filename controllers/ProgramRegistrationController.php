@@ -5,6 +5,9 @@ namespace app\controllers;
 use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
 use app\models\JuryResultSearch;
+use app\models\ManagerAnalysisSearch;
+use app\models\ParticipantAchieve;
+use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
@@ -18,6 +21,7 @@ use yii\db\Query;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\helpers\ArrayHelper;
 
 /**
  * ProgramRegistrationController implements the CRUD actions for ProgramRegistration model.
@@ -207,16 +211,93 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
-    public function actionManagerView($id){
+    public function actionAchieveDelete($id){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $model = $this->findAchievement($id);
+        $reg = $model->registration->id;
+        $sub = $model->registration->program_sub;
+        if($model->delete()){
+            Yii::$app->session->addFlash('success', "Achievement Deleted");
+        }
+
+        return $this->redirect(['manager-view', 'id' => $reg, 'sub' => $sub]);
+
+    }
+
+    public function actionManagerView($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $model = $this->findModel($id);
+        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
+        $program = $role->program;
+        if($model->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+
 
         return $this->render('manager-view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
+
+        ]);
+    }
+
+    public function actionManagerAward($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $model = $this->findModel($id);
+        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
+        $program = $role->program;
+        if($model->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        if($programSub){
+            $achievement = ProgramAchievement::find()
+            ->where(['program_id' => $program->id, 'program_sub' => $sub])->all();
+        }else{
+            $achievement = ProgramAchievement::find()->where(['program_id' => $program->id])->all();
+        }
+        $list = ArrayHelper::map($achievement, 'id', 'name');
+
+
+        $achieve = new ParticipantAchieve();
+        $achieve->program_reg_id = $id;
+        if ($this->request->isPost && $achieve->load($this->request->post())) {
+            $achieve->achieved_at = time();
+            if($achieve->save()){
+                Yii::$app->session->addFlash('success', "Achievement Added");
+                return $this->refresh();
+            }
+        }
+
+        return $this->render('manager-award', [
+            'model' => $model,
+            'achieve' => $achieve,
+            'list' => $list
         ]);
     }
 
     public function actionManagerAddJury($id){
         $model = new JuryAssign();
-
         if ($this->request->isPost && $model->load($this->request->post())) {
             $model->save();
             return $this->redirect(['view', 'id' => $model->id]);
@@ -401,6 +482,57 @@ class ProgramRegistrationController extends Controller
         
     }
 
+    public function actionManagerAnalysis($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $programSub = null;
+        $program = $role->program;
+        $rubrics = $program->programRubrics;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+                $rubrics = $program->getProgramRubricsSub($sub)->all();
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+        $firstRubric = null;
+        if($rubrics){
+            $firstRubric = $rubrics[0];
+        }
+        
+
+        if($role && $role->program){
+            $model = new JuryAssign();
+            //cari ada stage tak
+            
+        
+            $searchModel = new ManagerAnalysisSearch();
+            $searchModel->program_id = $role->program_id;
+            $searchModel->program_sub = $sub;
+            $searchModel->rubric = $firstRubric->id;
+
+            $stages = $program->programStages;
+            if($stages){
+                $searchModel->stage = $stages[0]->id;
+            }
+            $dataProvider = $searchModel->search($this->request->queryParams);
+    
+            return $this->render('manager-analysis', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'role' => $role,
+                'model' => $model,
+                'programSub' => $programSub,
+                'rubrics' => $rubrics,
+                'stages' =>$stages
+            ]);
+        }
+
+        
+    }
+
     /**
      * Creates a new ProgramRegistration model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -476,6 +608,14 @@ class ProgramRegistrationController extends Controller
     protected function findAssignment($id)
     {
         if (($model = JuryAssign::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    protected function findAchievement($id)
+    {
+        if (($model = ParticipantAchieve::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

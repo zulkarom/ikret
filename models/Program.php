@@ -67,6 +67,11 @@ class Program extends \yii\db\ActiveRecord
         return $this->hasMany(ProgramRubric::class, ['program_id' => 'id']);
     }
 
+    public function getProgramRubricsSub($sub)
+    {
+        return $this->hasMany(ProgramRubric::class, ['program_id' => 'id'])->where(['program_sub' => $sub]);
+    }
+
     public function getProgramStages()
     {
         return $this->hasMany(ProgramStage::class, ['program_id' => 'id']);

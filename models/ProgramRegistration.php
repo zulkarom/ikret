@@ -37,6 +37,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public $group_member;
     public $mentor_main;
     public $mentor_co;
+    public $purata;
 
     /**
      * {@inheritdoc}
@@ -441,6 +442,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function getJuries()
     {
         return $this->hasMany(JuryAssign::class, ['reg_id' => 'id']);
+    }
+
+    public function getAchievements()
+    {
+        return $this->hasMany(ParticipantAchieve::class, ['program_reg_id' => 'id']);
     }
 
     

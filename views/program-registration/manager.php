@@ -1,5 +1,6 @@
 <?php
 
+use kartik\export\ExportMenu;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\grid\GridView;
@@ -21,13 +22,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <section class="section dashboard">
         <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-info'])?> 
         <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
-        <?php //=Html::button('<i class="bi bi-download"></i> Excel', ['id' => 'dwl-exl','class' => 'btn btn-success'])?>
     </div> 
 
-        <?php echo $this->render('_excel', [
-        'dataProvider' => $dataProvider
-        ]);
-
+        <?php
         $this->registerJs('
         $("#dwl-exl").click(function(){
             $("#w0-xls")[0].click();
@@ -116,7 +113,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $colums[] = [
             'label' =>'Assigned Juries',
-            'attribute' => 'programx_id',
             'format' => 'raw',
             'value' => function($model){
                 $juries = $model->juries;
@@ -129,26 +125,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     $html .= '<ul>';
                 }
                 return $html;
-            }
-        ];
-
-        $colums[] = [
-            'label' =>'Average Score',
-            'value' => function($model){
-                return $model->score;
-            }
-        ];
-
-        $colums[] = [
-            'label' =>'Award',
-            'value' => function($model){
-                return $model->awardText();
-            }
-        ];
-        $colums[] = [
-            'label' =>'Achievement',
-            'value' => function($model){
-                return '';
             }
         ];
     }

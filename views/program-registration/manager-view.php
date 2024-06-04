@@ -1,5 +1,6 @@
 <?php
 
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\DetailView;
@@ -7,30 +8,20 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
-$this->title = 'Registration Details / Juries';
+$this->title = 'Registration Details / Achievement';
 $this->params['breadcrumbs'][] = ['label' => 'Program Registrations', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 ?>
 
 
-<div class="d-flex justify-content-center py-4">
-                <a href="index.html" class="logo d-flex align-items-center w-auto">
+<div class="d-flex  py-4">
+                <a href="index.html" class="logo d-flex w-auto">
           
                   <span class="d-none d-lg-block"><?=$this->title?></span>
                 </a>
               </div>
 
- 
-               <div class="card">
-              <div class="card-header">Achivement</div>
-                      <div class="card-body pt-4">
-                         <?php 
-                         
-                         
-                         ?>
-                      </div>
-                  </div>
       
 
               <?php 

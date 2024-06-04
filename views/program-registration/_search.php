@@ -1,7 +1,7 @@
 <?php
 
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $model */
@@ -14,10 +14,11 @@ use yii\widgets\ActiveForm;
         'action' => ['manager', 'id' => $model->program_id],
         'method' => 'get',
     ]); ?>
-    <?= $form->field($model, 'fullnameSearch') ?>
+    <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
+    
 <br />
     <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?> <a href="javascript:void(0)" id="hide-filter-form">Hide this form</a>
+        <?= Html::submitButton('Apply Filter', ['class' => 'btn btn-primary']) ?>
      
     </div>
 

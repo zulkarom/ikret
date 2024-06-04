@@ -46,6 +46,7 @@ use yii\helpers\Url;
               if($p->program){
                 $sub = '';
                 $url = ['/program-registration/manager','id' => $p->program_id];
+                $url7 = ['/program-registration/manager-analysis','id' => $p->program_id];
                 $url2 = ['/program-registration/jury-result','id' => $p->program_id];
                 $url3 = ['/program/register-fields','id' => $p->program_id];
                 $url4 = ['/program/rubrics','id' => $p->program_id];
@@ -56,6 +57,7 @@ use yii\helpers\Url;
                 if($p->programSub){
                   $sub = '/' . $p->programSub->sub_abbr;
                   $url = ['/program-registration/manager','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url7 = ['/program-registration/manager-analysis','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url2 = ['/program-registration/jury-result','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url4 = ['/program/rubrics','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
@@ -65,6 +67,7 @@ use yii\helpers\Url;
                 $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.$sub.')', 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
                   ['name' => 'Participants & Juries Assignment', 'url' => $url],
                   ['name' => 'Result By Assignments', 'url' => $url2],
+                  ['name' => 'Analysis & Achievement', 'url' => $url7],
                   ['name' => 'Registration Fields', 'url' => $url3],
                   ['name' => 'Rubrics', 'url' => $url4],
                   ['name' => 'Achievements', 'url' => $url5],
