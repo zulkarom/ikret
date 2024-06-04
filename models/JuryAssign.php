@@ -41,6 +41,8 @@ class JuryAssign extends \yii\db\ActiveRecord
         return [
             [['reg_id', 'user_id', 'rubric_id'], 'required'],
 
+            [['reg_id', 'user_id', 'rubric_id', 'stage'], 'required', 'on' => 'stage'],
+
             ['users', 'each', 'rule' => ['integer']],
 
             [['reg_id', 'user_id', 'rubric_id', 'created_at', 'updated_at', 'method', 'stage', 'status'], 'integer'],
@@ -184,6 +186,10 @@ class JuryAssign extends \yii\db\ActiveRecord
     public static function listRubrics(){
         $list = Rubric::find()->all();
         return ArrayHelper::map($list, 'id', 'rubric_name');
+    }
+
+    public function getRubricAnswer(){
+        return $this->hasOne(RubricAnswer::class, ['assignment_id' => 'id']);
     }
 
     public function infoHtml($admin = false){

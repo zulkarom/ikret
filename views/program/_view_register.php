@@ -40,7 +40,8 @@ use yii\helpers\Url;
     showFieldList($register, $arr_fields,'participant_cat_local','listParticipantLocal');
     showFieldList($register, $arr_fields,'participant_cat_group','listParticipantGroup');
     showFieldList($register, $arr_fields,'competition_type','listCompetitionType');
-    showFieldList($register, $arr_fields,'competition_cat','listCategoryCome');
+    //showFieldList($register, $arr_fields,'program_sub','listCategoryCome');
+    showFieldModel($register, $arr_fields, 'program_sub', 'programSub', 'sub_name');
     showFieldList($register, $arr_fields,'advisor_dropdown','listNeweekAdvisor');
     showField($register, $arr_fields,'advisor');
     showFieldList($register, $arr_fields,'booth_number','listNeweekBooth');
@@ -48,6 +49,12 @@ use yii\helpers\Url;
     showFieldList($register, $arr_fields,'participant_cat_umk','listParticipantUMK');
     showFieldList($register, $arr_fields,'participant_program','listParticipantProgram','other_program');
     showField($register, $arr_fields,'institution');
+    showField($register, $arr_fields,'group_code');
+    showField($register, $arr_fields,'group_name');
+    showFieldModel($register, $arr_fields, 'mentor_main', 'mentorMain', 'fullname');
+    showFieldModel($register, $arr_fields, 'mentor_co', 'mentorCo', 'fullname');
+
+    
 
 
     ?>
@@ -164,7 +171,7 @@ function showFieldUser($user, $attr){
 }
 
 function showFieldList($register, $arr_fields, $attr, $listName, $otherField = false){
-    if(in_array($attr ,$arr_fields)){
+    if(in_array($attr, $arr_fields)){
     ?>
     <div class="row">
       <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel($attr)?></div>
@@ -181,5 +188,26 @@ function showFieldList($register, $arr_fields, $attr, $listName, $otherField = f
     <?php
     }
 }
+
+function showFieldModel($register, $arr_fields, $attr, $method, $method_attr){
+  if(in_array($attr, $arr_fields)){
+  ?>
+  <div class="row">
+    <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel($attr)?></div>
+    <div class="col-lg-9 col-md-8">
+
+    <?php 
+    if($register->$method){
+      echo $register->$method->$method_attr;
+    }
+    ?>
+
+  </div>
+  </div>
+  <?php
+  }
+}
+
+
 
 

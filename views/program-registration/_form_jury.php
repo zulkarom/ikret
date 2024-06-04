@@ -1,21 +1,19 @@
 <?php
 
+use app\models\ProgramRubric;
 use app\models\UserRole;
 use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-
 <div class="program-registration-form">
-
-
-
-    <?=$form->field($model, 'users')->widget(Select2::classname(), [
+    <?=$form->field($model, 'users')->widget(Select2::class, [
         'data' => UserRole::listJury(),
         'options' => ['multiple' => true,'placeholder' => 'Search for jury ...'],
         'pluginOptions' => [
@@ -25,20 +23,46 @@ use yii\helpers\Html;
 
     <div class="row">
 
-    <div class="col-md-5">
-        <?= $form->field($model, 'rubric_id')->dropDownList($model->listRubrics(),['prompt' => 'Choose Rubric']) ?>
+    <div class="col-md-9">
+        <?php
+        if($programSub){
+            $list_rubrics = $programSub->programRubrics;
+        }else{
+            $list_rubrics = $program->programRubrics;
+        }
+        //print_r($list_rubrics);die();
+        $rubricArray = ArrayHelper::map($list_rubrics, 'id', 'rubric.rubric_name');
+        $prompt = [];
+        if(count($rubricArray) > 1){
+            $prompt = ['prompt' => 'Choose Rubric'];
+        }
+        ?>
+        <?= $form->field($model, 'rubric_id')->dropDownList($rubricArray,$prompt) ?>
         </div>
 
+        <?php if($program->programStages){
+            $stagesArray = ArrayHelper::map($program->programStages, 'id', 'stage_name');
+            $prompt = [];
+            if(count($rubricArray) > 1){
+                $prompt = ['prompt' => 'Choose Stage'];
+            }
+            ?>
         <div class="col-md-3">
-        <?= $form->field($model, 'stage')->dropDownList($model->listStage()) ?>
+        <?= $form->field($model, 'stage')->dropDownList($stagesArray,$prompt) ?>
         </div>
-        <div class="col-md-4"><?= $form->field($model, 'method')->dropDownList($model->listMethod()) ?></div>
+        <?php } ?>
+
+        <?php 
+        /*  <div class="col-md-4"><?= $form->field($model, 'method')->dropDownList($model->listMethod()) ?></div> */
+        
+        ?>
+       
     </div>
 
     <div class="row">
         <div class="col-md-3"><?=$form->field($model, 'date_start')->widget(DatePicker::classname(), [
     'removeButton' => false,
-    'pickerIcon' => '<i class="bi bi-calendar"></i>',
+    'pickerIcon' => '<i class="bi bi-calendar3"></i>',
     'pluginOptions' => [
         'autoclose'=>true,
         'format' => 'yyyy-mm-dd',
@@ -49,7 +73,7 @@ use yii\helpers\Html;
 ?></div>
         <div class="col-md-3"><?=$form->field($model, 'date_end')->widget(DatePicker::classname(), [
     'removeButton' => false,
-    'pickerIcon' => '<i class="bi bi-calendar"></i>',
+    'pickerIcon' => '<i class="bi bi-calendar3"></i>',
     'pluginOptions' => [
         'autoclose'=>true,
         'format' => 'yyyy-mm-dd',
@@ -76,6 +100,7 @@ use yii\helpers\Html;
     <div class="form-group">
         <?= Html::submitButton('Assign Jury to Selected Participants', ['class' => 'btn btn-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
     </div>
+   <i>* select participant(s) first before clicking button above.</i> 
 
     
 

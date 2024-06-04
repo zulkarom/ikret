@@ -7,7 +7,8 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
-$this->title = $title;
+$this->title = 'View Result';
+
 $rubric = $assign->rubric;
 $register = $assign->registration;
 $formName =  $model->formName();
@@ -17,9 +18,6 @@ $formName =  $model->formName();
 <h1><?=$this->title?></h1></div>
     <section class="section dashboard">
 
-    <?php 
-    if(!$plain){
-    ?>
     <div class="card">
             <div class="card-body pt-4">
 
@@ -56,10 +54,7 @@ $formName =  $model->formName();
                 
             </div>
         </div>
-        <?php } ?>
 
-
-<?php if($assign->status <= 10){?>
   <div class="pagetitle"><h1>Rubric Form </h1>
   (<?=$rubric->rubric_name?>)
 </div>
@@ -107,7 +102,7 @@ $formName =  $model->formName();
                 for($x=1;$x<=$options;$x++){
                   $qn = $item->colum_ans;
                   $check = $model->$qn == $x ? 'checked' : '';
-                  echo '<td><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$x.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$x.'" '.$check.'></td>';
+                  echo '<td><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$x.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$x.'" '.$check.' disabled></td>';
                 }
               echo '<td>Excellent</td></tr>';
               
@@ -127,7 +122,7 @@ $formName =  $model->formName();
                         foreach($arr as $key => $val){
                           $qn = $item->colum_ans;
                           $check = $model->$qn == $key ? 'checked' : '';
-                          echo '<div class="form-group"><label style="cursor:pointer;" for="r'.$item->id.'-'.$key.'"><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$key.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$key.'" '.$check.'> '.$val.'</label></div>';
+                          echo '<div class="form-group"><label style="cursor:pointer;" for="r'.$item->id.'-'.$key.'"><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$key.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$key.'" '.$check.' disabled> '.$val.'</label></div>';
                         }
                     echo '</div>
          
@@ -150,16 +145,9 @@ $formName =  $model->formName();
     
           
           
-        <?php if($write){?>  
-    <div class="form-group">
-        
-        <?= Html::submitButton('Save & Preview', ['name' => 'action', 'value' => 'save', 'class' => 'btn btn-primary']) ?> 
-        <?= Html::submitButton('Finalise & Submit', ['name' => 'action', 'value' => 'submit','class' => 'btn btn-success', 'data-confirm' => 'Are you sure to submit this form?']) ?>
-            </div>
-            <?php } ?>
 
         
-            <?php ActiveForm::end(); } ?>
+            <?php ActiveForm::end(); ?>
 
 
           </section>

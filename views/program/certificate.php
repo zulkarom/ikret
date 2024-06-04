@@ -29,12 +29,16 @@ $this->title = 'Programme Registered';
             }
             echo '<table class="table table-borderless">
                 <tbody>
-                    <tr><th>No. </th><th>Group Members</th><th>Matric</th><th></th></tr>';
+                    <tr><th>No. </th><th>Group Members</th><th></th></tr>';
                     $members = $program->members;
                     if($members){
                       $i = 1;
                       foreach($members as $m){
-                        echo '<tr><td>'.$i.'. </td><td>'.$m->member_name.'</td><td>'.$m->member_matric.'</td><td><a href="'.Url::to(['cert-participation','reg' => $program->id, 'm' => $m->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a></td></tr>';
+                        echo '<tr><td>'.$i.'. </td><td>'.$m->member_name.'</td><td>';
+                        
+                        /* echo '<a href="'.Url::to(['cert-participation','reg' => $program->id, 'm' => $m->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a>'; */
+                        
+                        echo '</td></tr>';
                         $i++;
                       }
                     }

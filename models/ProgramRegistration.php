@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 use yii\web\UploadedFile;
 
@@ -60,7 +61,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
 
-            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'competition_cat', 'award'], 'integer'],
+            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award'], 'integer'],
 
             [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
 
@@ -109,7 +110,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'poster_instance' => 'Submission of Poster',
             'payment_file' => 'Proof of Payment',
             'payment_instance' => 'Upload Proof of Payment',
-            'competition_cat' => 'Category of Competition',
+            'program_sub' => 'Category of Competition',
             'booth_number' => 'Group ID/Booth ID', //for dropdownlist
             'advisor_dropdown' => 'Lecturer\'s Name',
             'nric' => 'Identification Card Number',
@@ -159,7 +160,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 2: //come
-            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'group_code'];
+            $array = ['project_name', 'participant_cat_group', 'program_sub', 'group_member', 'group_code'];
             break;
 
             case 3: //neweek
@@ -167,11 +168,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 4: //aifif
-            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file'];
+            $array = ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution'];
             break;
 
             case 5: //rise
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'group_code'];
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'group_code'];
             break;
 
             case 6: //jfed
@@ -189,7 +190,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 2: //come
-            $array = ['project_name', 'participant_cat_group', 'competition_cat', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
+            $array = ['project_name', 'participant_cat_group', 'program_sub', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
 
             case 3: //neweek
@@ -197,11 +198,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 4: //aifif
-            $array = ['nric', 'participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'payment_file', 'mentor_main', 'mentor_co'];
+            $array = ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'mentor_main', 'mentor_co'];
             break;
 
             case 5: //rise
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'payment_file', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
+            $array = ['project_name', 'participant_cat_group', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
 
             case 6: //jfed
@@ -220,7 +221,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 2: //come
-            $array = ['project_name', 'competition_cat',  'group_code', 'group_name'];
+            $array = ['project_name', 'program_sub',  'group_code', 'group_name'];
             break;
 
             case 3: //neweek
@@ -259,9 +260,18 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         $html = $this->participantText;
         //ok project name
         $html .= '<ul>';
+        $sub ='';
+        if(in_array('program_sub', $array)){
+            if($this->programSub){
+                $sub = ' / '.$this->programSub->sub_name;
+            }
+        }
+        $html .= '<li><i>Program:</i> '.$this->program->program_abbr. $sub . '</li>';
+        
         if(in_array('project_name', $array)){
             $html .= '<li><i>Project Title:</i> '.$this->project_name.'</li>';
         }
+        
         if(in_array('group_code', $array)){
            $html .= '<li><i>Group ID:</i> '.$this->group_code.'</li>';
         }
@@ -273,14 +283,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         if(in_array('competition_type', $array)){
             $html .= '<li><i>Competition Type:</i> '.$this->getListLabel('listCompetitionType', $this->competition_type).'</li>';
         }
-        if(in_array('competition_cat', $array)){
-            //split
-            $str = $this->getListLabel('listCategoryCome', $this->competition_cat);
-            $str_arr = explode('/', $str);
-            $str = trim($str_arr[0]);
-
-            $html .= '<li><i>Competition:</i> '.$str.'</li>';
-        }
+        
         $html .= '<ul>';
 
 
@@ -296,7 +299,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $text;
     }
 
-    public static function listCategoryCome(){
+    public static function listCategoryComeXX(){
         return [
             1 => 'E-Preneur / Dr. Fatihah Mohd & Dr. Yusmazida',
             2 => 'Business Product Pitching / Dr. Noor Raihani Binti Zainol',
@@ -307,6 +310,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             7 => 'Poster Presentation / Dr. Siti Fariha Binti Muhamad'
         ];
     }
+
 
     public static function listNeweekAdvisor(){
         return [
@@ -409,6 +413,21 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $this->hasOne(Program::class, ['id' => 'program_id']);
     }
 
+    public function getProgramSub()
+    {
+        return $this->hasOne(ProgramSub::class, ['id' => 'program_sub']);
+    }
+
+    public function getMentorMain()
+    {
+        return $this->hasOne(User::class, ['id' => 'mentor_main']);
+    }
+
+    public function getMentorCo()
+    {
+        return $this->hasOne(User::class, ['id' => 'mentor_co']);
+    }
+
     /**
      * Gets query for [[ProgramRegMembers]].
      *
@@ -423,6 +442,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     {
         return $this->hasMany(JuryAssign::class, ['reg_id' => 'id']);
     }
+
+    
 
     public function getAverageJuriesScore(){
         $juries = $this->juries;

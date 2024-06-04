@@ -11,13 +11,13 @@ use yii\widgets\ActiveForm;
 <div class="program-registration-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['manager', 'id' => $model->programx_id],
+        'action' => ['manager', 'id' => $model->program_id],
         'method' => 'get',
     ]); ?>
     <?= $form->field($model, 'fullnameSearch') ?>
 <br />
     <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
+        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?> <a href="javascript:void(0)" id="hide-filter-form">Hide this form</a>
      
     </div>
 

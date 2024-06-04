@@ -36,7 +36,11 @@ $this->title = 'Request for Additional User Role';
 <?= $form->field($model, 'role_name')->dropDownList($model->listRolesRequest(), ['prompt' => 'Select Role']) ?>
 
 <div style="display:none" id="con-program">
-<?= $form->field($model, 'program_id')->dropDownList(Program::listPrograms(), ['prompt' => 'Select Program']) ?>
+<?= $form->field($model, 'program_id')->dropDownList(Program::listPrograms(), ['prompt' => 'Select Program','onchange'=>'
+                         $.get("'.Url::to(['/user/sub-program-options', 'program' => '']).
+                       '"+$(this).val(),function( data ) 
+                        {$( "select#userrole-program_sub" ).html( data );
+                             });']) ?>
 </div>
 
 <div style="display:none" id="con-committee">
@@ -45,6 +49,10 @@ $this->title = 'Request for Additional User Role';
 
 <div style="display:none" id="con-leader">
 <?= $form->field($model, 'is_leader')->dropDownList(UserRole::listCommitteeRoles(), ['prompt' => 'Select Role']) ?>
+</div>
+
+<div style="display:none" id="con-program-sub">
+<?= $form->field($model, 'program_sub')->dropDownList(['']) ?>
 </div>
 
 <?php 
@@ -60,17 +68,27 @@ foreach($jw as $j){
 }
 $str_arr .= ']';
 
+//prepare arr for sub program
+$str_sub = '[';
+$sb = Program::find()->where(['has_sub' => 1])->all();
+$i=1;
+foreach($sb as $s){
+  $comma = $i == 1 ? '':',';
+  $str_sub .= $comma.$s->id;
+  $i++;
+}
+$str_sub .= ']';
+
 $this->registerJs('
-
 $("#userrole-role_name").change(function(){
-
   var val = $(this).val();
   if(val == "manager"){
       $("#con-program").show();
+      //kena check lg sub
   }else{
+    $("#con-program-sub").hide();
       $("#con-program").hide();
   }
-
   if(val == "committee"){
     $("#con-committee").show();
   }else{
@@ -79,14 +97,29 @@ $("#userrole-role_name").change(function(){
 
 });
 
+$("#userrole-program_id").change(function(){
+  //console.log("chnage");
+  const arr_sb = '.$str_sub.';
+var comm = $(this).val();
+//console.log(comm);
+//console.log(arr_sb.includes(comm));
+if(arr_sb.includes(parseInt(comm))){
+ // console.log("show");
+  $("#con-program-sub").show();
+}else{
+  $("#con-program-sub").hide();
+}
+});
+
+
 $("#userrole-committee_id").change(function(){
-  console.log("chnage");
+  //console.log("chnage");
   const arr_jw = '.$str_arr.';
 var comm = $(this).val();
-console.log(comm);
-console.log(arr_jw.includes(comm));
+//console.log(comm);
+//console.log(arr_jw.includes(comm));
 if(arr_jw.includes(parseInt(comm))){
-  console.log("show");
+ // console.log("show");
   $("#con-leader").show();
 }else{
   $("#con-leader").hide();
@@ -129,7 +162,11 @@ if($roles){
     echo '<tr><td>'.$i.'. </td><td>'.$r->roleText;
     if($r->role_name == 'manager'){
       if($r->program){
-        echo '<br />('.$r->program->program_abbr.')';
+        $sub = '';
+        if($r->programSub){
+          $sub = '/' . $r->programSub->sub_name;
+        }
+        echo '<br />('.$r->program->program_abbr. $sub . ')';
       }
     }
     if($r->role_name == 'committee'){

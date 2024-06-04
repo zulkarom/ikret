@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\ChangePasswordForm;
 use app\models\JurySearch;
+use app\models\ProgramSub;
 use app\models\RegisterForm;
 use Yii;
 use yii\web\Controller;
@@ -187,6 +188,17 @@ class UserController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    public function actionSubProgramOptions($program){
+        $list = ProgramSub::find()->where(['program_id' => $program])->all();
+        $html = '<option>Select Competition</option>';
+        if($list){
+            foreach($list as $sub){
+                $html .= '<option value="'.$sub->id .'">'.$sub->sub_name.'</option>';
+            }
+        }
+        return $html;
+    }
+
     public function actionAddRole(){
         $model = new UserRole();
         $model->user_id = Yii::$app->user->identity->id;
@@ -223,12 +235,15 @@ class UserController extends Controller
             }
 
             if($model->role_name == 'manager'){
-                
                 if(!$model->program_id){
                     Yii::$app->session->addFlash('error', "Please select a program");
                     return $this->refresh();
                 }else{
-                    if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_id' => $model->program_id])){
+                    if($model->program->has_sub == 1 and !$model->program_sub){
+                        Yii::$app->session->addFlash('error', "Please select a competition");
+                        return $this->refresh();
+                    }
+                    if(UserRole::findOne(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_id' => $model->program_id, 'program_sub' => $model->program_sub])){
                         Yii::$app->session->addFlash('error', "Duplicate request!");
                         return $this->refresh();
                     }

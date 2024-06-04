@@ -17,7 +17,7 @@ use yii\helpers\Url;
       }else{
 
         if(Yii::$app->user->identity->isParticipant){
-          $menu[] = ['name' => 'Participant Menu'];
+          $menu[] = ['name' => 'Participant Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
           $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
           $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
@@ -25,14 +25,14 @@ use yii\helpers\Url;
         }
 
         if(Yii::$app->user->identity->isJury){
-          $menu[] = ['name' => 'Jury Menu'];
+          $menu[] = ['name' => 'Jury Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Assignments', 'url' => ['/program-registration/jury-assignment'], 'icon' => 'bi bi-file-earmark-medical'];
 
 
         }
 
         if(Yii::$app->user->identity->isCommittee){
-          $menu[] = ['name' => 'Committee Menu'];
+          $menu[] = ['name' => 'Committee Menu', 'heading' => true];
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
           $menu[] = ['name' => 'Certificate', 'url' => ['/committee/cert'], 'icon' => 'bi bi-award'];
 
@@ -41,10 +41,37 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isManager){
           $pro = UserRole::find()->where(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10])->all();
           if($pro){
-            $menu[] = ['name' => 'Manager Menu'];
+            $menu[] = ['name' => 'Manager Menu', 'heading' => true];
             foreach($pro as $p){
               if($p->program){
-                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.')', 'url' => ['/program-registration/manager','id' => $p->program_id], 'icon' => 'bi bi-list-stars'];
+                $sub = '';
+                $url = ['/program-registration/manager','id' => $p->program_id];
+                $url2 = ['/program-registration/jury-result','id' => $p->program_id];
+                $url3 = ['/program/register-fields','id' => $p->program_id];
+                $url4 = ['/program/rubrics','id' => $p->program_id];
+                $url5 = ['/program/achievement','id' => $p->program_id];
+                $url6 = ['/program/info','id' => $p->program_id];
+                
+
+                if($p->programSub){
+                  $sub = '/' . $p->programSub->sub_abbr;
+                  $url = ['/program-registration/manager','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url2 = ['/program-registration/jury-result','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url4 = ['/program/rubrics','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
+                }
+
+                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.$sub.')', 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
+                  ['name' => 'Participants & Juries Assignment', 'url' => $url],
+                  ['name' => 'Result By Assignments', 'url' => $url2],
+                  ['name' => 'Registration Fields', 'url' => $url3],
+                  ['name' => 'Rubrics', 'url' => $url4],
+                  ['name' => 'Achievements', 'url' => $url5],
+                  ['name' => 'Program Info', 'url' => $url6],
+                  
+                ]];
+
               }
               
             }
@@ -61,7 +88,7 @@ use yii\helpers\Url;
         
 
         if(Yii::$app->user->identity->isAdmin){
-          $menu[] = ['name' => 'Admin Menu'];
+          $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
 
           
@@ -74,7 +101,7 @@ use yii\helpers\Url;
 
         }
 
-        $menu[] = ['name' => 'User Menu'];
+        $menu[] = ['name' => 'User Menu', 'heading' => true];
         $menu[] = ['name' => 'Profile', 'url' => ['/user/index'], 'icon' => 'bi bi-file-earmark-person'];
         $menu[] = ['name' => 'User Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
         $menu[] = ['name' => 'Change Password', 'url' => ['/user/change-password'], 'icon' => 'bi bi-lock'];
@@ -85,23 +112,10 @@ use yii\helpers\Url;
       }
       
 
-
+      $i=1;
       foreach($menu as $item){
-
-        
-        if(array_key_exists('url', $item)){
-          $active = isItemActive($item['url']);
-        $collapse = $active ? '' : 'collapsed';
-          echo '<li class="nav-item">
-        <a class="nav-link '.$collapse.'" href="' . Url::to($item['url']) . '">
-          <i class="'. $item['icon'] .'"></i>
-          <span>'. $item['name'] .'</span>
-        </a>
-      </li>';
-        }else{
-          echo '<li class="nav-heading">'. $item['name'] .'</li>';
-        }
-        
+        echoMenuItem($item, $i);
+        $i++;
       }
       ?>
     </ul>
@@ -109,6 +123,73 @@ use yii\helpers\Url;
   </aside>
 
   <?php 
+
+    function echoMenuItem($item, $i){
+        $html= '';
+        if(array_key_exists('url', $item)){
+          $active = isItemActive($item['url']);
+          
+        $collapse = $active ? '' : 'collapsed';
+        $children=null;
+        if(array_key_exists('children', $item)){
+            $children = $item['children'];
+        }
+        
+        $children_has_active = childrenActive($children);
+        $collapse = $children_has_active ? '' : 'collapsed';
+        //echo $children_has_active ? 'children_has_active' :'';
+        /* ok dah hightlight menu tak 
+        collapse
+        echo
+ */
+        $html .= '<li class="nav-item">';
+        
+        if($children){
+          $html .= '<a class="nav-link '.$collapse.'" data-bs-target="#components-nav-'.$i.'" data-bs-toggle="collapse" href="#">';
+        }else{
+          $html .= '<a class="nav-link '.$collapse.'" href="' . Url::to($item['url']) . '">';
+        }
+        $html .=  '<i class="'. $item['icon'] .'"></i>
+          <span>'. $item['name'] .'</span>';
+          if($children){
+            $html .= '<i class="bi bi-chevron-down ms-auto"></i>';
+          }
+          $html .= '</a>';
+        if($children){
+          $show = $children_has_active ? 'show' : '';
+          $html .= '<ul id="components-nav-'.$i.'" class="nav-content collapse '.$show.'" data-bs-parent="#sidebar-nav">';
+          foreach($children as $child){
+            $child_active = isItemActive($child['url']) ? 'class="active"' : '';
+            $html .= '<li>
+            <a href="'.Url::to($child['url']).'" '.$child_active.'>
+              <i class="bi bi-circle"></i><span>'.$child['name'].'</span>
+            </a>
+          </li>';
+          }
+          $html .= '</ul>';
+        }
+        $html .= '</li>';
+        }else if(array_key_exists('heading', $item)){
+          $html .= '<li class="nav-heading">'. $item['name'] .'</li>';
+        }
+
+        echo $html;
+    }
+
+    function childrenActive($children){
+      if($children){
+        foreach($children as $child){
+          if(array_key_exists('url', $child)){
+            $active = isItemActive($child['url']);
+            if($active){ //even satu pun dah cukup
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
   function isItemActive($url)
     {
       //echo Yii::$app->controller->id;
@@ -122,13 +203,52 @@ use yii\helpers\Url;
 			  }
       }
       //die(); 
-			$arr = explode('/', $url[0]);
+      $url_str = $url[0];
+			$arr = explode('/', $url_str);
 			//assuming tak de module
       // url kena start dengan /
-			if($arr[1] == Yii::$app->controller->id && 
-			$arr[2] == Yii::$app->controller->action->id){
-				return true;
-			}
+      //kita nak cari ada ?
+      $id = null;
+      $sub = null;
+      if(array_key_exists('id', $url)){
+        $id = $url['id'];
+      }
+      if(array_key_exists('sub', $url)){
+        $sub = $url['sub'];
+      }
+
+    
+      //klu ada explode
+      //cari ada = ke
+      //klu ada explode
+
+      $id_get  = Yii::$app->request->get('id');
+      $sub_get  = Yii::$app->request->get('sub');
+
+      //echo $sub_get;
+      
+      if($id && $sub){
+        if($arr[1] == Yii::$app->controller->id && 
+        $arr[2] == Yii::$app->controller->action->id && $id == $id_get && $sub == $sub_get){
+         // echo 'id=' .$id, 'sub='.$sub;
+          return true;
+        }
+      }else if($id){
+        if($arr[1] == Yii::$app->controller->id && 
+        $arr[2] == Yii::$app->controller->action->id && $id == $id_get && $sub == null){
+         // echo 'id=' .$id, 'sub='.$sub;
+          return true;
+        }
+      }else{
+        if($arr[1] == Yii::$app->controller->id && 
+        $arr[2] == Yii::$app->controller->action->id){
+          return true;
+        }
+      }
+			
+
+
+
         return false;
     }
   ?>

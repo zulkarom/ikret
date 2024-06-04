@@ -51,7 +51,7 @@ use yii\widgets\ActiveForm;
 
     <?php // echo $form->field($model, 'competition_type') ?>
 
-    <?php // echo $form->field($model, 'competition_cat') ?>
+    <?php // echo $form->field($model, 'program_sub') ?>
 
     <?php // echo $form->field($model, 'booth_number') ?>
 

@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\Certificate;
 use app\models\CertificateTemplate;
+use app\models\JuryAssign;
 use app\models\Member;
 use app\models\Mentor;
 use app\models\Model;
@@ -12,11 +13,17 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
 use app\models\Program;
+use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
+use app\models\ProgramRubric;
 use app\models\Questionnaire;
 use app\models\QuestionnaireAnswer;
 use app\models\QuestionnaireAnswerPost;
+use app\models\Rubric;
+use app\models\RubricAnswer;
+use app\models\Setting;
 use app\models\Upload;
+use app\models\UserRole;
 use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
@@ -73,16 +80,137 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionInfo($id){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $model = $this->findModel($id);
+
+        if ($model->load(Yii::$app->request->post())) {
+            if($model->save()){
+                Yii::$app->session->addFlash('success', "Data Updated");
+                return $this->refresh();
+            }
+        }
+
+        return $this->render('info',[
+            'model' => $model
+        ]);
+    }
+
+    public function actionViewRubric($id){
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $rubric = $this->findRubric($id);
+        $assign = new JuryAssign();
+        $assign->rubric_id = $rubric->id;
+
+        $model = new RubricAnswer();
+
+        return $this->render('../program-registration/jury-judge',[
+            'model' => $model,
+            'assign' => $assign,
+            'plain' => true,
+            'title' => 'View Rubric',
+            'write' => false,
+        ]);
+    }
+
+    public function actionRubrics($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
+        $program = $role->program;
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        if($programSub){
+            $rubrics = ProgramRubric::find()
+            ->where(['program_id' => $id, 'program_sub' => $sub])->all();
+        }else{
+            $rubrics = ProgramRubric::find()->where(['program_id' => $id])->all();
+        }
+        
+        $model = $this->findModel($id);
+        return $this->render('rubrics',[
+            'model' => $model,
+            'rubrics' => $rubrics,
+            'programSub' => $programSub
+        ]);
+    }
+
+    public function actionAchievement($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
+        $program = $role->program;
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        if($programSub){
+            $achievement = ProgramAchievement::find()
+            ->where(['program_id' => $id, 'program_sub' => $sub])->all();
+        }else{
+            $achievement = ProgramAchievement::find()->where(['program_id' => $id])->all();
+        }
+        
+        $model = $this->findModel($id);
+        return $this->render('achievements',[
+            'model' => $model,
+            'achievement' => $achievement,
+            'programSub' => $programSub
+        ]);
+    }
+
+    public function actionRegisterFields($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $program = $role->program;
+        $register = new ProgramRegistration();
+        $register->program_id = $program->id;
+
+        return $this->render('register',[
+            'model' => $program,
+            'register' => $register,
+            'members' => [new Member()],
+            'demo' => true,
+        ]);
+    }
+
     public function actionCertificate()
     {
         $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
         if(!$check){
-            Yii::$app->session->addFlash('info', "The certificate will be available after the program date. Please be noted that you need to complete post-event questionnaire before getting the access to the certificate.");
+            Yii::$app->session->addFlash('info', "Please be noted that you need to complete post-event questionnaire before getting the access to the certificate.");
             return $this->render('empty');
+        }
+        $setting = Setting::findOne(1);
+        $allow_from = $setting->allow_cert_from;
+        if(time() < strtotime($allow_from)){
+            Yii::$app->session->addFlash('info', "The certificate will be available after the program date.");
+            //return $this->render('empty');
         }
 
         $registered = ProgramRegistration::find()
-        ->where(['user_id' => Yii::$app->user->identity->id])
+        ->where(['user_id' => Yii::$app->user->identity->id, 'status' => 10])
         ->all();
 
         return $this->render('certificate',[
@@ -145,12 +273,29 @@ class ProgramController extends Controller
         //check dah register event
         $check = ProgramRegistration::find()->where(['user_id' => Yii::$app->user->identity->id])
         ->andWhere(['>', 'status', 0])
-        ->one();
+        ->all();
 
-        if(!$check){
+        if($check){
+            foreach($check as $p){
+                if($p->program->has_sub && $p->program->programSubs){
+                    foreach($p->program->programSubs as $sub){
+                        if(time() < strtotime($sub->date_end)){
+                            Yii::$app->session->addFlash('error', "To answer this post-questionnaire, you need to wait until the program (".$sub->sub_name.") ends.");
+                            return $this->render('empty');
+                        }
+                    }
+                }else{
+                    if(time() < strtotime($p->program->date_end)){
+                        Yii::$app->session->addFlash('error', "To answer this post-questionnaire, you need to wait until the program (".$p->program->program_name.") ends.");
+                        return $this->render('empty');
+                    }
+                }
+            }
+        }else{
             Yii::$app->session->addFlash('error', "Please proceed to program registration first before post-event questionnaire.");
             return $this->render('empty');
         }
+
 
         $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
         if($check){
@@ -226,7 +371,8 @@ class ProgramController extends Controller
             'model' => $model,
             'register' => $register,
             'err' => false,
-            'members' => (empty($members)) ? [$defaultMember] : $members
+            'members' => (empty($members)) ? [$defaultMember] : $members,
+            'demo' => false
         ]);
     }
 
@@ -366,7 +512,8 @@ class ProgramController extends Controller
             'model' => $model,
             'register' => $register,
             'err' => true,
-            'members' => (empty($members)) ? [$defaultMember] : $members
+            'members' => (empty($members)) ? [$defaultMember] : $members,
+            'demo' => false,
         ]);
     }
 
@@ -541,6 +688,15 @@ class ProgramController extends Controller
     protected function findModel($id)
     {
         if (($model = Program::findOne($id)) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function findRubric($id)
+    {
+        if (($model = Rubric::findOne($id)) !== null) {
             return $model;
         }
 

@@ -37,7 +37,7 @@ class UserRole extends \yii\db\ActiveRecord
         return [
             [['user_id', 'role_name'], 'required'],
 
-            [['user_id', 'program_id', 'committee_id', 'is_leader', 'is_deleted', 'status'], 'integer'],
+            [['user_id', 'program_id', 'committee_id', 'is_leader', 'is_deleted', 'status', 'program_sub'], 'integer'],
 
            [['role_name'], 'string', 'max' => 100],
 
@@ -60,6 +60,7 @@ class UserRole extends \yii\db\ActiveRecord
             'committee_id' => 'Committee',
            'is_leader' => 'Committee Role',
            'is_deleted' => 'Is Deleted',
+           'program_sub' => 'Competition'
         ];
     }
 
@@ -155,6 +156,11 @@ class UserRole extends \yii\db\ActiveRecord
        return $this->hasOne(Program::class, ['id' => 'program_id']);
    }
 
+   public function getProgramSub()
+   {
+       return $this->hasOne(ProgramSub::class, ['id' => 'program_sub']);
+   }
+
     /** 
     * Gets query for [[User]]. 
     * 
@@ -166,10 +172,10 @@ class UserRole extends \yii\db\ActiveRecord
    }
 
    public static function listJury(){
-    $user = User::find()->alias('u')
-    ->select('u.id, u.fullname')
-    ->innerJoin('user_role r', 'r.user_id = u.id')
-    ->where(['r.role_name' => 'jury'])->all();
-    return ArrayHelper::map($user, 'id', 'fullname');
+        $user = User::find()->alias('u')
+        ->select('u.id, u.fullname')
+        ->innerJoin('user_role r', 'r.user_id = u.id')
+        ->where(['r.role_name' => 'jury'])->all();
+        return ArrayHelper::map($user, 'id', 'fullname');
    }
 }

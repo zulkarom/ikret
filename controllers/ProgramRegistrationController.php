@@ -4,9 +4,11 @@ namespace app\controllers;
 
 use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
+use app\models\JuryResultSearch;
 use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
+use app\models\ProgramSub;
 use app\models\RubricAnswer;
 use app\models\User;
 use app\models\UserRole;
@@ -168,7 +170,10 @@ class ProgramRegistrationController extends Controller
 
         return $this->render('jury-judge', [
             'assign' => $assign,
-            'model' => $model
+            'model' => $model,
+            'plain' => false,
+            'title' => 'Judging Session',
+            'write' => true,
         ]);
     }
 
@@ -182,6 +187,23 @@ class ProgramRegistrationController extends Controller
     {
         return $this->render('view', [
             'model' => $this->findModel($id),
+        ]);
+    }
+
+    public function actionViewResult($id)
+    {
+        $assign = $this->findAssignment($id);
+        $model = RubricAnswer::findOne([
+            'rubric_id' => $assign->rubric_id,
+            'assignment_id' => $assign->id
+        ]);
+
+        return $this->render('jury-judge', [
+            'assign' => $assign,
+            'model' => $model,
+            'plain' => false,
+            'title' => 'View Result',
+            'write' => false,
         ]);
     }
 
@@ -259,14 +281,59 @@ class ProgramRegistrationController extends Controller
         return $this->redirect(['manager', 'id' => $reg->program_id]);
     }
 
-    public function actionManager($id){
+    public function actionJuryResult($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $programSub = null;
+        $program = $role->program;
+
+        $programSub = null;
+        $program = $role->program;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        $searchModel = new JuryResultSearch();
+        $searchModel->program_id = $id;
+        $searchModel->program_sub = $sub;
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('jury-result', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'program' => $program,
+            'programSub' => $programSub,
+        ]);
+    }
+
+    public function actionManager($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $programSub = null;
+        $program = $role->program;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
 
         if($role && $role->program){
-
             $model = new JuryAssign();
-
+            //cari ada stage tak
+            $stages = $program->programStages;
+            if($stages){
+                $model->scenario = 'stage';
+            }
+            $model->stage = 0;
                 if ($this->request->isPost && $model->load($this->request->post())) {
                     //echo '<pre>';
                     $users = $model->users;
@@ -280,7 +347,7 @@ class ProgramRegistrationController extends Controller
                             if($users){
                                 foreach($users as $u){
                                     //validate dh assign ke belum
-                                    $ada = JuryAssign::findOne(['user_id' => $u, 'reg_id' => $select]);
+                                    $ada = JuryAssign::findOne(['user_id' => $u, 'reg_id' => $select, 'stage' => $model->stage]);
                                     if($ada){
                                         $name = $ada->user->fullname;
                                         $peserta = $ada->registration->participantText;
@@ -318,14 +385,16 @@ class ProgramRegistrationController extends Controller
                 }
         
             $searchModel = new ProgramRegistrationManagerSearch();
-            $searchModel->programx_id = $role->program_id;
+            $searchModel->program_id = $role->program_id;
+            $searchModel->program_sub = $sub;
             $dataProvider = $searchModel->search($this->request->queryParams);
     
             return $this->render('manager', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'role' => $role,
-                'model' => $model
+                'model' => $model,
+                'programSub' => $programSub
             ]);
         }
 

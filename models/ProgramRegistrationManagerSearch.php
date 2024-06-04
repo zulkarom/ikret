@@ -13,14 +13,14 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
 {
     public $fullnameSearch;
     public $dateSearch;
-    public $programx_id;
+   // public $programx_id;
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['programx_id'], 'integer'],
+            [['program_id', 'program_sub'], 'integer'],
             [['fullnameSearch','dateSearch'], 'string'],
         ];
     }
@@ -52,7 +52,14 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     {
         $query = ProgramRegistration::find()->alias('a')
         ->joinWith(['user u'])
-        ->where(['>', 'a.status', 0])->orderBy('a.flag DESC, a.submitted_at DESC');
+        ->where(['>', 'a.status', 0])
+        ->andWhere(['a.program_id' => $this->program_id,]);
+
+        if($this->program_sub){
+            $query = $query->andWhere(['a.program_sub' => $this->program_sub]);
+        }
+
+        $query = $query->orderBy('a.flag DESC, a.submitted_at DESC');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -64,10 +71,10 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
             return $dataProvider;
         }
 
-        // grid filtering conditions
+      /*   // grid filtering conditions
         $query->andFilterWhere([
             'a.program_id' => $this->programx_id,
-        ]);
+        ]); */
 
         $query->andFilterWhere(['like', 'a.submitted_at', $this->submitted_at])
         ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);

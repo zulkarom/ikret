@@ -120,9 +120,9 @@ $this->title = 'Registration - ' . $model->program_name;
             <div class="col-12">
 
             <?php 
-                    if(in_array('competition_cat',$arr_fields)){
+                    if(in_array('program_sub',$arr_fields)){
                     echo $form
-            ->field($register, 'competition_cat')->dropDownList($register->listCategoryCome(),['prompt' => 'Select Category']);
+            ->field($register, 'program_sub')->dropDownList($register->program->listSubPrograms(),['prompt' => 'Select Category']);
         }
           ?>
             </div>
@@ -447,14 +447,22 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 } 
 
 }?>
-                    <div class="col-12">
-                    <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
-                      <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
-                    </div> 
-                    <br />
-   
-       
-                    <?php ActiveForm::end(); ?>
+
+
+
+      <?php if(!$demo){?>
+      <div class="col-12">
+      <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
+        <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
+      </div> 
+      <?php } ?>
+      <br />
+
+
+
+      <?php ActiveForm::end(); 
+      
+      ?>
 
                 </div>
               </div>

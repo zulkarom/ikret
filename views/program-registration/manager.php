@@ -12,12 +12,29 @@ $this->title = 'Registration ('.$program->program_abbr.')';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">
-<h1><?=$this->title?></h1></div>
+<h1><?=$this->title?></h1>
+<?=$programSub? $programSub->sub_name:''?>
+</div>
 
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
-        <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-primary'])?> <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-success'])?></div>
+        <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-info'])?> 
+        <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
+        <?php //=Html::button('<i class="bi bi-download"></i> Excel', ['id' => 'dwl-exl','class' => 'btn btn-success'])?>
+    </div> 
+
+        <?php echo $this->render('_excel', [
+        'dataProvider' => $dataProvider
+        ]);
+
+        $this->registerJs('
+        $("#dwl-exl").click(function(){
+            $("#w0-xls")[0].click();
+        });
+        ');
+        ?>
+
         <?php
         $this->registerJs('
             $("#btn-jury-form").click(function(){
@@ -26,7 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
             });
             $("#hide-jury-form").click(function(){
                 $("#con-jury-form").slideUp();
-                $("#con-filter-form").slideDown();
+              
             });
 
             $("#btn-filter-form").click(function(){
@@ -35,7 +52,6 @@ $this->params['breadcrumbs'][] = $this->title;
             });
             $("#hide-filter-form").click(function(){
                 $("#con-filter-form").slideUp();
-                $("#con-jury-form").slideDown();
             });
         ');
         
@@ -57,7 +73,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-body pt-4">
     <?= $this->render('_form_jury', [
         'model' => $model,
-        'form' => $form
+        'form' => $form,
+        'program' => $program,
+        'programSub' => $programSub,
     ]) ?>
 </div></div>
 

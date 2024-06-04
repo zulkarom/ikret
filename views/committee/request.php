@@ -50,8 +50,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     $str = $r->roleText;
                     if($r->role_name == 'manager'){
                         if($r->program){
-                            $str .= '<br />('.$r->program->program_abbr.')';
-                        }
+                            $sub = '';
+                            if($r->programSub){
+                              $sub = '/' . $r->programSub->sub_name;
+                            }
+                            $str .=  '<br />('.$r->program->program_abbr. $sub . ')';
+                          }
                       }
                       if($r->role_name == 'committee'){
                         if($r->committee){
@@ -84,17 +88,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $model->request_at;
                 }
             ],
-            /* ['class' => 'yii\grid\ActionColumn',
-                'contentOptions' => ['style' => 'width: 13%'],
+            ['class' => 'yii\grid\ActionColumn',
             'template' => '{view}',
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
-                    return Html::a('<span class="bi bi-eye"></span> View',['view', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    return Html::a('<span class="bi bi-trash"></span>',['delete-role', 'id' => $model->id],['data-confirm' => 'Are you sure to delete this user role']);
                 },
             ],
         
-        ], */
+        ], 
   
         ],
     ]); ?>
