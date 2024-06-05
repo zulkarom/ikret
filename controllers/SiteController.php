@@ -104,7 +104,7 @@ class SiteController extends Controller
                 
                 return $this->redirect(['/site/login']);
             } else {
-                Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+                Yii::$app->session->setFlash('error', 'Sorry, currently we are unable to reset your password. Please contact system administration for passsword reset.');
             }
         }
         
