@@ -68,23 +68,13 @@ $formName =  $model->formName();
 
                     <?php
                     $i = 1;
-                    foreach($quest_checkbox as $q){
+                    foreach($quest_essay as $q){
 
                       
 
                       echo '<tr><td>'.$i.'. </td><td>';
                       
-                      echo $q->question_text;
-                      echo '<p>';
-                      if($q->questionSubs){
-                        foreach($q->questionSubs as $sub){
-                          //echo '<div>'.$sub->question_text.'</div>';
-                          echo $form->field($model, $sub->answer_colum)
-	->checkbox(['label'=>$sub->question_text]);
-                        }
-                        
-                      }
-                      echo '</p>';
+                      echo $form->field($model, 'q'.$q->question_number)->textarea(['rows' => '6'])->label($q->question_text);
 
 
 

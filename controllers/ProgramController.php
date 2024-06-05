@@ -238,6 +238,11 @@ class ProgramController extends Controller
         ->orderBy('question_order ASC')
         ->all();
 
+        $quest_checkbox = Questionnaire::find()
+        ->where(['pre_post' => 1, 'question_type' => 3])
+        ->orderBy('question_order ASC')
+        ->all();
+
         $model = new QuestionnaireAnswer();
         $model->user_id = Yii::$app->user->identity->id;
         //time zone
@@ -263,7 +268,7 @@ class ProgramController extends Controller
 
         return $this->render('prequestion',[
             'quest_likert' => $quest_likert,
-            'quest_essay' => $quest_essay,
+            'quest_checkbox' => $quest_checkbox,
             'model' => $model
         ]);
     }
@@ -308,6 +313,10 @@ class ProgramController extends Controller
 
         $quest_likert = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 1]);
         $quest_essay = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 2]);
+        $quest_checkbox = Questionnaire::find()
+        ->where(['pre_post' => 1, 'question_type' => 3])
+        ->orderBy('question_order ASC')
+        ->all();
 
         $model = new QuestionnaireAnswerPost();
         $model->user_id = Yii::$app->user->identity->id;
@@ -333,7 +342,7 @@ class ProgramController extends Controller
 
         return $this->render('postquestion',[
             'quest_likert' => $quest_likert,
-            'quest_essay' => $quest_essay,
+            'quest_checkbox' => $quest_checkbox,
             'model' => $model
         ]);
     }

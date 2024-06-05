@@ -46,4 +46,10 @@ class Questionnaire extends \yii\db\ActiveRecord
             'question_type' => 'Question Type',
         ];
     }
+
+    public function getQuestionSubs(){
+        return $this->hasMany(QuestionnaireSub::class, ['question_id' => 'id']);
+    }
+
+    
 }

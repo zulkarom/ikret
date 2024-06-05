@@ -36,9 +36,9 @@ class QuestionnaireAnswer extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5','q6', 'q7', 'q8', 'q9'], 'required'],
+            [['user_id', 'q1', 'q2', 'q3'], 'required'],
 
-            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5'], 'integer'],
+            [['user_id', 'q1', 'q2', 'q3', 'q4', 'q5', 'sub1', 'sub1', 'sub2', 'sub3', 'sub4', 'sub5', 'sub6', 'sub7', 'sub8', 'sub9', 'sub10'], 'integer'],
 
             [['q7', 'q8', 'q9'], 'string', 'min' => 20],
 
