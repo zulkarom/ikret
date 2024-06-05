@@ -67,7 +67,7 @@ $formName =  $model->formName();
                   </tr>
 
                     <?php
-                    $i = 1;
+                   // $i = 1;
                     foreach($quest_checkbox as $q){
 
                       
@@ -75,6 +75,7 @@ $formName =  $model->formName();
                       echo '<tr><td>'.$i.'. </td><td>';
                       
                       echo $q->question_text;
+                      echo '<br /><i>(You can choose more than one option.)</i>';
                       echo '<p>';
                       if($q->questionSubs){
                         foreach($q->questionSubs as $sub){
