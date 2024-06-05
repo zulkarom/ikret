@@ -413,7 +413,7 @@ if(in_array('group_member',$arr_fields)){
 
                     } ?></div>
   </div>
-
+<i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as mentor.</i>
 
 
 

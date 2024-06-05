@@ -13,6 +13,7 @@ use app\models\UserRole;
 use app\models\UserSearch;
 use yii\db\Expression;
 use yii\db\Query;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 class UserController extends Controller
@@ -62,14 +63,16 @@ class UserController extends Controller
 
 
     public function actionAll(){
-        if(!Yii::$app->user->identity->isAdmin or !Yii::$app->user->identity->isManager) return false;
-        $searchModel = new UserSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('all', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        if(Yii::$app->user->identity->isAdmin or Yii::$app->user->identity->isManager){
+            $searchModel = new UserSearch();
+            $dataProvider = $searchModel->search($this->request->queryParams);
+    
+            return $this->render('all', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+            ]);
+        }
+        
     }
 
     public function actionJury(){
@@ -190,8 +193,9 @@ class UserController extends Controller
 
     public function actionSubProgramOptions($program){
         $list = ProgramSub::find()->where(['program_id' => $program])->all();
-        $html = '<option>Select Competition</option>';
+        $html = '<option value="-1">N/A</option>';
         if($list){
+            $html = '<option>Select Competition</option>';
             foreach($list as $sub){
                 $html .= '<option value="'.$sub->id .'">'.$sub->sub_name.'</option>';
             }
@@ -269,7 +273,9 @@ class UserController extends Controller
                 }
             }
 
-
+            if($model->program_sub == -1){
+                $model->program_sub = null; 
+            }
 
             if($model->save()){
                 Yii::$app->session->addFlash('success', "Role Added");

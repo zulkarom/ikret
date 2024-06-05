@@ -134,7 +134,11 @@ $this->params['breadcrumbs'][] = $this->title;
 //'visible' => false,
 'buttons'=>[
     'view'=>function ($url, $model) {
-        return Html::a('<span class="bi bi-eye"></span> View',['manager-view', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+        $url = ['manager-view', 'id' => $model->id];
+        if($model->programSub){
+            $url = ['manager-view', 'id' => $model->id, 'sub' => $model->programSub->id];
+        }
+        return Html::a('<span class="bi bi-eye"></span> View',$url,['class'=>'btn btn-primary btn-sm']);
     },
     'flag'=>function ($url, $model) {
         if($model->flag == 0){

@@ -63,9 +63,11 @@ class SiteController extends Controller
     public function actionIndex()
     {
         if (!Yii::$app->user->isGuest) {
-            $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
-            if(!$check){
-                Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
+            if(Yii::$app->user->identity->isParticipant){
+                $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
+                if(!$check){
+                    Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
+                }
             }
         }
         

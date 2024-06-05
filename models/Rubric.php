@@ -61,7 +61,7 @@ class Rubric extends \yii\db\ActiveRecord
 
     public function getCategories()
     {
-        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id']);
+        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])->orderBy('cat_order ASC');
     }
 
     /**

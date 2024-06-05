@@ -89,7 +89,12 @@ $formName =  $model->formName();
                   <div class="col-md-6">'.$item->item_text.'<br />';
                 
                   if($item->item_description){
-                    echo '<i style="font-size:13px">('.$item->item_description.')</i>';
+                    if(strpos($item->item_description, "\n") !== FALSE) {
+                      echo '<i style="font-size:14px">'.nl2br($item->item_description).'</i>';
+                    }else {
+                      echo '<i style="font-size:14px">('.$item->item_description.')</i>';
+                    }
+                    
                   }
                  
 
@@ -133,6 +138,19 @@ $formName =  $model->formName();
          
                  </div>
                  </td></tr>';
+                 $i++;
+              }else if($item->item_type == 3){ //text area
+                echo '<tr><td width="10">'.$i.'. </td><td>
+                 <div class="row">
+                    <div class="col-md-8">
+                        <label> '.$item->item_text.'</label>
+                        ';
+                    echo '<div><textarea class="form-control" name="'.$formName.'['.$item->colum_ans.']" name="">'.$model->{$item->colum_ans}.'</textarea></div>';
+                    echo '</div>
+         
+                 </div>
+                 </td></tr>';
+                $i++;
               }
             }
           }
