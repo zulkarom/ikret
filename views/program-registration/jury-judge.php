@@ -128,6 +128,14 @@ $formName =  $model->formName();
                     <div class="col-md-8">
                         <div> '.$item->item_text.'</div>
                         ';
+                        if($item->item_description){
+                          if(strpos($item->item_description, "\n") !== FALSE) {
+                            echo '<i style="font-size:14px">'.nl2br($item->item_description).'</i>';
+                          }else {
+                            echo '<i style="font-size:14px">('.$item->item_description.')</i>';
+                          }
+                          
+                        }
                         $arr = [1=>'Yes', 2 => 'No'];
                         foreach($arr as $key => $val){
                           $qn = $item->colum_ans;

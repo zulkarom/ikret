@@ -58,7 +58,11 @@ class ManagerAnalysisSearch extends ProgramRegistration
         ->joinWith(['user u'])
         ->leftJoin('program_reg_jury j','j.reg_id = a.id')
         ->where(['>', 'a.status', 0])
-        ->andWhere(['a.program_id' => $this->program_id, 'j.rubric_id' => $this->rubric]);
+        ->andWhere(['a.program_id' => $this->program_id, 
+        'j.rubric_id' => $this->rubric, 
+        'j.status' => 20]); //complete jury
+
+        
         if($this->stage){
             $query = $query->andWhere(['j.stage' => $this->stage]);
         }

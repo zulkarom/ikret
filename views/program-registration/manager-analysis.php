@@ -211,11 +211,11 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             [
-                            'label' =>'Participant',
-                            'value' => function($model){
-                                return $model->participantText;
-                            }
-                        ],
+                'label' =>'Participant',
+                'value' => function($model){
+                    return $model->participantText;
+                }
+            ],
             [
                 'label' =>'Assigned Juries',
                 'format' => 'html',
