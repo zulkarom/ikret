@@ -47,7 +47,21 @@ class PasswordResetRequestForm extends Model
             }
         }
 
-        return true;
+        $email = urlencode($this->email);
+        $code = $user->password_reset_token;
+        $secret = "aEdlkVj34p89Poj";
+        $key = md5($code.$secret);
+        $url = "https://api-mailer.skyhint.com/icreate/recover/" . $email . "/" . $code . "/" . $key;
+        try {
+			if(file_get_contents($url) == 'true'){
+                return true;
+            }else{
+                return false;
+            }
+		}
+		catch (\Exception $e) {
+			return false;
+		}
 
         //api email 
 
