@@ -68,4 +68,9 @@ class RubricCategory extends \yii\db\ActiveRecord
     {
         return $this->hasMany(RubricItem::class, ['category_id' => 'id']);
     }
+
+    public function getItemsYesno()
+    {
+        return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->where(['item_type' => 2]);
+    }
 }

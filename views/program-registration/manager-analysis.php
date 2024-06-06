@@ -35,8 +35,11 @@ $this->params['breadcrumbs'][] = $this->title;
             $juries = $model->juriesCompleted;
                     $html = '';
                     if($juries){
+                        $x=1;
                         foreach($juries as $jury){
-                            $html .= $jury->user->fullname . " (".$jury->score.")\n";
+                            $br = $x==1 ? '' : "\n";
+                            $html .= $br . $jury->user->fullname . " (".$jury->score.")";
+                            $x++;
                         }
                     }
                     return $html;
@@ -69,18 +72,80 @@ $this->params['breadcrumbs'][] = $this->title;
     ];
     //dapatkan category rubric
     if($selectedRubric){
-        if($selectedRubric->categories){
-            foreach($selectedRubric->categories as $cat){
+        if($selectedRubric->categoriesNotRecommend){
+            foreach($selectedRubric->categoriesNotRecommend as $cat){
                 $exportColumns[] = [
                     'label' =>$cat->category_name,
                     'format' => 'html',
-                    'value' => function($model){
-                        
+                    'value' => function($model) use($cat){
+                        $items = $cat->items;
+                        $arrayColum = [];
+                        if($items){
+                            foreach($items as $item){
+                                $arrayColum[] = $item->colum_ans;
+                            }
+                        }
+                        if($model->juriesCompleted){
+                            $juri_count = 0;
+                            $avg_cat_item = 0;
+                            foreach($model->juriesCompleted as $j){
+                                if($j->rubricAnswer){
+                                    $ans = $j->rubricAnswer;
+                                    //dapatkan answer colum2 tertentu
+                                    //total markah soalan2 / total soalan
+                                    $count_q = 0;
+                                    $sum_q = 0;
+                                    if($arrayColum){
+                                        foreach($arrayColum as $q){
+                                            $sum_q += $ans[$q];
+                                            $count_q++;
+                                        }
+                                    }
+                                    $avg_q = $count_q > 0 ? $sum_q / $count_q : 0;
+                                    $avg_cat_item += $avg_q;
+                                    $juri_count++;
+                                }
+                            }
+                            $avg_cat = $juri_count > 0 ? $avg_cat_item / $juri_count : 0;
+                            return number_format($avg_cat,2);
+                        }
+                        return 0;
                     }
                 ];
             }
+        }
+
+        if($selectedRubric->categoriesRecommend){
+            foreach($selectedRubric->categoriesRecommend as $cat){
+                if($cat->itemsYesno){
+                    foreach($cat->itemsYesno as $item){
+                        //get total
+                        $colum = $item->colum_ans;
+                        $exportColumns[] = [
+                            'label' =>$item->item_short,
+                            'format' => 'html',
+                            'value' => function($model) use($colum){
+                                $total = 0;
+                                if($model->juriesCompleted){
+                                    foreach($model->juriesCompleted as $j){
+                                        if($j->rubricAnswer){
+                                            $answer = $j->rubricAnswer;
+                                            if($answer[$colum] == 1){
+                                                $total++;
+                                            }
+                                        }
+                                    }
+                                }
+                                return $total;
+                            }
+                        ];
+                    }
+                }
+                
+            }
 
         }
+
     }
     
 

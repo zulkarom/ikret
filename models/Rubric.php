@@ -64,6 +64,20 @@ class Rubric extends \yii\db\ActiveRecord
         return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])->orderBy('cat_order ASC');
     }
 
+    public function getCategoriesNotRecommend()
+    {
+        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
+        ->where(['is_recommend' => 0])
+        ->orderBy('cat_order ASC');
+    }
+
+    public function getCategoriesRecommend()
+    {
+        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
+        ->where(['is_recommend' => 1])
+        ->orderBy('cat_order ASC');
+    }
+
     /**
      * get all likert * total option
      */
