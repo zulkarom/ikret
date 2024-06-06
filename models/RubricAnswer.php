@@ -72,7 +72,9 @@ class RubricAnswer extends \yii\db\ActiveRecord
         return [
             [['rubric_id', 'assignment_id'], 'required'],
             [['rubric_id', 'assignment_id', 'item_no1', 'item_no2', 'item_no3', 'item_no4', 'item_no5', 'item_no6', 'item_no7', 'item_no8', 'item_no9', 'item_no10', 'item_no11', 'item_no12', 'item_no13', 'item_no14', 'item_no15', 'item_no16', 'item_no17', 'item_no18', 'item_no19', 'item_no20', 'item_no21', 'item_no22', 'item_no23', 'item_no24', 'item_no25', 'item_no26', 'item_no27', 'item_no28', 'item_no29', 'item_no30'], 'integer'],
+
             [['item_text1', 'item_text2', 'item_text3', 'item_text4', 'item_text5', 'item_text6', 'item_text7', 'item_text8', 'item_text9', 'item_text10'], 'string'],
+
             [['rubric_id'], 'exist', 'skipOnError' => true, 'targetClass' => Rubric::class, 'targetAttribute' => ['rubric_id' => 'id']],
             [['assignment_id'], 'exist', 'skipOnError' => true, 'targetClass' => JuryAssign::class, 'targetAttribute' => ['assignment_id' => 'id']],
         ];
@@ -205,11 +207,14 @@ class RubricAnswer extends \yii\db\ActiveRecord
                         $option = $item->option_number;
                         $colum = $item->colum_ans;
                         $val = $this->$colum;
-                        if($val > 0){
-                            //
-                        }else{
-                            return false;
+                        if($item->item_type== 1 || $item->item_type==2){
+                            if($val > 0){
+                                //
+                            }else{
+                                return false;
+                            }
                         }
+                        
                     }
                 }
             }
