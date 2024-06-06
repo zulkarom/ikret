@@ -63,7 +63,7 @@ use yii\helpers\Url;
                   $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
                 }
-                
+
                 $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
                   ['name' => 'Participants & Juries Assignment', 'url' => $url],
                   ['name' => 'Result By Assignments', 'url' => $url2],
@@ -94,14 +94,12 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
 
-          
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
 
           $menu[] = ['name' => 'Program Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
 
           $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
           
-
         }
 
         $menu[] = ['name' => 'User Menu', 'heading' => true];

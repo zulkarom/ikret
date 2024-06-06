@@ -64,7 +64,7 @@ class Rubric extends \yii\db\ActiveRecord
         return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])->orderBy('cat_order ASC');
     }
 
-    public function getCategoriesNotRecommend()
+    public function getCategoriesScore()
     {
         return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
         ->where(['is_recommend' => 0])

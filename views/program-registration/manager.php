@@ -9,12 +9,12 @@ use yii\grid\GridView;
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $program = $role->program;
-$this->title = 'Registration ('.$program->program_abbr.')';
+$sub_str = $programSub? ' / ' . $programSub->sub_abbr  : '';
+$this->title = 'Registration ('.$program->program_abbr . $sub_str.')';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1>
-<?=$programSub? $programSub->sub_name:''?>
 </div>
 
     </div><!-- End Page Title -->

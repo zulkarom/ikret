@@ -72,8 +72,8 @@ $this->params['breadcrumbs'][] = $this->title;
     ];
     //dapatkan category rubric
     if($selectedRubric){
-        if($selectedRubric->categoriesNotRecommend){
-            foreach($selectedRubric->categoriesNotRecommend as $cat){
+        if($selectedRubric->categoriesScore){
+            foreach($selectedRubric->categoriesScore as $cat){
                 $exportColumns[] = [
                     'label' =>$cat->category_name,
                     'format' => 'html',

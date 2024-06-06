@@ -12,15 +12,15 @@ use yii\helpers\ArrayHelper;
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$programSub? $programSub->sub_name:'';
-$this->title = $program->program_name;
+$sub_str = $programSub? ' / (' . $programSub->sub_abbr . ')' : '';
+$this->title = $program->program_abbr . $sub_str;
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="pagetitle">
 <h1><?=$this->title?></h1>
 
-<h1>Result by Juries</h1>
+<h1>Result by Assignment</h1>
 </div>
 
 

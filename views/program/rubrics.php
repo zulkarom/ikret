@@ -5,7 +5,9 @@ use yii\helpers\Html;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
+
 $this->title = 'Rubric: ' . $model->program_name;
+
 ?>
 
 

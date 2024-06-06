@@ -461,6 +461,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         $juries = $this->juries;
         $kira_juri = 0;
         $score = 0;
+        
         if($juries){
             foreach($juries as $j){
                 if($j->status == 20){
@@ -469,6 +470,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
                 }
             }
         }
+
         if($kira_juri == 0){
             return 0;
         }

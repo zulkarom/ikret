@@ -160,7 +160,7 @@ class RubricAnswer extends \yii\db\ActiveRecord
                 $items = $c->items;
                 if($items){
                     foreach($items as $item){
-                        if($item->item_type == 1){
+                        if($item->item_type == 1){ // kira yang likert shj
                             $option = $item->option_number;
                             $colum = $item->colum_ans;
                             $val = $this->$colum;
@@ -221,7 +221,7 @@ class RubricAnswer extends \yii\db\ActiveRecord
 
     public function getScoreValue(){
         list($total, $score, $percent, $award, $val) = $this->totalScorePercent;
-        return $score;
+        return $percent;
     }
 
 
