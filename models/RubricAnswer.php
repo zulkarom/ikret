@@ -154,19 +154,26 @@ class RubricAnswer extends \yii\db\ActiveRecord
         $total = 0;
         $score = 0;
         $rubric = $this->rubric;
-        $cat = $rubric->categories;
+        $cat = $rubric->categoriesScore;
         if($cat){
             foreach($cat as $c){
                 $items = $c->items;
                 if($items){
                     foreach($items as $item){
+                        $option = $item->option_number;
+                        $colum = $item->colum_ans;
+                        $val = $this->$colum;
+                        $total += $option;
+
                         if($item->item_type == 1){ // kira yang likert shj
-                            $option = $item->option_number;
-                            $colum = $item->colum_ans;
-                            $val = $this->$colum;
-                            $total += $option;
                             if($val > 0){
                                 $score +=$val;
+                            }
+                        }
+                        if($item->item_type == 2){ //yesno
+                            //number option kena set full mark berapa
+                            if($val == 1){
+                                $score += $option;
                             }
                         }
                     }
