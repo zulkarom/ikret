@@ -33,9 +33,12 @@ class RubricItem extends \yii\db\ActiveRecord
     {
         return [
             [['item_text', 'category_id'], 'required'],
-            [['item_text', 'item_description'], 'string'],
+
+            [['item_text', 'item_description', 'item_short'], 'string'],
+
             [['category_id', 'item_type', 'item_order', 'option_number'], 'integer'],
             [['colum_ans'], 'string', 'max' => 100],
+
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => RubricCategory::class, 'targetAttribute' => ['category_id' => 'id']],
         ];
     }

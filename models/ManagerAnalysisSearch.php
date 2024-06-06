@@ -54,7 +54,7 @@ class ManagerAnalysisSearch extends ProgramRegistration
     public function search($params)
     {
         $query = ProgramRegistration::find()->alias('a')
-        ->select('a.user_id, a.program_id , AVG(j.score) as  purata')
+        ->select('a.*, j.rubric_id, AVG(j.score) as  purata')
         ->joinWith(['user u'])
         ->leftJoin('program_reg_jury j','j.reg_id = a.id')
         ->where(['>', 'a.status', 0])
@@ -62,7 +62,7 @@ class ManagerAnalysisSearch extends ProgramRegistration
         'j.rubric_id' => $this->rubric, 
         'j.status' => 20]); //complete jury
 
-        
+
         if($this->stage){
             $query = $query->andWhere(['j.stage' => $this->stage]);
         }

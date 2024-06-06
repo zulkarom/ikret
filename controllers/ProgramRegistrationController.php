@@ -12,6 +12,7 @@ use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
 use app\models\ProgramSub;
+use app\models\Rubric;
 use app\models\RubricAnswer;
 use app\models\User;
 use app\models\UserRole;
@@ -499,8 +500,13 @@ class ProgramRegistrationController extends Controller
         }
         $firstRubric = null;
         if($rubrics){
-            $firstRubric = $rubrics[0];
+            $firstRubric = $rubrics[0]->id;
         }
+        $firstStage = null;
+        $stages = $program->programStages;
+            if($stages){
+                $firstStage = $stages[0]->id;
+            }
         
 
         if($role && $role->program){
@@ -511,13 +517,14 @@ class ProgramRegistrationController extends Controller
             $searchModel = new ManagerAnalysisSearch();
             $searchModel->program_id = $role->program_id;
             $searchModel->program_sub = $sub;
-            $searchModel->rubric = $firstRubric->id;
 
-            $stages = $program->programStages;
-            if($stages){
-                $searchModel->stage = $stages[0]->id;
-            }
+            $searchModel->rubric = $firstRubric;
+            $searchModel->stage = $firstStage;
+            //TODO: set klu ada get request yg pilih lain
+            
             $dataProvider = $searchModel->search($this->request->queryParams);
+
+            $selectedRubric = Rubric::findOne($searchModel->rubric);
     
             return $this->render('manager-analysis', [
                 'searchModel' => $searchModel,
@@ -526,7 +533,8 @@ class ProgramRegistrationController extends Controller
                 'model' => $model,
                 'programSub' => $programSub,
                 'rubrics' => $rubrics,
-                'stages' =>$stages
+                'stages' =>$stages,
+                'selectedRubric' => $selectedRubric
             ]);
         }
 

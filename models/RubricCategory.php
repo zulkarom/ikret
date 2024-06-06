@@ -31,7 +31,7 @@ class RubricCategory extends \yii\db\ActiveRecord
     {
         return [
             [['category_name', 'rubric_id'], 'required'],
-            [['rubric_id'], 'integer'],
+            [['rubric_id', 'is_recommend'], 'integer'],
             [['category_name'], 'string', 'max' => 255],
             [['rubric_id'], 'exist', 'skipOnError' => true, 'targetClass' => Rubric::class, 'targetAttribute' => ['rubric_id' => 'id']],
         ];

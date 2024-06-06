@@ -9,12 +9,13 @@ use yii\grid\GridView;
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 $program = $role->program;
-$this->title = 'Registration ('.$program->program_abbr.')';
+$sub_text = $programSub ? ' / ' .$programSub->sub_abbr:'';
+$this->title = 'Registration ('.$program->program_abbr. $sub_text . ')';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1>
-<?=$programSub? $programSub->sub_name:''?>
+
 </div>
 
     </div><!-- End Page Title -->
@@ -25,35 +26,35 @@ $this->params['breadcrumbs'][] = $this->title;
     </div> 
 
     <?php
-    $exportColumns = [
-    ['class' => 'yii\grid\SerialColumn'],
-    'participantText',
-    [
-        'label' =>'Assigned Juries',
+
+    $exportColumns[] = ['class' => 'yii\grid\SerialColumn'];
+    $exportColumns[] = 'participantText';
+    $exportColumns[] = [
+        'label' =>'Completed Juries',
         'value' => function($model){
-            $juries = $model->juries;
-            $html = '';
-            if($juries){
-                foreach($juries as $jury){
-                    $html .= $jury->user->fullname . "\n";
-                }
-            }
-            return $html;
+            $juries = $model->juriesCompleted;
+                    $html = '';
+                    if($juries){
+                        foreach($juries as $jury){
+                            $html .= $jury->user->fullname . " (".$jury->score.")\n";
+                        }
+                    }
+                    return $html;
         }
-    ],
-    [
+    ];
+    $exportColumns[] = [
         'label' =>'Average Score',
         'value' => function($model){
             return $model->score;
         }
-    ],
-    [
+    ];
+    $exportColumns[] = [
         'label' =>'Award',
         'value' => function($model){
             return $model->awardText();
         }
-    ],
-    [
+    ];
+    $exportColumns[] = [
         'label' =>'Achievement',
         'format' => 'html',
         'value' => function($model){
@@ -65,16 +66,33 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             return $html;
         }
-    ]
-            
     ];
+    //dapatkan category rubric
+    if($selectedRubric){
+        if($selectedRubric->categories){
+            foreach($selectedRubric->categories as $cat){
+                $exportColumns[] = [
+                    'label' =>$cat->category_name,
+                    'format' => 'html',
+                    'value' => function($model){
+                        
+                    }
+                ];
+            }
+
+        }
+    }
+    
+
+
+
 
 ?>
 <div style="display: none;">
 <?=ExportMenu::widget([
     'dataProvider' => $dataProvider,
     'columns' => $exportColumns,
-    'filename' => 'I-CREATE_SUMMARY_' . date('Y-m-d'),
+    'filename' => 'I-CREATE_ANALYSIS_' . date('Y-m-d'),
     'onRenderSheet'=>function($sheet, $grid){
         $sheet->getStyle('A2:'.$sheet->getHighestColumn().$sheet->getHighestRow())
         ->getAlignment()->setWrapText(true);
@@ -217,14 +235,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
-                'label' =>'Assigned Juries',
+                'label' =>'Completed Juries',
                 'format' => 'html',
                 'value' => function($model){
-                    $juries = $model->juries;
+                    $juries = $model->juriesCompleted;
                     $html = '';
                     if($juries){
                         foreach($juries as $jury){
-                            $html .= $jury->user->fullname . "<br />";
+                            $html .= $jury->user->fullname . " (".$jury->score.")<br />";
                         }
                     }
                     return $html;
@@ -233,7 +251,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'label' =>'Average Score',
                 'value' => function($model){
-                    return $model->score;
+                    return number_format($model->purata,2).'%';
                 }
             ],
             [
@@ -260,7 +278,11 @@ $this->params['breadcrumbs'][] = $this->title;
 //'visible' => false,
 'buttons'=>[
     'view'=>function ($url, $model) {
-        return Html::a('Update',['manager-award', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+        $url = ['manager-award', 'id' => $model->id];
+        if($model->programSub){
+            $url = ['manager-award', 'id' => $model->id, 'sub' => $model->programSub->id];
+        }
+        return Html::a('Update', $url,['class'=>'btn btn-primary btn-sm']);
     }
 ],
 

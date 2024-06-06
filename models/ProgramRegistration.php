@@ -444,6 +444,12 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $this->hasMany(JuryAssign::class, ['reg_id' => 'id']);
     }
 
+    public function getJuriesCompleted(){
+        return JuryAssign::find()
+        ->where(['reg_id' => $this->id, 'status' => 20])
+        ->all();
+    }
+
     public function getAchievements()
     {
         return $this->hasMany(ParticipantAchieve::class, ['program_reg_id' => 'id']);
