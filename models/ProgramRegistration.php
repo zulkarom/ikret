@@ -3,6 +3,8 @@
 namespace app\models;
 
 use Yii;
+use yii\db\Expression;
+use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 use yii\web\UploadedFile;
@@ -455,13 +457,23 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $this->hasMany(ParticipantAchieve::class, ['program_reg_id' => 'id']);
     }
 
+    public function mentorList(){
+        $list = User::find()
+        ->from('user u')
+        ->innerJoin('user_role r','r.user_id = u.id')
+        ->andWhere(['r.role_name' => 'mentor'])
+        ->all();
+        
+        return ArrayHelper::map($list,'id', 'fullname');
+    }
+
     
 
     public function getAverageJuriesScore(){
         $juries = $this->juries;
         $kira_juri = 0;
         $score = 0;
-        
+
         if($juries){
             foreach($juries as $j){
                 if($j->status == 20){

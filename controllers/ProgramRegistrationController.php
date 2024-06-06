@@ -76,12 +76,13 @@ class ProgramRegistrationController extends Controller
             'dataProvider' => $dataProvider,
         ]);
     }
-    public function actionJuryDelete($id){
+    public function actionJuryDelete($id, $p, $s = null){
         if(!Yii::$app->user->identity->isManager) return false;
+
         $assign = $this->findAssignment($id);
         $reg = $assign->registration;
 
-        $role = UserRole::findOne(['program_id' => $reg->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne(['program_id' => $reg->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_id' => $p]);
 
         if($role && $role->program){
             
@@ -93,7 +94,7 @@ class ProgramRegistrationController extends Controller
             }
         }
 
-        return $this->redirect(['manager', 'id' => $reg->program_id]);
+        return $this->redirect(['manager', 'id' => $p, 'sub' => $s]);
     }
 
     public function actionJuryJudge($id){

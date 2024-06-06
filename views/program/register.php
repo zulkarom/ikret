@@ -317,6 +317,14 @@ if(in_array('group_member',$arr_fields)){
       <div class="col-md-6"><?php 
                     if(in_array('mentor_main',$arr_fields)){
 
+                    echo $form->field($register, 'mentor_main')->widget(Select2::classname(), [
+                        'data' => $register->mentorList(),
+                        'options' => ['multiple' => false,'placeholder' => 'Select mentor'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                      ]);
+/* 
                       //cari mentor
                       $userDesc = '';
                       if(!$register->isNewRecord){
@@ -357,7 +365,7 @@ if(in_array('group_member',$arr_fields)){
                       'templateSelection' => new JsExpression('function (user) { return user.text; }'),
                   ],
                   ]);
-                  
+                   */
 
 
 
@@ -365,7 +373,15 @@ if(in_array('group_member',$arr_fields)){
                     } ?></div>
       <div class="col-md-6"><?php 
                     if(in_array('mentor_co',$arr_fields)){
+                      echo $form->field($register, 'mentor_co')->widget(Select2::classname(), [
+                        'data' => $register->mentorList(),
+                        'options' => ['multiple' => false,'placeholder' => 'Select mentor'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                      ]);
 
+/* 
 
          //cari mentor
          $userDesc = '';
@@ -408,7 +424,7 @@ if(in_array('group_member',$arr_fields)){
      ],
      ]);
 
-
+ */
 
 
                     } ?></div>

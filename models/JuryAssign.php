@@ -220,7 +220,16 @@ class JuryAssign extends \yii\db\ActiveRecord
                     $html .= '<li><i>Note:</i> '.$this->note.'</li>';
                 }
                 if($admin && $this->status == 0){
-                    $html .= '<li><i>Action:</i> <a href="'.Url::to(['/program-registration/jury-delete', 'id' => $this->id]).'" class="btn btn-outline-danger btn-sm">Delete</a></li>';
+                    //kena cari program & sub
+                    $p = $this->registration->program_id;
+                    $sub = $this->registration->program_sub;
+                    $url = ['/program-registration/jury-delete', 'id' => $this->id, 'p' => $p];
+                    if($sub){
+                        $url = ['/program-registration/jury-delete', 'id' => $this->id, 'p' => $p, 's' => $sub];
+                    }
+
+
+                    $html .= '<li><i>Action:</i> <a href="'.Url::to($url).'" class="btn btn-outline-danger btn-sm">Delete</a></li>';
                 }
                 if($admin && $this->status == 20){
                     $html .= '<li><i>Score:</i> '.$this->score.'</li>';
