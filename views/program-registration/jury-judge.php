@@ -59,7 +59,7 @@ $formName =  $model->formName();
         <?php } ?>
 
 
-<?php if($assign->status <= 10){?>
+<?php if($assign->status <= 10 || $write == false){?>
   <div class="pagetitle"><h1>Rubric Form </h1>
   (<?=$rubric->rubric_name?>)
 </div>
