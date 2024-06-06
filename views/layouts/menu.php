@@ -63,8 +63,8 @@ use yii\helpers\Url;
                   $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
                 }
-
-                $menu[] = ['name' => 'Registration ('.$p->program->program_abbr.$sub.')', 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
+                
+                $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
                   ['name' => 'Participants & Juries Assignment', 'url' => $url],
                   ['name' => 'Result By Assignments', 'url' => $url2],
                   ['name' => 'Analysis & Achievement', 'url' => $url7],
