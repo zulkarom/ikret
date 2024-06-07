@@ -231,7 +231,7 @@ if(in_array('group_member',$arr_fields)){
         'widgetContainer' => 'dynamicform_wrapper',
         'widgetBody' => '.container-items',
         'widgetItem' => '.member-item',
-        'limit' => 10,
+        'limit' => 20,
         'min' => 1,
         'insertButton' => '.add-member',
         'deleteButton' => '.remove-member',
