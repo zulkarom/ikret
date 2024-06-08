@@ -430,7 +430,7 @@ class ProgramController extends Controller
             }
             $ada = $ada->one();
             if($ada){
-                Yii::$app->session->addFlash('error', "You have registered to this program");
+                Yii::$app->session->addFlash('error', "Sorry, registration failed. You have registered to this program");
             }else{
                 $action =  Yii::$app->request->post('action');
                 if($action == 'submit'){
