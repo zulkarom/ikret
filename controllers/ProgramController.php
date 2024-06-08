@@ -424,7 +424,7 @@ class ProgramController extends Controller
             //verify dia nk register ke belum
             $p = $register->program_id;
             $sub = $register->program_sub;
-            $ada = ProgramRegistration::find()->where(['program_id' => $p]);
+            $ada = ProgramRegistration::find()->where(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id]);
             if($sub){
                 $ada = $ada->andWhere(['program_sub' => $sub]);
             }

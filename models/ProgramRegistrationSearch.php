@@ -45,7 +45,7 @@ class ProgramRegistrationSearch extends ProgramRegistration
     {
         $query = ProgramRegistration::find()->alias('a')
         ->joinWith(['user u'])
-        ->where(['>', 'a.status', 0]);
+        ->where(['>', 'a.status', 0])->orderBy('id DESC');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
