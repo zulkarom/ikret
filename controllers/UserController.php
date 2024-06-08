@@ -70,6 +70,9 @@ class UserController extends Controller
             return $this->render('all', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
             ]);
         }
         
@@ -116,6 +119,9 @@ class UserController extends Controller
         return $this->render('jury', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
             'userRole' => $userRole,
             'newUser' => $newUser
         ]);
@@ -319,11 +325,9 @@ class UserController extends Controller
 			$session->set('or-usr', $original);
 			return $this->redirect(['site/index']);
 		}
-		
 	}
 
-    public function actionReturnRole()
-	{
+    public function actionReturnRole(){
 		$session = Yii::$app->session;
 		if ($session->has('or-usr')){
 			$id = $session->get('or-usr');

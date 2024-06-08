@@ -156,6 +156,9 @@ $this->params['breadcrumbs'][] = $this->title;
 <div style="display: none;">
 <?=ExportMenu::widget([
     'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
     'columns' => $exportColumns,
     'filename' => 'I-CREATE_ANALYSIS_' . date('Y-m-d'),
     'onRenderSheet'=>function($sheet, $grid){
@@ -290,6 +293,9 @@ $this->params['breadcrumbs'][] = $this->title;
     
     echo GridView::widget([
         'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         //'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],

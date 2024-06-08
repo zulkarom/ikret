@@ -61,6 +61,9 @@ class ProgramRegistrationController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         ]);
     }
 
@@ -74,6 +77,9 @@ class ProgramRegistrationController extends Controller
         return $this->render('jury-assignment', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         ]);
     }
     public function actionJuryDelete($id, $p, $s = null){
@@ -390,6 +396,9 @@ class ProgramRegistrationController extends Controller
         return $this->render('jury-result', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
             'program' => $program,
             'programSub' => $programSub,
         ]);
@@ -475,6 +484,9 @@ class ProgramRegistrationController extends Controller
             return $this->render('manager', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
                 'role' => $role,
                 'model' => $model,
                 'programSub' => $programSub
@@ -530,6 +542,9 @@ class ProgramRegistrationController extends Controller
             return $this->render('manager-analysis', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
                 'role' => $role,
                 'model' => $model,
                 'programSub' => $programSub,

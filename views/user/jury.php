@@ -117,6 +117,9 @@ $("#btn-hide-new-user").click(function(){
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],

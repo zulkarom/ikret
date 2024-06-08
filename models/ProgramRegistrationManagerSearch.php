@@ -21,7 +21,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     {
         return [
             [['program_id', 'program_sub'], 'integer'],
-            [['fullnameSearch','dateSearch'], 'string'],
+            [['fullnameSearch','dateSearch', 'group_name', 'group_code'], 'string'],
         ];
     }
 
@@ -63,6 +63,9 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+		'pagination' => [
+                'pageSize' => 100,
+            ],
         ]);
 
         $this->load($params);
@@ -77,7 +80,10 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
         ]); */
 
         $query->andFilterWhere(['like', 'a.submitted_at', $this->submitted_at])
-        ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);
+        ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch])
+        ->andFilterWhere(['like', 'a.group_code', $this->group_code])
+        ->andFilterWhere(['like', 'a.group_name', $this->group_name])
+        ;
 
         return $dataProvider;
     }

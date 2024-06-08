@@ -60,7 +60,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card-header">Filter Form</div>
     <div class="card-body pt-4">
     <?= $this->render('_search', [
-        'model' => $searchModel
+        'model' => $searchModel,
+        'programSub' => $programSub,
     ]) ?>
 </div></div>
 
@@ -154,6 +155,12 @@ $this->params['breadcrumbs'][] = $this->title;
     
     echo GridView::widget([
         'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         //'filterModel' => $searchModel,
         'columns' => $colums,
     ]); ?>

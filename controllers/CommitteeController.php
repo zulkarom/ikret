@@ -78,6 +78,9 @@ class CommitteeController extends Controller
 
         return $this->render('request', [
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         ]);
     }
 
@@ -105,6 +108,9 @@ class CommitteeController extends Controller
 
         return $this->render('letter', [
             'dataProvider' => $dataProvider,
+                'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
         ]);
     }
 

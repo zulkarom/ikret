@@ -10,11 +10,26 @@ use yii\helpers\Html;
 
 <div class="program-registration-search">
 
-    <?php $form = ActiveForm::begin([
-        'action' => ['manager', 'id' => $model->program_id],
+    <?php 
+    $url = ['manager', 'id' => $model->program_id];
+    //buat utk sub
+    if($programSub){
+        $url = ['manager', 'id' => $model->program_id, 'sub' => $programSub->id];
+    }
+    
+    $form = ActiveForm::begin([
+        'action' => $url,
         'method' => 'get',
     ]); ?>
     <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
+    <div class="row">
+        <div class="col-md-6">
+        <?= $form->field($model, 'group_code')->textInput(['placeholder' => 'Search Group ID'])->label(false) ?>
+        </div>
+        <div class="col-md-6">
+        <?= $form->field($model, 'group_name')->textInput(['placeholder' => 'Search Group Name'])->label(false) ?>
+        </div>
+    </div>
     
 <br />
     <div class="form-group">
