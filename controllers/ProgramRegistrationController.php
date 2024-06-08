@@ -356,7 +356,7 @@ class ProgramRegistrationController extends Controller
         return $out;
     }
 
-    public function actionManagerFlag($id,$flag){
+    public function actionManagerFlag($id, $flag, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $reg = $this->findModel($id);
         if($flag == 1){
@@ -367,8 +367,19 @@ class ProgramRegistrationController extends Controller
         if($reg->save()){
             Yii::$app->session->addFlash('success', "Flagged Participants Updated");
         }
-        return $this->redirect(['manager', 'id' => $reg->program_id]);
+        return $this->redirect(['manager', 'id' => $reg->program_id, 'sub' => $sub]);
     }
+
+    public function actionManagerClearForm($id, $sub = null){
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $session = Yii::$app->session;
+        $this->clearSession($session);
+        $session->remove('keep-open');
+        Yii::$app->session->addFlash('success', "Form Cleared");
+        return $this->redirect(['manager', 'id' => $id, 'sub' => $sub]);
+    }
+
 
     public function actionJuryResult($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
@@ -405,6 +416,8 @@ class ProgramRegistrationController extends Controller
     }
 
     public function actionManager($id, $sub = null){
+        $session = Yii::$app->session;
+        //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
         $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
         $programSub = null;
@@ -419,15 +432,54 @@ class ProgramRegistrationController extends Controller
         }
 
         if($role && $role->program){
+            
             $model = new JuryAssign();
+            $model->scenario = 'assign';
+            if ($session->has('keep-data') && $session->get('keep-data') == 1){
+                $model->users = $session->get('users');
+                $model->rubric_id = $session->get('rubric_id');
+                $model->date_start = $session->get('date_start');
+                $model->date_end = $session->get('date_end');
+                $model->location = $session->get('location');
+                $model->note = $session->get('note');
+                $model->link = $session->get('link');
+                $model->keep_data = $session->get('keep_data');
+                $model->keep_open = $session->get('keep_open');
+            }
+
             //cari ada stage tak
             $stages = $program->programStages;
             if($stages){
                 $model->scenario = 'stage';
             }
             $model->stage = 0;
+            //////////////////post
                 if ($this->request->isPost && $model->load($this->request->post())) {
-                    //echo '<pre>';
+                    //proses session
+                    //echo $model->keep_data;die();
+                    if($model->keep_data == 1){
+                        //die('keep data 1');
+                        $session->set('keep-data', 1);
+                        $session->set('users', $model->users);
+                        $session->set('rubric_id', $model->rubric_id);
+                        $session->set('date_start', $model->date_start);
+                        $session->set('date_end', $model->date_end);
+                        $session->set('location', $model->location);
+                        $session->set('note', $model->note);
+                        $session->set('link', $model->link);
+                        $session->set('keep_data', $model->keep_data);
+                        $session->set('keep_open', $model->keep_data);
+                    }else{
+                        $this->clearSession($session);
+                    }
+
+                    if($model->keep_open == 1){
+                        $session->set('keep-open', 1);
+                    }else{
+                        $session->remove('keep-open');
+                    }
+                    // echo '<pre>';
+                    // print_r($this->request->post());die();
                     $users = $model->users;
                     $post = Yii::$app->request->post();
 
@@ -443,7 +495,7 @@ class ProgramRegistrationController extends Controller
                                     if($ada){
                                         $name = $ada->user->fullname;
                                         $peserta = $ada->registration->participantText;
-                                        Yii::$app->session->addFlash('error', $name . ' had been assigned to ' . $peserta);
+                                        Yii::$app->session->addFlash('error', 'Failed: ' .$name . ' had been assigned to ' . $peserta);
                                     }else{
                                         $jury = new JuryAssign([
                                             'user_id' => $u,
@@ -494,6 +546,19 @@ class ProgramRegistrationController extends Controller
         }
 
         
+    }
+
+    private function clearSession($session){
+        $session->remove('keep-data');
+        $session->remove('users');
+        $session->remove('rubric_id');
+        $session->remove('date_start');
+        $session->remove('date_end');
+        $session->remove('location');
+        $session->remove('note');
+        $session->remove('link');
+        $session->remove('keep_open');
+        $session->remove('keep_data');
     }
 
     public function actionManagerAnalysis($id, $sub = null){

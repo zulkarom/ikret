@@ -7,6 +7,7 @@ use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
@@ -15,11 +16,11 @@ use yii\helpers\Html;
 <div class="program-registration-form">
     <?=$form->field($model, 'users')->widget(Select2::class, [
         'data' => UserRole::listJury(),
-        'options' => ['multiple' => true,'placeholder' => 'Search for jury ...'],
+        'options' => ['multiple' => true, 'placeholder' => 'Select..'],
         'pluginOptions' => [
             'allowClear' => true
         ],
-    ])?>
+    ])->label('Select Jury (s)')?>
 
     <div class="row">
 
@@ -91,14 +92,20 @@ use yii\helpers\Html;
         <div class="col-md-6"><?= $form->field($model, 'note')->textarea(['rows' => 3]) ?></div>
         <div class="col-md-6"><?= $form->field($model, 'link')->textarea(['rows' => 3]) ?></div>
     </div>
-    <?php 
-    /*  <label for="keep-data" style="margin-bottom: 10px;"><input type="checkbox" name="keep-data" id="keep-data"> Keep current data in this form after submitting</label>*/
-    ?>
+
+    <?=$form->field($model, 'keep_data')->checkbox(['label'=>'Keep current data in this form after submitting']);?>
+    <?=$form->field($model, 'keep_open')->checkbox(['label'=>'Keep this form open']);?>
+
+
+    
+
     
 <br />
 
     <div class="form-group">
-        <?= Html::button('Assign Jury to Selected Participants', ['id'=>'btn-submit-jury', 'class' => 'btn btn-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
+        <?= Html::button('Assign Jury to Selected Participants', ['id'=>'btn-submit-jury', 'class' => 'btn btn-success']) ?> 
+        
+        <?= Html::button('Clear Form', ['id'=>'btn-clear-form', 'class' => 'btn btn-outline-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
     </div>
 
 
@@ -106,11 +113,24 @@ use yii\helpers\Html;
 
 </div>
 
-<?php 
+<?php
+
+if($programSub){
+    $url = Url::to(['manager-clear-form', 'id' => $program->id, 'sub' => $programSub->id],true);
+}else{
+    $url = Url::to(['manager-clear-form', 'id' => $program->id],true);
+}
+
 $this->registerJs('
 
+$("#btn-clear-form").click(function(){
+    var url = "'. $url .'";
+    window.location.replace(url);
+
+});
+
 $("#btn-submit-jury").click(function(){
-    var checkboxes = document.querySelectorAll(\'input[type="checkbox"]:checked\');
+    var checkboxes = document.querySelectorAll(\'input[name="selection[]"]:checked\');
     if (checkboxes.length === 0) {
         alert("Please select participant(s) first before clicking the assign button");
     }else{

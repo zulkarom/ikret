@@ -1,7 +1,8 @@
 <?php
 
 use kartik\export\ExportMenu;
-use yii\bootstrap5\ActiveForm;
+use kartik\form\ActiveForm;
+//use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\grid\GridView;
 
@@ -65,8 +66,14 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 </div></div>
 
-    <?php $form = ActiveForm::begin(['id' => 'jury-assign-form']); ?>
-    <div class="card" style="display:none" id="con-jury-form">
+    <?php 
+    $fstyle = 'style="display:none"';
+    $session = Yii::$app->session;
+    if ($session->has('keep-open') && $session->get('keep-open') == 1){
+        $fstyle = '';
+    }
+    $form = ActiveForm::begin(['id' => 'jury-assign-form']); ?>
+    <div class="card" <?=$fstyle?> id="con-jury-form">
     <div class="card-header">Jury Assignment Form</div>
     <div class="card-body pt-4">
     <?= $this->render('_form_jury', [
@@ -143,11 +150,18 @@ $this->params['breadcrumbs'][] = $this->title;
     },
     'flag'=>function ($url, $model) {
         if($model->flag == 0){
-            return Html::a('<span class="bi bi-flag"></span> Flag',['manager-flag', 'id' => $model->id, 'flag' => 1],['class'=>'btn btn-warning btn-sm']);
+            $url = ['manager-flag', 'id' => $model->id];
+            if($model->programSub){
+                $url = ['manager-flag', 'id' => $model->id, 'flag' => 1, 'sub' => $model->programSub->id];
+            }
+            return Html::a('<span class="bi bi-flag"></span> Flag', $url,['class'=>'btn btn-warning btn-sm']);
         }else if($model->flag == 1){
-            return Html::a('<span class="bi bi-flag"></span> Unflag',['manager-flag', 'id' => $model->id, 'flag' => 0],['class'=>'btn btn-outline-warning btn-sm']);
+            $url = ['manager-flag', 'id' => $model->id];
+            if($model->programSub){
+                $url = ['manager-flag', 'id' => $model->id,'flag' => 0, 'sub' => $model->programSub->id];
+            }
+            return Html::a('<span class="bi bi-flag"></span> Unflag', $url,['class'=>'btn btn-outline-warning btn-sm']);
         }
-        
     },
 ],
 
@@ -171,4 +185,5 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
         <?php ActiveForm::end(); ?>
+        <i>* if you want to select multiple participants, but they are in different pages, flag them first to be on top of the list first.</i>
     </section>

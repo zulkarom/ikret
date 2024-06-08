@@ -24,6 +24,8 @@ use yii\helpers\Url;
 class JuryAssign extends \yii\db\ActiveRecord
 {
     public $users;
+    public $keep_data;
+    public $keep_open;
 
     /**
      * {@inheritdoc}
@@ -41,11 +43,13 @@ class JuryAssign extends \yii\db\ActiveRecord
         return [
             [['reg_id', 'user_id', 'rubric_id'], 'required'],
 
+            [['users', 'rubric_id'], 'required', 'on' => 'assign'],
+
             [['reg_id', 'user_id', 'rubric_id', 'stage'], 'required', 'on' => 'stage'],
 
             ['users', 'each', 'rule' => ['integer']],
 
-            [['reg_id', 'user_id', 'rubric_id', 'created_at', 'updated_at', 'method', 'stage', 'status'], 'integer'],
+            [['reg_id', 'user_id', 'rubric_id', 'created_at', 'updated_at', 'method', 'stage', 'status', 'keep_data', 'keep_open'], 'integer'],
 
             [['location'], 'string', 'max' => 255],
 
