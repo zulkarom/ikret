@@ -71,7 +71,7 @@ class ProgramController extends Controller
         $arr = ArrayHelper::map($registered, 'program_id', 'program_id');
 
         $programs = Program::find()
-        ->where(['NOT IN', 'id', $arr])
+        //->where(['NOT IN', 'id', $arr])
         ->all();
 
         return $this->render('index',[
@@ -420,100 +420,116 @@ class ProgramController extends Controller
 
 
         if($register->load(Yii::$app->request->post())){
-            $action =  Yii::$app->request->post('action');
-            if($action == 'submit'){
-                $register->status = 10;
-                $register->scenario = 'program'.$id;
-                $register->submitted_at = new Expression('NOW()');
+
+            //verify dia nk register ke belum
+            $p = $register->program_id;
+            $sub = $register->program_sub;
+            $ada = ProgramRegistration::find()->where(['program_id' => $p]);
+            if($sub){
+                $ada = $ada->andWhere(['program_sub' => $sub]);
             }
-
-            $register->group_member = 1;
-            $register->project_name = $this->myTrim($register->project_name);
-            if($register->isNewRecord){
-                $register->created_at = time();
-            }
-            
-            $register->updated_at = time();
-            $register->uploadFile('payment');
-            $register->uploadFile('poster');
-
-            if(!$register->isNewRecord){
-                $oldIDs = ArrayHelper::map($members, 'id', 'id');
-            }
-
-
-            $members = Model::createMultiple(Member::class);
-            Model::loadMultiple($members, Yii::$app->request->post());
-
-            if(!$register->isNewRecord){
-                $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($members, 'id', 'id')));
-            }
-        
-            $valid = $register->validate();
-            
-            $valid = Model::validateMultiple($members) && $valid;
-            //$valid = true;
-            if ($valid) {
-               
-                $transaction = Yii::$app->db->beginTransaction();
-                try {
-                    
-                    if ($flag = $register->save()) {
-                        if(!$register->isNewRecord){
-                            if (! empty($deletedIDs)) {
-                                Member::deleteAll(['id' => $deletedIDs]);
-                            }
-                        }
-
-                        foreach ($members as $i => $member) {
-                            if ($flag === false) {
-                                break;
-                            }
-                            $member->member_name = strtoupper($member->member_name);
-                            //do not validate this in model
-                            $member->program_reg_id = $register->id;
-                            
-
-                            if (!($flag = $member->save(false))) {
-                                break;
-                            }
-                        }
-
-                        //mentor
-                            $flag = $this->processMentor($register);
-
-                    }else{
-                        $register->flashError();
-                    }
-
-                    if ($flag) {
-
-                        $transaction->commit();
-
-                        if($action == 'submit'){
-                            Yii::$app->session->addFlash('success', "Registration successful.");
-                        }else if($action == 'draft'){
-                            Yii::$app->session->addFlash('success', "The information has been successfully saved.");
-                        }
-
-
-                        return $this->redirect(['register-form', 'id' => $register->program_id, 'reg' => $register->id]);
-                        
-
-                    } else {
-                        $register->status = 0;
-                        $transaction->rollBack();
-                    }
-                } catch (\Exception $e) {
-                    $register->status = 0;
-                    Yii::$app->session->addFlash('error', $e->getMessage());
-                    $transaction->rollBack();
-                    
-                }
+            $ada = $ada->one();
+            if($ada){
+                Yii::$app->session->addFlash('error', "You have registered to this program");
             }else{
-                $register->flashError();
-                $register->status = 0;
+                $action =  Yii::$app->request->post('action');
+                if($action == 'submit'){
+                    $register->status = 10;
+                    $register->scenario = 'program'.$id;
+                    $register->submitted_at = new Expression('NOW()');
+                }
+    
+                $register->group_member = 1;
+                $register->project_name = $this->myTrim($register->project_name);
+                if($register->isNewRecord){
+                    $register->created_at = time();
+                }
+                
+                $register->updated_at = time();
+                $register->uploadFile('payment');
+                $register->uploadFile('poster');
+    
+                if(!$register->isNewRecord){
+                    $oldIDs = ArrayHelper::map($members, 'id', 'id');
+                }
+    
+    
+                $members = Model::createMultiple(Member::class);
+                Model::loadMultiple($members, Yii::$app->request->post());
+    
+                if(!$register->isNewRecord){
+                    $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($members, 'id', 'id')));
+                }
+            
+                $valid = $register->validate();
+                
+                $valid = Model::validateMultiple($members) && $valid;
+                //$valid = true;
+                if ($valid) {
+                   
+                    $transaction = Yii::$app->db->beginTransaction();
+                    try {
+                        
+                        if ($flag = $register->save()) {
+                            if(!$register->isNewRecord){
+                                if (! empty($deletedIDs)) {
+                                    Member::deleteAll(['id' => $deletedIDs]);
+                                }
+                            }
+    
+                            foreach ($members as $i => $member) {
+                                if ($flag === false) {
+                                    break;
+                                }
+                                $member->member_name = strtoupper($member->member_name);
+                                //do not validate this in model
+                                $member->program_reg_id = $register->id;
+                                
+    
+                                if (!($flag = $member->save(false))) {
+                                    break;
+                                }
+                            }
+    
+                            //mentor
+                                $flag = $this->processMentor($register);
+    
+                        }else{
+                            $register->flashError();
+                        }
+    
+                        if ($flag) {
+    
+                            $transaction->commit();
+    
+                            if($action == 'submit'){
+                                Yii::$app->session->addFlash('success', "Registration successful.");
+                            }else if($action == 'draft'){
+                                Yii::$app->session->addFlash('success', "The information has been successfully saved.");
+                            }
+    
+    
+                            return $this->redirect(['register-form', 'id' => $register->program_id, 'reg' => $register->id]);
+                            
+    
+                        } else {
+                            $register->status = 0;
+                            $transaction->rollBack();
+                        }
+                    } catch (\Exception $e) {
+                        $register->status = 0;
+                        Yii::$app->session->addFlash('error', $e->getMessage());
+                        $transaction->rollBack();
+                        
+                    }
+                }else{
+                    $register->flashError();
+                    $register->status = 0;
+                }
             }
+
+
+            
 
         }
         //kena render jgk in case ada error

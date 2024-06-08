@@ -23,7 +23,12 @@ $this->title = 'Programme Registered';
         if($registered){
           $i = 1;
           foreach($registered as $program){
-            echo ' <tr><td>'.$i.'. </td><td>'.$program->program->program_name;
+            $sub = '';
+            if($program->programSub){
+              $sub = ' / ' . $program->programSub->sub_name;
+            }
+            echo ' <tr><td>'.$i.'. </td><td>'.$program->program->program_name . $sub;
+
             if($program->project_name){
               echo '<br /><i>Project Title: '. $program->project_name .'</i>';
             }
