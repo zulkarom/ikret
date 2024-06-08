@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 </div></div>
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php $form = ActiveForm::begin(['id' => 'jury-assign-form']); ?>
     <div class="card" style="display:none" id="con-jury-form">
     <div class="card-header">Jury Assignment Form</div>
     <div class="card-body pt-4">

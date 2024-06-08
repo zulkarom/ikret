@@ -15,7 +15,7 @@ use yii\helpers\Url;
 <div class="col-12">
 <?= $form
 ->field($model, 'email', ['addon' => ['append' => ['content'=>'<i class="bi bi-envelope"></i>']]])
-->textInput() ?>
+->textInput(['style' => 'text-transform: lowercase']) ?>
 </div>
 
 <div class="col-12">
@@ -28,7 +28,7 @@ use yii\helpers\Url;
 
 <?php 
 echo $form
-->field($model, 'is_internal')->dropDownList($model->listCategory(),['prompt' => 'Select Category']);
+->field($model, 'user_category')->dropDownList($model->listCategory(),['prompt' => 'Select Category']);
 ?>
 </div>
 
@@ -36,7 +36,7 @@ echo $form
 
 <?=$form
 ->field($model, 'matric')
-->textInput() ?>
+->textInput()->label('Student/Staff ID',['id' => 'label-matric']) ?>
 </div>
 
 <div class="col-12" id="con-institution" style="display:none">
@@ -85,15 +85,22 @@ echo $form
 </div>
 <?php } ?>
 <?php ActiveForm::end(); ?>
+
+
 <?php 
 $this->registerJs('
 
-$("#registerform-is_internal").change(function(){
+$("#registerform-user_category").change(function(){
   var val = $(this).val();
-  if(val == 1){
+  if(val == 1 || val == 2 || val == 3){
     $("#con-matric").show();
     $("#con-institution").hide();
-  }else if(val == 2){
+    if(val == 1 || val == 2){
+      $("#label-matric").text("Matric No.");
+    }else if(val == 3){
+      $("#label-matric").text("Staff No.");
+    }
+  }else if(val == 4 || val == 5){
     $("#con-matric").hide();
     $("#con-institution").show();
   }

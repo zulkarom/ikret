@@ -18,13 +18,14 @@ use yii\helpers\Html;
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'is_internal')->dropDownList($model->listCategory())?>
+    <?= $form->field($model, 'is_internal')->dropDownList($model->listIsInternal())->label('Category (Internal)')?>
+    <?= $form->field($model, 'is_student')->dropDownList($model->listIsStudent())->label('Category (Student)')?>
 
     <?= $form->field($model, 'matric')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'institution')->textInput() ?>
     <br />
-Fill password to change, otherwise leave blank
+Fill in password to change, otherwise <b>leave blank</b>
     <?= $form->field($model, 'passwordRaw')->passwordInput(['maxlength' => true]) ?>
     <br />
 

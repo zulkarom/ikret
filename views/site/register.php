@@ -38,29 +38,7 @@ $this->title = 'I-CREATE - Register';
                 </div>
               </div>
 
-
-
-
-
     </div>
     
 </div>
 
-<?php 
-$this->registerJs('
-
-$("#registerform-is_internal").change(function(){
-  var val = $(this).val();
-  if(val == 1){
-    $("#con-matric").show();
-    $("#con-institution").hide();
-  }else if(val == 2){
-    $("#con-matric").hide();
-    $("#con-institution").show();
-  }
-
-});
-
-');
-
-?>

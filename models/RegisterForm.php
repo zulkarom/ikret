@@ -15,9 +15,9 @@ class RegisterForm extends Model
     public $password_repeat;
     public $matric;
     public $email;
-    public $is_internal;
+    public $user_category;
     public $institution;
-    public $role_name = 'participant';
+    public $role_name = ['participant'];
     public $self_register = true;
     public $button_label = 'Register';
 
@@ -33,26 +33,28 @@ class RegisterForm extends Model
             ['email', 'email'],
             ['phone', 'number'],
 
-            ['is_internal', 'integer'],
+            ['user_category', 'integer'],
 
             ['password_repeat', 'compare', 'compareAttribute' => 'password'],
 
-            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'is_internal'], 'required'],
+            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'user_category'], 'required'],
 
-            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'is_internal', 'institution'], 'required', 'on' => 'external'],
+            [['fullname', 'phone', 'password', 'password_repeat', 'email', 'user_category', 'institution'], 'required', 'on' => 'external'],
 
             [['matric'], 'required', 'when' => function($model){
-                return $model->is_internal == '1';},
+                    return $model->user_category == '1' || $model->user_category == '2' || $model->user_category == '3';
+                },
                 'whenClient' => "function (attribute, value) {
-        return $('#registerform-is_internal').val() == '1';
-                         }",
+                    return $('#registerform-user_category').val() == '1' || $('#registerform-user_category').val() == '2' || $('#registerform-user_category').val() == '3';
+                }",
             ],
 
             [['institution'], 'required', 'when' => function($model){
-                return $model->is_internal == '2';},
+                    return $model->user_category == '4' || $model->user_category == '5';
+                },
                 'whenClient' => "function (attribute, value) {
-        return $('#registerform-is_internal').val() == '2';
-                         }",
+                    return $('#registerform-user_category').val() == '4' || $('#registerform-user_category').val() == '5';
+                }",
             ],
             
 
@@ -68,8 +70,9 @@ class RegisterForm extends Model
         $label = parent::attributeLabels();
         $label['matric'] = 'Student/Staff ID';
         $label['fullname'] = 'Full Name';
-        $label['is_internal'] = 'Category';
+        $label['user_category'] = 'Category';
         $label['password_repeat'] = 'Password Repeat';
+        $label['role_option'] = 'Register as';
         return $label;
     }
 
@@ -92,19 +95,31 @@ class RegisterForm extends Model
             return null;
         }
 
-        
-        
         $user = new User();  
-        $user->username = $this->email;
+        $user->username = strtolower($this->email);
         $user->matric = $this->matric;
         $user->fullname = strtoupper($this->fullname);
         $user->phone = $this->phone;
-        $user->email = $this->email;
+        $user->email = strtolower($this->email);;
         $user->institution = $this->institution;
+
+        //pasal category
+        $category = $this->user_category;
+        if(in_array($category, [1,2,3])){ //internal
+            $user->is_internal = 1;
+            if(in_array($category, [1,2])){
+                $user->is_student = 1;
+            }else if($category == 3){
+                $user->is_student = 0;
+            }
+        }else if(in_array($category, [4,5])){ //external
+            $user->is_internal = 0;
+            $user->is_student = 0;
+        }
+        
         if($this->self_register){
             $user->setPassword($this->password);
         }else{
-            
             $user->setPassword(time());
         }
         
@@ -113,30 +128,62 @@ class RegisterForm extends Model
         $user->status = 10;
 
         if($user->save()){
-            $role = new UserRole();
-            $role->role_name = $this->role_name;
-            $role->status = 10;
-            $role->user_id = $user->id;
-            if($role->save()){
-                //auto login
-                if($this->self_register){
-                    Yii::$app->user->login($user);
-                }
-                //berjaya register
-                return true;
-            }else{
-                Yii::$app->session->addFlash('error', "failed to create user role");
+            //perihal user role
+            $roles = ['participant']; // utk 1 & 5
+            switch($category){
+                case 2: //student / committee
+                $roles = ['participant', 'committee'];
+                $committee_id = 32;
+                break;
+
+                case 3: //staff
+                case 4: //ext
+                $roles = ['jury', 'mentor'];
+                break;
             }
+
+            foreach($roles as $r){
+                $role = new UserRole();
+                $role->role_name = $r;
+                if($r == 'committee'){
+                    $role->status = 0;
+                    $role->committee_id = 32;
+                }else{
+                    $role->status = 10;
+                }
+                
+                $role->user_id = $user->id;
+                if($role->save()){
+                    //berjaya register
+                    //return true;
+                }else{
+                    $role->flashError();
+                    Yii::$app->session->addFlash('error', "Failed to create user role");
+                }
+
+            }
+
+            //auto login
+            if($this->self_register){
+                Yii::$app->user->login($user);
+            }
+            return true;
             
         }else{
             $user->flashError();
             Yii::$app->session->addFlash('error', "failed to create user");
         }
-    
-        
         return false;
 }
+
 public static function listCategory(){
-    return User::listCategory();
+    return [
+        1 => 'UMK Student Participant',
+        2 => 'UMK Student Participant/ Committee',
+        3 => 'UMK Staff as Jury/ Mentor',
+        4 => 'Non-UMK Jury/ Mentor',
+        5 => 'Non-UMK Participant'
+    ];
 }
+
 }

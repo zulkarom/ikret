@@ -16,7 +16,7 @@ class UserSearch extends User
     public function rules()
     {
         return [
-            [['is_internal'], 'integer'],
+            [['is_internal', 'is_student'], 'integer'],
             [['fullname','email'], 'string'],
         ];
     }
@@ -55,6 +55,7 @@ class UserSearch extends User
         // grid filtering conditions
         $query->andFilterWhere([
             'is_internal' => $this->is_internal,
+            'is_student' => $this->is_student,
         ]);
 
         $query->andFilterWhere(['like', 'fullname', $this->fullname]);

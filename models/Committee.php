@@ -57,7 +57,23 @@ class Committee extends \yii\db\ActiveRecord
         return $this->hasMany(UserRole::class, ['committee_id' => 'id']);
     }
 
-    public static function listCommittees(){
-        return ArrayHelper::map(self::find()->all(),'id', 'com_name');
+    public static function listCommittees($control = false){
+        if($control){
+            $user = Yii::$app->user->identity;
+            if($user->is_student == 1){
+                return ArrayHelper::map(self::find()
+                ->where(['is_student' => 1])
+                ->all(),'id', 'com_name');
+            }else if($user->is_student == 0){
+                return ArrayHelper::map(self::find()->all(),'id', 'com_name');
+            }else{
+                return [''];
+            }
+
+            
+        }else{
+            return ArrayHelper::map(self::find()->all(),'id', 'com_name');
+        }
+        
     }
 }

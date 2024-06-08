@@ -48,25 +48,42 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'is_internal',
                 'format' => 'html',
-                'filter' => Html::activeDropDownList($searchModel, 'is_internal', $searchModel->listCategory(),['class'=> 'form-control','prompt' => 'Pilih Category']),
+                'filter' => Html::activeDropDownList($searchModel, 'is_internal', $searchModel->listIsInternal(),['class'=> 'form-control','prompt' => 'Choose']),
                 'value' => function($model){
-                    $str = $model->categoryText. '<br />';
+                    $str = $model->isInternalText. '<br />';
                     if($model->is_internal == 1){
                         $str .= $model->matric;
-                    }else if($model->is_internal == 2){
+                    }else if($model->is_internal == 0){
                         $str .= $model->institution;
                     }
                     return $str;
                 }
             ],
+            [
+                'attribute' => 'is_student',
+                'format' => 'html',
+                'filter' => Html::activeDropDownList($searchModel, 'is_student', $searchModel->listIsStudent(),['class'=> 'form-control','prompt' => 'Choose']),
+                'value' => function($model){
+                    return $model->isStudentText;
+                }
+            ],
             ['class' => 'yii\grid\ActionColumn',
-                'contentOptions' => ['style' => 'width: 13%'],
-            'template' => '{view}',
+            'template' => '{view} {login}',
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
-                    return Html::a('<span class="bi bi-pencil-square
-                    "></span> Update',['update', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    if(Yii::$app->user->identity->isAdmin){
+                    return Html::a('Update',['update', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    }else{
+                        return;
+                    }
+                },
+                'login'=>function ($url, $model) {
+                    if(Yii::$app->user->identity->isAdmin){
+                    return Html::a('Login',['login-as', 'id' => $model->id],['class'=>'btn btn-warning btn-sm']);
+                    }else{
+                        return;
+                    }
                 },
             ],
         

@@ -58,6 +58,7 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return [
             ['status', 'default', 'value' => self::STATUS_INACTIVE],
+
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_DELETED]],
 
             //Admin Update
@@ -65,7 +66,9 @@ class User extends ActiveRecord implements IdentityInterface
 
             [['email'], 'email'],
 
-            [['phone', 'matric', 'fullname', 'passwordRaw'], 'string'],
+            [['is_student', 'is_internal'], 'integer'],
+
+            [['phone', 'matric', 'fullname', 'passwordRaw', 'institution'], 'string'],
             
             [['username', 'fullname'], 'required', 'on' => 'update'],
             
@@ -123,17 +126,32 @@ class User extends ActiveRecord implements IdentityInterface
         ])->one();
     }
 
-    public static function listCategory(){
+    public static function listIsInternal(){
         return [
             1 => 'UMK Student/Staff',
-            2 => 'Non-UMK Institution'
+            0 => 'Non-UMK Institution',
         ];
     }
 
-    public function getCategoryText(){
+    public static function listIsStudent(){
+        return [
+            1 => 'Student',
+            0 => 'Not Student', //staff / external
+        ];
+    }
+
+    public function getIsInternalText(){
         $text = '';
-        if(array_key_exists($this->is_internal, $this->listCategory())){
-            $text = $this->listCategory()[$this->is_internal];
+        if(array_key_exists($this->is_internal, $this->listisInternal())){
+            $text = $this->listisInternal()[$this->is_internal];
+        }
+        return $text;
+    }
+
+    public function getIsStudentText(){
+        $text = '';
+        if(array_key_exists($this->is_student, $this->listIsStudent())){
+            $text = $this->listIsStudent()[$this->is_student];
         }
         return $text;
     }

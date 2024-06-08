@@ -104,13 +104,28 @@ class UserRole extends \yii\db\ActiveRecord
     }
 
     public static function listRolesRequest(){
-        return [
-            'participant' => 'Participant',
-            'manager' => 'Manager', 
-            'jury' => 'Jury',
-            'committee' => 'Committee',
-            'mentor' => 'Mentor',
-        ];
+        $user = Yii::$app->user->identity;
+        if($user->is_student == 1){
+            return [
+                'participant' => 'Participant',
+                'committee' => 'Committee',
+            ];
+        }else if($user->is_internal == 0){
+            return [
+                'participant' => 'Participant',
+                'jury' => 'Jury',
+                'mentor' => 'Mentor',
+            ];
+        }else{
+            return [
+                'participant' => 'Participant',
+                'manager' => 'Manager', 
+                'jury' => 'Jury',
+                'committee' => 'Committee',
+                'mentor' => 'Mentor',
+            ];
+        }
+        
     }
 
     public static function listCommitteeRoles(){

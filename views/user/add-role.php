@@ -44,7 +44,7 @@ $this->title = 'Request for Additional User Role';
 </div>
 
 <div style="display:none" id="con-committee">
-<?= $form->field($model, 'committee_id')->dropDownList(Committee::listCommittees(), ['prompt' => 'Select Committee']) ?>
+<?= $form->field($model, 'committee_id')->dropDownList(Committee::listCommittees(true), ['prompt' => 'Select Committee']) ?>
 </div>
 
 <div style="display:none" id="con-leader">

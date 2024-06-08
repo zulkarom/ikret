@@ -87,7 +87,7 @@ class UserController extends Controller
                 Yii::$app->session->addFlash('error', "The user already a jury");
             }else{
                 $userRole->status = 10;
-                $userRole->role_name = 'jury';
+                $userRole->role_name = ['jury'];
                 $userRole->approve_at = new Expression('NOW()');
                 if($userRole->save()){
                     Yii::$app->session->addFlash('success', "Jury Added");
@@ -99,11 +99,11 @@ class UserController extends Controller
         }
         $userRole->user_id = null;
 
-        $newUser = new RegisterForm(['self_register' => false, 'role_name' => 'jury', 'button_label' => 'Register & Add Jury']);
+        $newUser = new RegisterForm(['self_register' => false, 'button_label' => 'Register & Add Jury']);
 
         if ($this->request->isPost && $newUser->load($this->request->post())) {
             if($newUser->signup()){
-                Yii::$app->session->addFlash('success', "The new registered user has been added as jury");
+                Yii::$app->session->addFlash('success', "The new registered user has been added with role selected");
                 return $this->refresh();
             }
             //set password

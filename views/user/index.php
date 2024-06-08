@@ -35,12 +35,7 @@ use yii\helpers\Html;
                     <?= $form
             ->field($model, 'fullname')->textInput(['style' => 'text-transform: uppercase'])?>
             </div>
-            <div class="col-12">
-            <?= $form
-            ->field($model, 'matric')
-      
-            ->textInput() ?>
-            </div>
+            
             <div class="col-12">
             <?= $form
             ->field($model, 'email')
@@ -53,6 +48,23 @@ use yii\helpers\Html;
       
             ->textInput() ?>
             </div>
+
+            <div class="col-12">
+            <?= $form
+            ->field($model, 'matric')
+      
+            ->textInput() ?>
+            </div>
+
+            <div class="col-12">
+            <?= $form
+            ->field($model, 'institution')
+      
+            ->textInput() ?>
+            </div>
+
+            <?= $form->field($model, 'is_internal')->dropDownList($model->listIsInternal())->label('Category (Internal)')?>
+    <?= $form->field($model, 'is_student')->dropDownList($model->listIsStudent())->label('Category (Student)')?>
 
  
 

@@ -98,10 +98,30 @@ use yii\helpers\Html;
 <br />
 
     <div class="form-group">
-        <?= Html::submitButton('Assign Jury to Selected Participants', ['class' => 'btn btn-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
+        <?= Html::button('Assign Jury to Selected Participants', ['id'=>'btn-submit-jury', 'class' => 'btn btn-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
     </div>
-   <i>* select participant(s) first before clicking button above.</i> 
+
 
     
 
 </div>
+
+<?php 
+$this->registerJs('
+
+$("#btn-submit-jury").click(function(){
+    var checkboxes = document.querySelectorAll(\'input[type="checkbox"]:checked\');
+    if (checkboxes.length === 0) {
+        alert("Please select participant(s) first before clicking the assign button");
+    }else{
+        $("#jury-assign-form").submit();
+       // alert("submitting");
+    }
+});
+
+
+
+
+');
+
+?>
