@@ -311,5 +311,24 @@ class UserController extends Controller
 		]);
 	}
 
+    public function actionModifyStudentData294(){
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $list = User::find()->all();
+        foreach ($list as $user) {
+            $matric = $user->matric;
+            if($matric){ // cari first char
+                $c = substr($matric, 0, 1);
+                if($c == "A"){
+                    $user->is_student = 1;
+                    $user->save();
+                }else if($c == '0'){
+                    $user->is_student = 0;
+                    $user->save();
+                }
+            }
+        }
+    }
+
 
 }
