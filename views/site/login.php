@@ -37,7 +37,7 @@ $this->title = 'I-CREATE - Login';
                     <div class="col-12">
 
                     <?= $form
-            ->field($model, 'username', ['addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])
+            ->field($model, 'email', ['addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])
       
             ->textInput() ?>
             </div>
