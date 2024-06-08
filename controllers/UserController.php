@@ -322,12 +322,15 @@ class UserController extends Controller
                 if($c == "A"){
                     $user->is_student = 1;
                     $user->save();
+                    echo $matric . ' = student <br />';
                 }else if($c == '0'){
                     $user->is_student = 0;
                     $user->save();
+                    echo $matric . ' = staff <br />';
                 }
             }
         }
+        exit;
     }
 
 
