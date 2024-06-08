@@ -99,12 +99,20 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Program Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
 
           $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
+
+          
           
         }
 
         $menu[] = ['name' => 'User Menu', 'heading' => true];
         $menu[] = ['name' => 'Profile', 'url' => ['/user/index'], 'icon' => 'bi bi-file-earmark-person'];
         $menu[] = ['name' => 'User Role', 'url' => ['/user/add-role'], 'icon' => 'bi bi-person-plus'];
+
+        $session = Yii::$app->session;
+        if ($session->has('or-usr')){
+          $menu[] = ['name' => 'Return Role', 'url' => ['/user/return-role'], 'icon' => 'bi bi-person-lines-fill'];
+        }
+        
         $menu[] = ['name' => 'Change Password', 'url' => ['/user/change-password'], 'icon' => 'bi bi-lock'];
         $menu[] = ['name' => 'Logout', 'url' => ['/site/logout'], 'icon' => 'bi bi-box-arrow-right'];
 

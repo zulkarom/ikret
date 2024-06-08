@@ -311,7 +311,34 @@ class UserController extends Controller
 		]);
 	}
 
+    public function actionLoginAs($id){
+		$user = User::findIdentity($id);
+		$original = Yii::$app->user->identity->id;
+		if(Yii::$app->user->login($user)){
+			$session = Yii::$app->session;
+			$session->set('or-usr', $original);
+			return $this->redirect(['site/index']);
+		}
+		
+	}
+
+    public function actionReturnRole()
+	{
+		$session = Yii::$app->session;
+		if ($session->has('or-usr')){
+			$id = $session->get('or-usr');
+			$user = User::findIdentity($id);
+				if(Yii::$app->user->login($user)){
+					$session->remove('or-usr');
+					return $this->redirect(['site/index']);
+				}
+		}else{
+			throw new NotFoundHttpException('The requested page does not exist..');
+		}
+	}
+
     public function actionModifyStudentData294(){
+        die();
         if(!Yii::$app->user->identity->isAdmin) return false;
 
         $list = User::find()->all();
