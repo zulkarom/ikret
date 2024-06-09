@@ -16,6 +16,8 @@ use yii\helpers\Url;
         $menu[] = ['name' => 'Register', 'url' => ['/site/register'], 'icon' => 'bi bi-card-list'];
       }else{
 
+        $menu[] = ['name' => 'Session Attendance', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
+
         if(Yii::$app->user->identity->isParticipant){
           $menu[] = ['name' => 'Participant Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
@@ -93,6 +95,10 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
+          $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [
+              ['name' => 'Session List', 'url' => ['/session/index']],
+              ['name' => 'Attendance List', 'url' => ['/session/attendance']],
+          ]];
 
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
 

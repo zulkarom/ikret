@@ -795,6 +795,7 @@ class ProgramController extends Controller
         $pdf->template = CertificateTemplate::findOne(1);
         $pdf->model = $member;
         $pdf->generatePdf();
+        exit;
     }
 
 }
