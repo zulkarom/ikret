@@ -3,6 +3,7 @@
 /* @var $this yii\web\View */
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 $this->title = 'HOME - I-CREATE - The International Convention on Resourceful Entrepreneurs Achieving Tomorrow\'s Excellence';
 ?>
@@ -22,7 +23,7 @@ $this->title = 'HOME - I-CREATE - The International Convention on Resourceful En
       ?>
       <div style="text-align:center" align="center">
       <?=Yii::$app->user->identity->isParticipant ? Html::a('<i class="bi bi-easel"></i> List of Programs',['/program/index'],['class' => 'btn btn-primary']) : Html::a('<i class="bi bi-file-earmark-person"></i> Profile',['/user/index'],['class' => 'btn btn-primary'])?>
-       <?=Html::a('<i class="bi bi-box-arrow-right"></i> Logout',['/site/logout'],['class' => 'btn btn-success'])?></div>
+       <?=Html::button('<i class="bx bx-qr-scan"></i> Scan Attendance',['class' => 'btn btn-warning', 'id' => 'scanner'])?></div>
       <?php
     }
     
@@ -42,4 +43,12 @@ $this->title = 'HOME - I-CREATE - The International Convention on Resourceful En
     <div> <a href="https://anyflip.com/nsaql/bhfa/" target="_blank">Programme Book</a> </div>
 
   </div>
-    
+  <?php
+$this->registerJs('
+
+$("#scanner").click(function(){
+    window.open("'. Url::to(['/session/qrscanner']) .'", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
+});
+
+');
+?>

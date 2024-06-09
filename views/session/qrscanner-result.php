@@ -90,7 +90,7 @@ window.close();
 
 window.onunload = refreshParent;
 function refreshParent() {
-    window.opener.location.replace("'.$url.'");
+    window.opener.location.href = "'.$url.'";
 }
 
 ');

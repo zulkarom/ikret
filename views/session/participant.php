@@ -40,7 +40,24 @@ $("#scanner").click(function(){
     </div>
 
  <div class="card">
+ <div class="card-header">Recorded Attendance</div>
          <div class="card-body pt-4">
+<table class="table">
+            <tbody>
+                <tr><th>No.</th><th>Session</th><th>Date Time</th></tr>
+                <?php 
+                if($list){
+                    $i=1;
+                    foreach($list as $r){
+                        echo '<tr><td>'.$i.'. </td><td>'.$r->session->session_name.'</td><td>'.date("d M Y h:i:s A", strtotime($r->scanned_at)).'</td></tr>';
+                        $i++;
+                    }
+                }else{
+                    echo '<tr><td colspan="3">You do not have any recorded attendance.</td></tr>';
+                     }
+                ?> 
+            </tbody>
+        </table>
              
          </div>
      </div>

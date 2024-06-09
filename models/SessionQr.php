@@ -63,7 +63,7 @@ $style = array(
     'module_height' => 1 // height of a single module in points
 );
 $token = $this->model->token;
-$url = 'https://fkp-portal.umk.edu.my/icreate/site/qr/'.$token;
+$url = 'https://fkp-portal.umk.edu.my/icreate/site/qr?t='.$token;
 $yp = $this->yp;
         $this->pdf->write2DBarcode($url, 'QRCODE,M', 65, $yp, 90, 90, $style, 'N');
 

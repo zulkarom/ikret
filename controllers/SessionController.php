@@ -53,6 +53,8 @@ class SessionController extends Controller
 
     public function actionParticipant()
     {
+        date_default_timezone_set("Asia/Kuala_Lumpur");
+        
         if(!Yii::$app->user->identity->isAdmin) return false;
 
         $list = SessionAttendance::find()
@@ -85,7 +87,7 @@ class SessionController extends Controller
     public function actionQrscannerResult($t = 0)
     {
         $this->layout = '//plain';
-        $t = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr/', '', $t);
+        $t = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr?t=', '', $t);
 
         return $this->render('qrscanner-result',[
             't' => $t,
