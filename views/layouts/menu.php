@@ -84,6 +84,11 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
             $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
+            $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [
+              ['name' => 'Session List', 'url' => ['/session/index']],
+              ['name' => 'Attendance List', 'url' => ['/session/attendance']],
+          ]];
+
 
           }
           
@@ -95,10 +100,7 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
-          $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [
-              ['name' => 'Session List', 'url' => ['/session/index']],
-              ['name' => 'Attendance List', 'url' => ['/session/attendance']],
-          ]];
+          
 
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
 

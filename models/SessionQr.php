@@ -30,7 +30,7 @@ class SessionQr
         $time_start = date('h:i A', strtotime($start));
         $time_end = date('h:i A', strtotime($end));
 
-        $html = '<div align="center"><img src="images/logo-sm.png" width="400" />
+        $html = '<br /><br /><div align="center"><img src="images/logo-sm.png" width="400" />
         <h2>'.$this->model->session_name.'</h2>
         <div><i>Date Time</i><br />
         '.$date.' '.$time_start.' - '.$time_end.'

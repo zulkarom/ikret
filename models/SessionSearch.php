@@ -40,7 +40,7 @@ class SessionSearch extends Session
      */
     public function search($params)
     {
-        $query = Session::find();
+        $query = Session::find()->orderBy('id DESC');
 
         // add conditions that should always apply here
 

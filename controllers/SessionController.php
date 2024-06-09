@@ -41,7 +41,7 @@ class SessionController extends Controller
      */
     public function actionIndex()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isManager) return false;
         $searchModel = new SessionSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -54,8 +54,6 @@ class SessionController extends Controller
     public function actionParticipant()
     {
         date_default_timezone_set("Asia/Kuala_Lumpur");
-        
-        if(!Yii::$app->user->identity->isAdmin) return false;
 
         $list = SessionAttendance::find()
         ->where(['user_id' => Yii::$app->user->identity->id])
@@ -68,7 +66,7 @@ class SessionController extends Controller
 
     public function actionAttendance()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isManager) return false;
         $searchModel = new SessionAttendanceSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -114,7 +112,7 @@ class SessionController extends Controller
      */
     public function actionCreate()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isManager) return false;
         $model = new Session();
 
         if ($this->request->isPost) {
@@ -155,6 +153,8 @@ class SessionController extends Controller
      */
     public function actionUpdate($id)
     {
+        if(!Yii::$app->user->identity->isManager) return false;
+
         $model = $this->findModel($id);
 
         if ($this->request->isPost) {
@@ -185,7 +185,7 @@ class SessionController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        //$this->findModel($id)->delete();
 
         return $this->redirect(['index']);
     }
