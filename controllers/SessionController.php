@@ -85,6 +85,8 @@ class SessionController extends Controller
     public function actionQrscannerResult($t = 0)
     {
         $this->layout = '//plain';
+        $t = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr/', '', $t);
+
         return $this->render('qrscanner-result',[
             't' => $t,
         ]); 

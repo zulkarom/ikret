@@ -197,4 +197,10 @@ class SiteController extends Controller
     {
         return $this->render('about');
     }
+
+    public function actionQr($t=null)
+    {
+        Yii::$app->session->addFlash('error', 'Sorry, this is not correct way to scan attendance for I-CREATE session. You need to login here then click [Scan Attendance]. Kindly register if you haven\'t already');
+        return $this->redirect(['login']);
+    }
 }
