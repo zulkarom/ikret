@@ -233,11 +233,11 @@ class SiteController extends Controller
                         Yii::$app->session->addFlash('error', "Error in recording attendance.");
                     }
                 }else{
-                    Yii::$app->session->addFlash('error', "Invalid time session");
+                    Yii::$app->session->addFlash('error', "Failed to record attendance due to invalid time session.");
                 }
                 
             }else{
-                Yii::$app->session->addFlash('error', "Not a valid session");
+                Yii::$app->session->addFlash('error', "Failed to record attendance due to invalid session.");
             }
 
             return $this->redirect(['index']);
