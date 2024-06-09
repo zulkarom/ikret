@@ -175,7 +175,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 5: //rise
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'group_code'];
+            $array = ['project_name', 'program_sub' ,'participant_cat_group', 'group_member', 'group_code'];
             break;
 
             case 6: //jfed
@@ -205,7 +205,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 5: //rise
-            $array = ['project_name', 'participant_cat_group', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
+            $array = ['project_name', 'program_sub', 'participant_cat_group', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
             break;
 
             case 6: //jfed
@@ -236,7 +236,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 5: //rise
-            $array = ['project_name', 'group_code', 'group_name'];
+            $array = ['project_name', 'program_sub', 'group_code', 'group_name'];
             break;
 
             case 6: //jfed
@@ -282,7 +282,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         if(in_array('booth_number', $array)){
             $html .= '<li><i>Booth Number:</i> '.$this->booth_number.'</li>';
         }
-        
+
         if(in_array('group_name', $array)){
             if($this->group_name){
                 $html .= '<li><i>Group Name:</i> '.$this->group_name.'</li>';

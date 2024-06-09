@@ -177,7 +177,7 @@ $formName =  $model->formName();
                  if(!$write){
                   echo '<br /> ** '. $item->colum_ans.' **';
                 }
-                
+
                  echo '</td></tr>';
                 $i++;
               }
@@ -204,7 +204,7 @@ $formName =  $model->formName();
         <?= Html::submitButton('Finalise & Submit', ['name' => 'action', 'value' => 'submit','class' => 'btn btn-success', 'data-confirm' => 'Are you sure to submit this form?']) ?>
             </div>
             <?php }else{
-              echo '<i>This page is meant for view only. Please make sure item stars (** item_# **) are unique.</i>';
+              echo '<i>This page is meant for view only. Please make sure item in stars (** __ **) are unique.</i>';
             } ?>
 
         

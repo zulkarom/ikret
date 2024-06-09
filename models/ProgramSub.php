@@ -66,7 +66,11 @@ class ProgramSub extends \yii\db\ActiveRecord
     }
 
     public function getSubProgramText(){
-        return $this->sub_name . ' / ' . $this->advisor;
+        $adv = '';
+        if($this->advisor){
+            $adv = ' / '. $this->advisor;
+        }
+        return $this->sub_name . $adv;
     }
 
     public function getProgramRubrics()
