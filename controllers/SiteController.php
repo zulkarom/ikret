@@ -217,22 +217,31 @@ class SiteController extends Controller
             
             //record je la
             $session = Session::findOne(['token' => $t]);
+            
             $start = strtotime($session->datetime_start);
             $end = strtotime($session->datetime_end);
             $valid = time() >= $start && time() <= $end;
 
             if($session){
                 if($valid){
-                    $att = new SessionAttendance();
-                    $att->user_id = Yii::$app->user->identity->id;
-                    $att->session_id = $session->id;
-                    $att->scanned_at = new Expression("NOW()");
-                    if($att->save()){
-                        Yii::$app->session->addFlash('success', "Your attendance has been recorded.");
-                        return $this->redirect(['/session/participant']);
+                    $ada = SessionAttendance::find()->alias('a')
+                    ->where(['a.session_id' => $session->id, 'a.user_id' => Yii::$app->user->identity->id])
+                    ->one();
+                    if($ada){
+                        Yii::$app->session->addFlash('error', "Failed to add attendance due to the session's attendance had recorded already");
                     }else{
-                        Yii::$app->session->addFlash('error', "Error in recording attendance.");
+                        $att = new SessionAttendance();
+                        $att->user_id = Yii::$app->user->identity->id;
+                        $att->session_id = $session->id;
+                        $att->scanned_at = new Expression("NOW()");
+                        if($att->save()){
+                            Yii::$app->session->addFlash('success', "Your attendance has been recorded.");
+                            return $this->redirect(['/session/participant']);
+                        }else{
+                            Yii::$app->session->addFlash('error', "Error in recording attendance.");
+                        }
                     }
+                    
                 }else{
                     Yii::$app->session->addFlash('error', "Failed to record attendance due to invalid time session.");
                 }

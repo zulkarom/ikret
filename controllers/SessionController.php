@@ -57,6 +57,7 @@ class SessionController extends Controller
 
         $list = SessionAttendance::find()
         ->where(['user_id' => Yii::$app->user->identity->id])
+        ->orderBy('id DESC')
         ->all();
 
         return $this->render('participant', [
