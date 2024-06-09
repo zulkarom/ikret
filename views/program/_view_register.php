@@ -1,5 +1,6 @@
 <?php
 
+use app\models\Mentor;
 use app\models\Setting;
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -52,8 +53,8 @@ use yii\helpers\Url;
     showField($register, $arr_fields,'institution');
     showField($register, $arr_fields,'group_code');
     showField($register, $arr_fields,'group_name');
-    showFieldModel($register, $arr_fields, 'mentor_main', 'mentorMain', 'fullname');
-    showFieldModel($register, $arr_fields, 'mentor_co', 'mentorCo', 'fullname');
+    showFieldMentor($register, $arr_fields, 'mentor_main');
+    showFieldMentor($register, $arr_fields, 'mentor_co');
 
     
 
@@ -125,12 +126,12 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
 <?php
 
-/* $set = Setting::findOne(1);
+$set = Setting::findOne(1);
 $due = strtotime($set->allow_edit_reg_until.' 23:59:59');
 if(Yii::$app->user->identity->id == $register->user_id && time() < $due){
 echo Html::a('<i class="bi bi-pencil"></i> Edit', ['register-form', 'id' => $register->program_id, 'reg' => $register->id, 'edit' => true], ['class' => 'btn btn-outline-warning btn-sm'])?><br />
 <i style="font-size: 12px;">* finalise before/at <?=date('d/m/Y', strtotime($set->allow_edit_reg_until))?></i>
-<?php }  */
+<?php } 
 
 
 ?>
@@ -206,6 +207,29 @@ function showFieldModel($register, $arr_fields, $attr, $method, $method_attr){
     <?php 
     if($register->$method){
       echo $register->$method->$method_attr;
+    }
+    ?>
+
+  </div>
+  </div>
+  <?php
+  }
+}
+
+function showFieldMentor($register, $arr_fields, $attr){
+  if(in_array($attr, $arr_fields)){
+  ?>
+  <div class="row">
+    <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel($attr)?></div>
+    <div class="col-lg-9 col-md-8">
+
+    <?php 
+    $main = $attr == 'mentor_main' ? 1 : 0;
+    $m = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => $main]);
+    if($m){
+       if($m->user){
+         echo $m->user->fullname;
+       }
     }
     ?>
 

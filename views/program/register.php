@@ -30,16 +30,17 @@ $this->title = 'Registration - ' . $model->program_name;
     ]);
     ?>
 
-<?php if($edit == false){?>
-              <div class="card">
-              <div class="card-header">Program Information</div>
-                      <div class="card-body pt-4">
-                          <?=$model->reg_info?>
-                      </div>
-                  </div>
-                  <?php } ?>
+      <?php if(!$edit){ //program information 
+        ?>
+    <div class="card">
+    <div class="card-header">Program Information</div>
+            <div class="card-body pt-4">
+                <?=$model->reg_info?>
+            </div>
+        </div>
+      <?php } ?>
 
-                  <?php if($register->status == 0 || $edit == true){?>
+                  <?php if($register->status == 0 || $edit){?>
               <div class="card mb-3">
               <div class="card-header">Registration Form</div>
                 <div class="card-body">
@@ -56,6 +57,9 @@ $this->title = 'Registration - ' . $model->program_name;
                   <?php 
                   if(!$register->isNewRecord && !$err){
                       echo '<input type="hidden" name="reg_id" value="'.$register->id.'" />';
+                  }
+                  if($edit){
+                    echo '<input type="hidden" name="edit" value="1" />';
                   }
                   ?>
 
@@ -320,6 +324,15 @@ if(in_array('group_member',$arr_fields)){
       <div class="col-md-6"><?php 
                     if(in_array('mentor_main',$arr_fields)){
 
+                      if(!$register->isNewRecord){
+                        $main = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => 1]);
+                        if($main){
+                           if($main->user){
+                            $register->mentor_main = $main->user_id;
+                           }
+                        }
+                      }
+
                     echo $form->field($register, 'mentor_main')->widget(Select2::classname(), [
                         'data' => $register->mentorList(),
                         'options' => ['multiple' => false,'placeholder' => 'Select mentor'],
@@ -376,6 +389,16 @@ if(in_array('group_member',$arr_fields)){
                     } ?></div>
       <div class="col-md-6"><?php 
                     if(in_array('mentor_co',$arr_fields)){
+
+                      if(!$register->isNewRecord){
+                        $co = Mentor::findOne(['program_reg_id' => $register->id, 'is_main' => 0]);
+                        if($co){
+                           if($co->user){
+                            $register->mentor_co = $co->user_id;
+                           }
+                        }
+                      }
+
                       echo $form->field($register, 'mentor_co')->widget(Select2::classname(), [
                         'data' => $register->mentorList(),
                         'options' => ['multiple' => false,'placeholder' => 'Select mentor'],
@@ -468,7 +491,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 }
 
 
-echo '<input type="hidden" name="edit" value="0" />';
+
 
 ?>
 
@@ -476,13 +499,16 @@ echo '<input type="hidden" name="edit" value="0" />';
 
       <?php if(!$demo && !$edit){?>
       <div class="col-12">
+
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
+
         <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
+
       </div> 
       <?php } 
       
       if($edit){
-        echo '<input type="hidden" name="edit" value="1" />';
+        //echo '<input type="hidden" name="edit" value="1" />';
         echo Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'update']);
       }
       

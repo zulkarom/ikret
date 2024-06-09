@@ -415,11 +415,11 @@ class ProgramController extends Controller
         $model = $this->findModel($id);
         
         if($reg){
-            //echo 'reg';die();
+            //update 
             $register = $this->findRegistration($reg);
             $members = $register->members;
         }else{
-            //echo 'not reg';die();
+            //new record
             $register = new ProgramRegistration();
             $defaultMember = new Member();
             $defaultMember->member_name = Yii::$app->user->identity->fullname;
@@ -427,10 +427,11 @@ class ProgramController extends Controller
             $members = [$defaultMember];
             $register->program_id = $model->id;
             $register->user_id = Yii::$app->user->identity->id;
+            $register->scenario = 'draft';
+            $register->status = 0;
         }
         
-        $register->scenario = 'draft';
-        $register->status = 0;
+        
 
 
         if($register->load(Yii::$app->request->post())){
@@ -440,6 +441,7 @@ class ProgramController extends Controller
             $sub = $register->program_sub;
 
             if($register->isNewRecord){
+                //check dah ada ke belum untuk new record shj
                 $ada = ProgramRegistration::find()->where(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id]);
                 if($sub){
                     $ada = $ada->andWhere(['program_sub' => $sub]);
@@ -527,6 +529,8 @@ class ProgramController extends Controller
                                 Yii::$app->session->addFlash('success', "Registration successful.");
                             }else if($action == 'draft'){
                                 Yii::$app->session->addFlash('success', "The information has been successfully saved.");
+                            }else if($action == 'update'){
+                                Yii::$app->session->addFlash('success', "The information has been successfully updated.");
                             }
     
     
@@ -545,7 +549,10 @@ class ProgramController extends Controller
                     }
                 }else{
                     $register->flashError();
-                    $register->status = 0;
+                    if(!$edit){
+                        $register->status = 0;
+                    }
+                    
                 }
             }
 

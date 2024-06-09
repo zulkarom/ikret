@@ -64,7 +64,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
 
-            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award'], 'integer'],
+            [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award', 'participant_mode', 'participant_program'], 'integer'],
 
             [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
 
