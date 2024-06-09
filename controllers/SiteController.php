@@ -216,17 +216,28 @@ class SiteController extends Controller
             
             //record je la
             $session = Session::findOne(['token' => $t]);
+            $start = strtotime($session->datetime_start);
+            $end = strtotime($session->datetime_end);
+            $valid = time() >= $start && time() <= $end;
+
             if($session){
-                $att = new SessionAttendance();
-                $att->user_id = Yii::$app->user->identity->id;
-                $att->session_id = $session->id;
-                $att->scanned_at = new Expression("NOW()");
-                if($att->save()){
-                    Yii::$app->session->addFlash('success', "Your attendance has been recorded.");
-                    return $this->redirect(['/session/participant']);
+                if($valid){
+                    $att = new SessionAttendance();
+                    $att->user_id = Yii::$app->user->identity->id;
+                    $att->session_id = $session->id;
+                    $att->scanned_at = new Expression("NOW()");
+                    if($att->save()){
+                        Yii::$app->session->addFlash('success', "Your attendance has been recorded.");
+                        return $this->redirect(['/session/participant']);
+                    }else{
+                        Yii::$app->session->addFlash('error', "Error in recording attendance.");
+                    }
                 }else{
-                    Yii::$app->session->addFlash('error', "Error in recording attendance.");
+                    Yii::$app->session->addFlash('error', "Invalid time session");
                 }
+                
+            }else{
+                Yii::$app->session->addFlash('error', "Not a valid session");
             }
         }
         
