@@ -209,6 +209,7 @@ class SiteController extends Controller
 
     public function actionQr($t=null)
     {
+        date_default_timezone_set("Asia/Kuala_Lumpur");
         if (Yii::$app->user->isGuest) {
             Yii::$app->session->addFlash('error', "You need to login here to proceed with attendance record. Kindly register if you haven't already");
             return $this->redirect(['login', 't' => $t]);

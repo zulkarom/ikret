@@ -84,6 +84,7 @@ class SessionController extends Controller
 
     public function actionQrscannerResult($t = 0)
     {
+        date_default_timezone_set("Asia/Kuala_Lumpur");
         $this->layout = '//plain';
         $t = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr?t=', '', $t);
 
