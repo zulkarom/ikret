@@ -200,7 +200,12 @@ class SiteController extends Controller
 
     public function actionQr($t=null)
     {
-        Yii::$app->session->addFlash('error', 'Sorry, this is not correct way to scan attendance for I-CREATE session. You need to login here then click [Scan Attendance]. Kindly register if you haven\'t already');
+        if (Yii::$app->user->isGuest) {
+            Yii::$app->session->addFlash('error', 'Sorry, this is not correct way to scan attendance for I-CREATE session. You need to login here then click [Scan Attendance] button and scan again the code. Kindly register if you haven\'t already');
+        }else{
+            Yii::$app->session->addFlash('success', "Sorry, this is not correct way to scan attendance for I-CREATE session. You need to click [Scan Attendance] button and scan again the code. Kindly register if you haven\'t already");
+        }
+        
         return $this->redirect(['login']);
     }
 }
