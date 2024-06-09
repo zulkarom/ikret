@@ -32,7 +32,14 @@ $this->title = 'I-CREATE - Login';
 
              
                  
-                  <?php $form = ActiveForm::begin(['id' => 'login-form', 'class' => 'row g-3 needs-validation']); ?>
+                  <?php
+                  if($attendanceToken){
+                    $url = ['/site/login', 't' => $attendanceToken];
+                  }else{
+                    $url = ['/site/login'];
+                  }
+                  
+                  $form = ActiveForm::begin(['id' => 'login-form', 'class' => 'row g-3 needs-validation', 'action' => $url]); ?>
 
                     <div class="col-12">
 

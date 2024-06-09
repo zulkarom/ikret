@@ -13,7 +13,9 @@ use app\models\PasswordResetRequestForm;
 use app\models\QuestionnaireAnswer;
 use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
+use app\models\SessionAttendance;
 use InvalidArgumentException;
+use yii\db\Expression;
 use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
 
@@ -79,7 +81,7 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
-    public function actionLogin()
+    public function actionLogin($t=null)
     {
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
@@ -88,12 +90,18 @@ class SiteController extends Controller
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
-            return $this->redirect(['site/index']);
+            if($t){
+                return $this->redirect(['site/qr', 't' => $t]);
+            }else{
+                return $this->redirect(['site/index']);
+            }
+            
         }
 
         $model->password = '';
         return $this->render('login', [
             'model' => $model,
+            'attendanceToken' => $t
         ]);
     }
 
@@ -201,11 +209,26 @@ class SiteController extends Controller
     public function actionQr($t=null)
     {
         if (Yii::$app->user->isGuest) {
-            Yii::$app->session->addFlash('error', "Sorry, this is not correct way to scan attendance for I-CREATE session. You need to login here then click [Scan Attendance] button and scan again the code. Kindly register if you haven't already");
+            Yii::$app->session->addFlash('error', "You need to login here to proceed with attendance record. Kindly register if you haven't already");
+            return $this->redirect(['login', 't' => $t]);
         }else{
-            Yii::$app->session->addFlash('error', "Sorry, this is not correct way to scan attendance for I-CREATE session. You need to click [Scan Attendance] button and scan again the code.");
+            
+            //record je la
+            $session = SessionAttendance::findOne(['token' => $t]);
+            if($session){
+                $att = new SessionAttendance();
+                $att->user_id = Yii::$app->user->identity->id;
+                $att->session_id = $session->id;
+                $att->scanned_at = new Expression("NOW()");
+                if($att->save()){
+                    Yii::$app->session->addFlash('success', "Your attendance has been recorded.");
+                    return $this->redirect(['/session/participant']);
+                }else{
+                    Yii::$app->session->addFlash('error', "Error in recording attendance.");
+                }
+            }
         }
         
-        return $this->redirect(['login']);
+        
     }
 }
