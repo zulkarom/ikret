@@ -217,7 +217,7 @@ class SiteController extends Controller
             
             //record je la
             $session = Session::findOne(['token' => $t]);
-            
+
             $start = strtotime($session->datetime_start);
             $end = strtotime($session->datetime_end);
             $valid = time() >= $start && time() <= $end;
@@ -243,7 +243,7 @@ class SiteController extends Controller
                     }
                     
                 }else{
-                    Yii::$app->session->addFlash('error', "Failed to record attendance due to invalid time session.");
+                    Yii::$app->session->addFlash('error', "Failed to record attendance due to invalid time session. Current time " . date('Y-m-d h:i:s A'));
                 }
                 
             }else{
