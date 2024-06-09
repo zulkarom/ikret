@@ -90,10 +90,10 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
             if($t){
                 return $this->redirect(['site/qr', 't' => $t]);
             }else{
+                Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
                 return $this->redirect(['site/index']);
             }
             
