@@ -474,7 +474,7 @@ echo '<input type="hidden" name="edit" value="0" />';
 
 
 
-      <?php if(!$demo && $edit == false){?>
+      <?php if(!$demo && !$edit){?>
       <div class="col-12">
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
         <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
