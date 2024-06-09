@@ -348,7 +348,7 @@ class ProgramController extends Controller
     }
 
 
-    public function actionRegisterForm($id, $reg = null){
+    public function actionRegisterForm($id, $reg = null, $edit = false){
 
         date_default_timezone_set("Asia/Kuala_Lumpur");
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
@@ -362,6 +362,17 @@ class ProgramController extends Controller
         if($reg){
             $register = $this->findRegistration($reg);
             $members = $register->members;
+            $set = Setting::findOne(1);
+            $due = strtotime($set->allow_edit_reg_until.' 23:59:59');
+            if(Yii::$app->user->identity->id == $register->user_id){
+                if($edit){
+                    if(time() > $due){
+                        return;
+                    }
+                }
+            }else{
+                return;
+            }
         }else{
             $register = new ProgramRegistration();
             $defaultMember = new Member();
@@ -381,16 +392,19 @@ class ProgramController extends Controller
             'register' => $register,
             'err' => false,
             'members' => (empty($members)) ? [$defaultMember] : $members,
-            'demo' => false
+            'demo' => false,
+            'edit' => $edit
         ]);
     }
 
     /**
      * method ni hanya utk post - khusus untuk store data
+     * tp perlu jgk render utk case error
      */
     public function actionRegister(){
         $id = Yii::$app->request->post('program_id');
         $reg = Yii::$app->request->post('reg_id');
+        $edit = Yii::$app->request->post('edit');
         date_default_timezone_set("Asia/Kuala_Lumpur");
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if(!$check){
@@ -424,11 +438,18 @@ class ProgramController extends Controller
             //verify dia nk register ke belum
             $p = $register->program_id;
             $sub = $register->program_sub;
-            $ada = ProgramRegistration::find()->where(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id]);
-            if($sub){
-                $ada = $ada->andWhere(['program_sub' => $sub]);
+
+            if($register->isNewRecord){
+                $ada = ProgramRegistration::find()->where(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id]);
+                if($sub){
+                    $ada = $ada->andWhere(['program_sub' => $sub]);
+                }
+                $ada = $ada->one();
+            }else{
+                $ada = false;
             }
-            $ada = $ada->one();
+            
+
             if($ada){
                 Yii::$app->session->addFlash('error', "Sorry, registration failed. You have registered to this program");
             }else{
@@ -539,6 +560,7 @@ class ProgramController extends Controller
             'err' => true,
             'members' => (empty($members)) ? [$defaultMember] : $members,
             'demo' => false,
+            'edit' => $edit
         ]);
     }
 

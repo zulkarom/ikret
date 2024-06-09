@@ -1,9 +1,10 @@
 <?php
 
+use app\models\Setting;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
- if($register->status > 0){?>
+ if($register->status > 0 and $edit == false){?>
       <div class="card profile">
       <div class="card-header">Registration Details</div>
     <div class="card-body profile-overview pt-4">
@@ -122,11 +123,13 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 <?php } ?>
 
 
-
-
-
-
-
+<?php
+$set = Setting::findOne(1);
+$due = strtotime($set->allow_edit_reg_until.' 23:59:59');
+if(Yii::$app->user->identity->id == $register->user_id && time() < $due){
+echo Html::a('<i class="bi bi-pencil"></i> Edit', ['register-form', 'id' => $register->program_id, 'reg' => $register->id, 'edit' => true], ['class' => 'btn btn-outline-warning btn-sm'])?><br />
+<i style="font-size: 12px;">* finalise before/at <?=date('d/m/Y', strtotime($set->allow_edit_reg_until))?></i>
+<?php } ?>
 
     </div>
   </div>

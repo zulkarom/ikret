@@ -25,18 +25,21 @@ $this->title = 'Registration - ' . $model->program_name;
 
               <?=$this->render('_view_register', [    
         'register' => $register,
-        'arr_fields' => $arr_fields
+        'arr_fields' => $arr_fields,
+        'edit' => $edit
     ]);
     ?>
 
+<?php if($edit == false){?>
               <div class="card">
               <div class="card-header">Program Information</div>
                       <div class="card-body pt-4">
                           <?=$model->reg_info?>
                       </div>
                   </div>
+                  <?php } ?>
 
-                  <?php if($register->status == 0){?>
+                  <?php if($register->status == 0 || $edit == true){?>
               <div class="card mb-3">
               <div class="card-header">Registration Form</div>
                 <div class="card-body">
@@ -429,7 +432,7 @@ if(in_array('group_member',$arr_fields)){
 
                     } ?></div>
   </div>
-<i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as mentor.</i>
+<i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as a mentor.</i>
 
 
 
@@ -462,16 +465,28 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 <?php 
 } 
 
-}?>
+}
+
+
+echo '<input type="hidden" name="edit" value="0" />';
+
+?>
 
 
 
-      <?php if(!$demo){?>
+      <?php if(!$demo && $edit == false){?>
       <div class="col-12">
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
         <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
       </div> 
-      <?php } ?>
+      <?php } 
+      
+      if($edit){
+        echo '<input type="hidden" name="edit" value="1" />';
+        echo Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'update']);
+      }
+      
+      ?>
       <br />
 
 
