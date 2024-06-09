@@ -13,6 +13,7 @@ use app\models\PasswordResetRequestForm;
 use app\models\QuestionnaireAnswer;
 use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
+use app\models\Session;
 use app\models\SessionAttendance;
 use InvalidArgumentException;
 use yii\db\Expression;
@@ -214,7 +215,7 @@ class SiteController extends Controller
         }else{
             
             //record je la
-            $session = SessionAttendance::findOne(['token' => $t]);
+            $session = Session::findOne(['token' => $t]);
             if($session){
                 $att = new SessionAttendance();
                 $att->user_id = Yii::$app->user->identity->id;
