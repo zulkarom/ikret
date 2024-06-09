@@ -21,7 +21,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     {
         return [
             [['program_id', 'program_sub'], 'integer'],
-            [['fullnameSearch','dateSearch', 'group_name', 'group_code'], 'string'],
+            [['fullnameSearch','dateSearch', 'group_name', 'group_code', 'booth_number'], 'string'],
         ];
     }
 
@@ -83,6 +83,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
         ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch])
         ->andFilterWhere(['like', 'a.group_code', $this->group_code])
         ->andFilterWhere(['like', 'a.group_name', $this->group_name])
+        ->andFilterWhere(['like', 'a.booth_number', $this->group_name])
         ;
 
         return $dataProvider;

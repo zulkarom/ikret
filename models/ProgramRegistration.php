@@ -278,11 +278,17 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         if(in_array('group_code', $array)){
            $html .= '<li><i>Group ID:</i> '.$this->group_code.'</li>';
         }
+
+        if(in_array('booth_number', $array)){
+            $html .= '<li><i>Booth Number:</i> '.$this->booth_number.'</li>';
+        }
+        
         if(in_array('group_name', $array)){
             if($this->group_name){
                 $html .= '<li><i>Group Name:</i> '.$this->group_name.'</li>';
             }
-         }
+        }
+
         if(in_array('competition_type', $array)){
             $html .= '<li><i>Competition Type:</i> '.$this->getListLabel('listCompetitionType', $this->competition_type).'</li>';
         }

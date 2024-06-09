@@ -96,6 +96,7 @@ $formName =  $model->formName();
                     }
                     
                   }
+                  
                  
 
                   echo '</div>
@@ -116,11 +117,16 @@ $formName =  $model->formName();
                 }
               echo '<td>Excellent</td></tr>';
               
-                echo '</table>
-                  </div>
-              </div>
-              
-              </td></tr>';
+                echo '</table>';
+
+               
+
+                  echo '</div>
+              </div>';
+              if(!$write){
+                echo '<br /> ** '. $item->colum_ans.' **';
+              }
+              echo '</td></tr>';
               $i++;
               }else if($item->item_type == 2){
                  echo '<tr><td width="10">'.$i.'. </td><td>
@@ -136,16 +142,26 @@ $formName =  $model->formName();
                           }
                           
                         }
+
+                        
+
+
                         $arr = [1=>'Yes', 2 => 'No'];
                         foreach($arr as $key => $val){
                           $qn = $item->colum_ans;
                           $check = $model->$qn == $key ? 'checked' : '';
                           echo '<div class="form-group"><label style="cursor:pointer;" for="r'.$item->id.'-'.$key.'"><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$key.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$key.'" '.$check.'> '.$val.'</label></div>';
                         }
+                        
                     echo '</div>
          
-                 </div>
-                 </td></tr>';
+                 </div>';
+
+                 if(!$write){
+                  echo '<br /> ** '. $item->colum_ans.' **';
+                }
+
+                 echo '</td></tr>';
                  $i++;
               }else if($item->item_type == 3){ //text area
                 echo '<tr><td width="10">'.$i.'. </td><td>
@@ -156,8 +172,13 @@ $formName =  $model->formName();
                     echo '<div><textarea class="form-control" name="'.$formName.'['.$item->colum_ans.']" name="">'.$model->{$item->colum_ans}.'</textarea></div>';
                     echo '</div>
          
-                 </div>
-                 </td></tr>';
+                 </div>';
+
+                 if(!$write){
+                  echo '<br /> ** '. $item->colum_ans.' **';
+                }
+                
+                 echo '</td></tr>';
                 $i++;
               }
             }
@@ -182,7 +203,9 @@ $formName =  $model->formName();
         <?= Html::submitButton('Save & Preview', ['name' => 'action', 'value' => 'save', 'class' => 'btn btn-primary']) ?> 
         <?= Html::submitButton('Finalise & Submit', ['name' => 'action', 'value' => 'submit','class' => 'btn btn-success', 'data-confirm' => 'Are you sure to submit this form?']) ?>
             </div>
-            <?php } ?>
+            <?php }else{
+              echo '<i>This page is meant for view only. Please make sure item stars (** item_# **) are unique.</i>';
+            } ?>
 
         
             <?php ActiveForm::end(); } ?>
