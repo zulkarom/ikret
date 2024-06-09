@@ -239,6 +239,8 @@ class SiteController extends Controller
             }else{
                 Yii::$app->session->addFlash('error', "Not a valid session");
             }
+
+            return $this->redirect(['index']);
         }
         
         
