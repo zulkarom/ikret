@@ -30,8 +30,14 @@ class SessionQr
         $time_start = date('h:i A', strtotime($start));
         $time_end = date('h:i A', strtotime($end));
 
+        $program = '';
+        if($this->model->program){
+            $program = '<br />('.$this->model->programNameShort . ')';
+        }
+        
+
         $html = '<br /><br /><div align="center"><img src="images/logo-sm.png" width="400" />
-        <h2>'.$this->model->session_name.'</h2>
+        <h2>'.$this->model->session_name.$program.'</h2>
         <div><i>Date Time</i><br />
         '.$date.' '.$time_start.' - '.$time_end.'
 

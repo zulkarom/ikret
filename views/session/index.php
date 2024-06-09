@@ -41,7 +41,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' =>'Program',
                 'value' => function($model){
                     if($model->program){
-                        return $model->program->program_name;
+                        return $model->programNameShort;
                     }
                     
                 }

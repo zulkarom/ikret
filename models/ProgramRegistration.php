@@ -422,6 +422,14 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $this->hasOne(Program::class, ['id' => 'program_id']);
     }
 
+    public function getProgramNameShort(){
+        $sub = '';
+        if($this->programSub){
+            $sub = ' / ' . $this->programSub->sub_abbr;
+        }
+        return $this->program->program_abbr . $sub;
+    }
+
     public function getProgramSub()
     {
         return $this->hasOne(ProgramSub::class, ['id' => 'program_sub']);

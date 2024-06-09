@@ -35,7 +35,7 @@ class Session extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['session_name'], 'required'],
+            [['session_name', 'datetime_start', 'datetime_end'], 'required'],
             [['program_id', 'program_sub'], 'integer'],
             [['datetime_start', 'datetime_end'], 'safe'],
             [['token', 'session_name'], 'string'],
@@ -68,6 +68,18 @@ class Session extends \yii\db\ActiveRecord
     public function getProgram()
     {
         return $this->hasOne(Program::class, ['id' => 'program_id']);
+    }
+
+    public function getProgramNameShort(){
+        if($this->program){
+            $sub = '';
+        if($this->programSub){
+            $sub = ' / ' . $this->programSub->sub_abbr;
+        }
+        return $this->program->program_abbr . $sub;
+        }
+        return;
+        
     }
 
     /**
