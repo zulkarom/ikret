@@ -11,65 +11,41 @@ use yii\widgets\ActiveForm;
 <div class="program-registration-search">
 
     <?php $form = ActiveForm::begin([
-        'action' => ['index'],
+        'action' => ['request'],
         'method' => 'get',
+        'id' => 'form-role'
     ]); ?>
 
-    <?= $form->field($model, 'id') ?>
-
-    <?= $form->field($model, 'user_id') ?>
-
-    <?= $form->field($model, 'program_id') ?>
-
-    <?= $form->field($model, 'project_name') ?>
-
-    <?= $form->field($model, 'nric') ?>
-
-    <?php // echo $form->field($model, 'status') ?>
-
-    <?php // echo $form->field($model, 'group_name') ?>
-
-    <?php // echo $form->field($model, 'participant_cat_local') ?>
-
-    <?php // echo $form->field($model, 'participant_cat_group') ?>
-
-    <?php // echo $form->field($model, 'participant_cat_umk') ?>
-
-    <?php // echo $form->field($model, 'participant_mode') ?>
-
-    <?php // echo $form->field($model, 'participant_program') ?>
-
-    <?php // echo $form->field($model, 'other_program') ?>
-
-    <?php // echo $form->field($model, 'advisor') ?>
-
-    <?php // echo $form->field($model, 'advisor_dropdown') ?>
-
-    <?php // echo $form->field($model, 'institution') ?>
-
-    <?php // echo $form->field($model, 'project_desc') ?>
-
-    <?php // echo $form->field($model, 'competition_type') ?>
-
-    <?php // echo $form->field($model, 'program_sub') ?>
-
-    <?php // echo $form->field($model, 'booth_number') ?>
-
-    <?php // echo $form->field($model, 'poster_file') ?>
-
-    <?php // echo $form->field($model, 'payment_file') ?>
-
-    <?php // echo $form->field($model, 'created_at') ?>
-
-    <?php // echo $form->field($model, 'updated_at') ?>
-
-    <?php // echo $form->field($model, 'submitted_at') ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+    <div class="row">
+        <div class="col-md-6"><?= $form->field($model, 'fullname')->textInput(['placeholder' => 'Search Name'])->label(false)?></div>
+        <div class="col-md-3">
+        <?= $form->field($model, 'status')->dropDownList($model->statusArray,['prompt' => 'Select Status'])->label(false)?>
+        </div>
+        <div class="col-md-3">
+        <?= $form->field($model, 'role_name')->dropDownList($model->listRoles(),['prompt' => 'Select Role'])->label(false)?>
+        </div>
     </div>
+<br />
+    
+
 
     <?php ActiveForm::end(); ?>
 
 </div>
+
+<?php 
+
+$this->registerJs('
+
+$("#rolerequestsearch-status").change(function(){
+    $("#form-role").submit();
+});
+
+$("#rolerequestsearch-role_name").change(function(){
+    $("#form-role").submit();
+});
+
+');
+
+
+?>

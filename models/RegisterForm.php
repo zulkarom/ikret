@@ -3,6 +3,7 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use yii\db\Expression;
 
 /**
  * Signup form
@@ -134,6 +135,7 @@ class RegisterForm extends Model
                 case 2: //student / committee
                 $roles = ['participant', 'committee'];
                 $committee_id = 32;
+
                 break;
 
                 case 3: //staff
@@ -148,8 +150,11 @@ class RegisterForm extends Model
                 if($r == 'committee'){
                     $role->status = 0;
                     $role->committee_id = 32;
+                    $role->request_at = new Expression('NOW()');
                 }else{
                     $role->status = 10;
+                    $role->request_at = new Expression('NOW()');
+                    $role->approve_at = new Expression('NOW()');
                 }
                 
                 $role->user_id = $user->id;

@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\ProgramRegistration;
 use app\models\UserRole;
 use app\models\LetterPdf;
+use app\models\RoleRequestSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
@@ -40,17 +41,11 @@ class CommitteeController extends Controller
      */
     public function actionRequest()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => UserRole::find()->where(['<>', 'role_name', 'participant']),
-            'pagination' => [
-                'pageSize' => 100
-            ],
-            'sort' => [
-                'defaultOrder' => [
-                    'id' => SORT_DESC,
-                ]
-            ],
-        ]);
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $searchModel = new RoleRequestSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
 
         if (Yii::$app->request->post()) {
             $post = Yii::$app->request->post();
@@ -78,9 +73,7 @@ class CommitteeController extends Controller
 
         return $this->render('request', [
             'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
+            'searchModel' => $searchModel,
         ]);
     }
 

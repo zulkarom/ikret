@@ -22,6 +22,10 @@ $this->params['breadcrumbs'][] = $this->title;
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
+    <?php  echo $this->render('_search', ['model' => $searchModel]); ?>
+
+
+
     <?php $form = ActiveForm::begin(); ?>
     <div class="card">
             <div class="card-body pt-4">
@@ -33,6 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
+        //'filterModel' => $searchModel,
                 'pager' => [
             'class' => 'yii\bootstrap5\LinkPager',
         ],
@@ -42,12 +47,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
             [
                 'label' =>'Name',
+                'attribute' => 'fullname',
                 'value' => function($model){
                     return $model->user->fullname;
                 }
             ],
             [
                 'label' =>'Role',
+                'attribute' => 'role_name',
                 'format' => 'html',
                 'value' => function($r){
                     $str = $r->roleText;
@@ -79,6 +86,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'label' =>'Status',
+                'attribute' => 'status',
                 'format' => 'html',
                 'value' => function($model){
                     return $model->statusLabel;
@@ -86,7 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'label' =>'Date Time',
-                'attribute' => 'dateSearch',
+                'attribute' => 'request_at',
                 'value' => function($model){
                     return $model->request_at;
                 }
