@@ -24,11 +24,27 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        //'filterModel' => $searchModel,
+        'pager' => [
+            'class' => 'yii\bootstrap5\LinkPager',
+        ],
+        'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
-            'session.session_name',
-            'user.fullname',
+            [
+                'label' =>'Session Name',
+                'attribute' => 'session_id',
+                'filter' => Html::activeDropDownList($searchModel, 'session_id', $searchModel->listSessions(),['class'=> 'form-control','prompt' => 'Choose Session']),
+                'value' => function($model){
+                    return $model->session->session_name;
+                }
+            ],
+            [
+                'label' =>'Participants',
+                'attribute' => 'fullname',
+                'value' => function($model){
+                    return $model->user->fullname;
+                }
+            ],
             'scanned_at',
 
         ],

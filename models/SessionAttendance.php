@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "session_attendance".
@@ -70,5 +71,10 @@ class SessionAttendance extends \yii\db\ActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
+    }
+
+    public function listSessions(){
+        $list = Session::find()->all();
+        return ArrayHelper::map($list, 'id', 'session_name');
     }
 }

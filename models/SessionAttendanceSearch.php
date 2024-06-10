@@ -11,13 +11,15 @@ use app\models\SessionAttendance;
  */
 class SessionAttendanceSearch extends SessionAttendance
 {
+    public $fullname;
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'session_id', 'user_id'], 'integer'],
+            [['session_id', 'fullname'], 'string'],
             [['scanned_at'], 'safe'],
         ];
     }
@@ -40,12 +42,17 @@ class SessionAttendanceSearch extends SessionAttendance
      */
     public function search($params)
     {
-        $query = SessionAttendance::find();
+        $query = SessionAttendance::find()
+        ->joinWith(['user u'])
+        ->orderBy('id DESC');
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 50,
+            ],
         ]);
 
         $this->load($params);
@@ -58,11 +65,12 @@ class SessionAttendanceSearch extends SessionAttendance
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
             'session_id' => $this->session_id,
-            'user_id' => $this->user_id,
-            'scanned_at' => $this->scanned_at,
         ]);
+
+        $query->andFilterWhere(['like', 'u.fullname', $this->fullname]);
+
+        $query->andFilterWhere(['like', 'scanned_at', $this->scanned_at]);
 
         return $dataProvider;
     }
