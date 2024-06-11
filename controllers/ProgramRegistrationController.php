@@ -115,6 +115,7 @@ class ProgramRegistrationController extends Controller
         
 
         //kita create terus klu takde
+        //mapping one to one mcm xkena, tp just proceeds
         $ada = RubricAnswer::findOne([
             'rubric_id' => $assign->rubric_id,
             'assignment_id' => $assign->id
@@ -387,6 +388,7 @@ class ProgramRegistrationController extends Controller
         $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
         $programSub = null;
         $program = $role->program;
+        $rubrics = $program->programRubrics;
 
         $programSub = null;
         $program = $role->program;
@@ -394,23 +396,31 @@ class ProgramRegistrationController extends Controller
         if($role->program->has_sub == 1){
             if($sub){
                 $programSub = $role->programSub;
+                $rubrics = $program->getProgramRubricsSub($sub)->all();
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
         }
 
+        $firstRubric = null;
+        if($rubrics){
+            $firstRubric = $rubrics[0]->id;
+        }
+
         $searchModel = new JuryResultSearch();
         $searchModel->program_id = $id;
         $searchModel->program_sub = $sub;
+        $searchModel->rubric = $firstRubric;
         $dataProvider = $searchModel->search($this->request->queryParams);
+
+        $selectedRubric = Rubric::findOne($searchModel->rubric);
 
         return $this->render('jury-result', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
             'program' => $program,
+            'rubrics' => $rubrics,
+            'selectedRubric' => $selectedRubric,
             'programSub' => $programSub,
         ]);
     }

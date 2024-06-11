@@ -192,6 +192,7 @@ class ProgramController extends Controller
             'register' => $register,
             'members' => [new Member()],
             'demo' => true,
+            'edit' => false,
         ]);
     }
 

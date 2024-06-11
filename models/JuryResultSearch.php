@@ -14,6 +14,8 @@ class JuryResultSearch extends User
     public $id;
     public $program_id;
     public $program_sub;
+    public $rubric;
+    public $fullnameSearch;
 
     /**
      * {@inheritdoc}
@@ -21,8 +23,8 @@ class JuryResultSearch extends User
     public function rules()
     {
         return [
-            [['is_internal'], 'integer'],
-            [['fullname','email'], 'string'],
+            [['is_internal', 'rubric'], 'integer'],
+            [['fullnameSearch','email'], 'string'],
         ];
     }
 
@@ -46,14 +48,17 @@ class JuryResultSearch extends User
     {
         $query = JuryAssign::find()->alias('a')
         ->joinWith(['registration r'])
-        ->where(['r.program_id' => $this->program_id]);
+        ->leftJoin('user u','u.id = r.user_id')
+        ->where(['r.program_id' => $this->program_id, 'rubric_id' => $this->rubric]);
         if($this->program_sub){
-            $query = $query->andWhere(['r.program_sub' => $this->program_sub]);
+            $query = $query->andWhere(
+                ['r.program_sub' => $this->program_sub]);
         }
+        $query = $query->orderBy('reg_id ASC, user_id ASC');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-		'pagination' => [
+		    'pagination' => [
                 'pageSize' => 100,
             ],
         ]);
@@ -75,6 +80,8 @@ class JuryResultSearch extends User
             ['like', 'email', $this->email],
             ['like', 'phone', $this->email]
         ]); */
+
+        $query->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);
 
         return $dataProvider;
     }

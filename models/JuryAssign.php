@@ -192,8 +192,15 @@ class JuryAssign extends \yii\db\ActiveRecord
         return ArrayHelper::map($list, 'id', 'rubric_name');
     }
 
+    /**
+     * salah mapping ni
+     * just proceed la 
+     */
     public function getRubricAnswer(){
-        return $this->hasOne(RubricAnswer::class, ['assignment_id' => 'id']);
+        //return $this->hasOne(RubricAnswer::class, ['assignment_id' => 'id']);
+        return RubricAnswer::find()
+        ->where(['assignment_id' => $this->id, 'rubric_id' => $this->rubric_id ])
+        ->one();
     }
 
     public function infoHtml($admin = false){
