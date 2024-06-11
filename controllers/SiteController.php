@@ -73,8 +73,41 @@ class SiteController extends Controller
                 }
             }
         }
+
+        $curr = Session::find()
+        ->where(['<', 'datetime_start', new Expression('NOW()')])
+        ->andWhere(['>', 'datetime_end', new Expression('NOW()')])
+        ->limit(5)
+        ->all();
+
+        $next = null;
+        $kira_curr = count($curr);
+        if($kira_curr < 2){
+            $next = Session::find()
+            ->where(['>', 'datetime_start', new Expression('NOW()')])
+            ->limit(5)
+            ->all();
+        }
+
         
-        return $this->render('index');
+
+        $previous = null;
+        $kira_session = count($next) + $kira_curr;
+
+
+        if($kira_session < 2){
+            $previous = Session::find()
+            ->where(['<', 'datetime_end', new Expression('NOW()')])
+            ->limit(3)
+            ->orderBy('datetime_end DESC')
+            ->all();
+        }
+        
+        return $this->render('index', [
+            'next' => $next,
+            'previous' => $previous,
+            'current' => $curr
+        ]);
     }
 
     /**
