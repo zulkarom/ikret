@@ -7,7 +7,9 @@ use app\models\SessionAttendance;
 use app\models\SessionAttendanceSearch;
 use app\models\SessionQr;
 use app\models\SessionSearch;
+use app\models\User;
 use Yii;
+use yii\db\Expression;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 
@@ -175,6 +177,41 @@ class SessionController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+        ]);
+    }
+
+    public function actionKeyin($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        $this->layout = 'plainx';
+
+        $model = $this->findModel($id);
+        
+        $att = new SessionAttendance();
+        $att->session_id = $id;
+
+        if ($this->request->isPost) {
+            if ($att->load($this->request->post())) {
+                $matric = $att->user_matric;
+                $user = User::findByMatricOrEmail($matric);
+                if($user){
+                    $att->user_id = $user->id;
+                    $att->scanned_at = new Expression('NOW()');
+                    if($att->save()){
+                        Yii::$app->session->addFlash('success', "Your attendance has been successfully recorded.");
+                        return $this->refresh();
+                    }
+                }else{
+                    Yii::$app->session->addFlash('error', "User not found");
+                }
+                
+            }
+            
+        } 
+
+        return $this->render('keyin', [
+            'model' => $model,
+            'att' => $att
         ]);
     }
 

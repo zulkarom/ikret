@@ -385,7 +385,7 @@ class ProgramRegistrationController extends Controller
     public function actionJuryResult($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
         $programSub = null;
         $program = $role->program;
         $rubrics = $program->programRubrics;
@@ -573,7 +573,7 @@ class ProgramRegistrationController extends Controller
 
     public function actionManagerAnalysis($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
         $programSub = null;
         $program = $role->program;
         $rubrics = $program->programRubrics;

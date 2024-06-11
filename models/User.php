@@ -130,6 +130,15 @@ class User extends ActiveRecord implements IdentityInterface
             ['email' => $username, ]
         ])->one();
     }
+    public static function findByMatricOrEmail($matric)
+    {
+        return static::find()
+        ->where(['status' => self::STATUS_ACTIVE])
+            ->andWhere(['or', 
+            ['matric' => $matric, ],
+            ['email' => $matric, ]
+        ])->one();
+    }
 
     public static function listIsInternal(){
         return [

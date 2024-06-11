@@ -101,4 +101,13 @@ class Session extends \yii\db\ActiveRecord
     {
         return $this->hasMany(SessionAttendance::class, ['session_id' => 'id']);
     }
+
+    public function getSessionAttendancesRecent()
+    {
+        return SessionAttendance::find()
+        ->where(['session_id' => $this->id])
+        ->limit(5)
+        ->orderBy('id DESC')
+        ->all();
+    }
 }

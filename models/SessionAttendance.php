@@ -18,6 +18,8 @@ use yii\helpers\ArrayHelper;
  */
 class SessionAttendance extends \yii\db\ActiveRecord
 {
+    public $user_matric;
+
     /**
      * {@inheritdoc}
      */
@@ -35,6 +37,9 @@ class SessionAttendance extends \yii\db\ActiveRecord
             [['session_id', 'user_id', 'scanned_at'], 'required'],
             [['session_id', 'user_id'], 'integer'],
             [['scanned_at'], 'safe'],
+
+            [['user_matric'], 'string'],
+
             [['session_id'], 'exist', 'skipOnError' => true, 'targetClass' => Session::class, 'targetAttribute' => ['session_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
