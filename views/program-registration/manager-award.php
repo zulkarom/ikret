@@ -8,23 +8,30 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
-$this->title = 'Update Achievement';
+$this->title = 'Achievement Award';
 
 ?>
 
+<div class="pagetitle">
+<h1><?=$this->title?></h1></div>
 
-<div class="d-flex  py-4">
-                <a href="index.html" class="logo d-flex w-auto">
-          
-                  <span class="d-none d-lg-block"><?=$this->title?></span>
-                </a>
-              </div>
+<nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="<?=Url::to(['/'])?>"><i class="bi bi-house-door"></i></a></li>
+        <li class="breadcrumb-item"><a href="<?=Url::to(['/program-registration/manager-analysis', 'id' => $achieve->registration->program_id, 'sub' => $achieve->registration->program_sub])?>">Analysis & Achievement</a></li>
+        <li class="breadcrumb-item active"><?=$this->title?></li>
+        </ol>
+        </nav>
+
+    </div><!-- End Page Title -->
+
+
 
 <?php $form = ActiveForm::begin(); ?>
 
 
                <div class="card">
-              <div class="card-header">Participant Achivement</div>
+              <div class="card-header">ACHIEVEMENT AWARD FOR <?= $achieve->registration->participantText?></div>
                       <div class="card-body pt-4">
 
 
