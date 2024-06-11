@@ -82,4 +82,25 @@ class SessionAttendance extends \yii\db\ActiveRecord
         $list = Session::find()->all();
         return ArrayHelper::map($list, 'id', 'session_name');
     }
+
+    public function validateAttendance($session, $user_id){
+        $start = strtotime($session->datetime_start);
+    $end = strtotime($session->datetime_end);
+    $valid = time() >= $start && time() <= $end;
+    if($session){
+        if($valid){
+            $ada = SessionAttendance::find()->alias('a')
+            ->where(['a.session_id' => $session->id, 'a.user_id' => $user_id])
+            ->one();
+            if($ada){
+                Yii::$app->session->addFlash('error', "Already Recorded");
+            }else{
+                return true;
+            }
+        }else{
+            Yii::$app->session->addFlash('error', "Invalid Session Time");
+        }
+    }
+    return false;
+    }
 }
