@@ -1,5 +1,6 @@
 <?php
 
+use app\models\Mentor;
 use app\models\Program;
 use app\models\ProgramRegistration;
 use app\widgets\Breadcrumbs;
@@ -38,6 +39,28 @@ $this->params['breadcrumbs'][] = $this->title;
             return $reg->participantText;
         }
     ];
+
+    $exportColumns[] = [
+        'label' =>'Group Members',
+        'value' => function($model){
+            $members = $model->registration->members;
+            $html = '';
+            if($members){
+                $i=1;
+                foreach($members as $m){
+                        $br = $i == 1 ? '' : "\n";
+                        $matric = '';
+                        if($m->member_matric){
+                            $matric = ' ('. $m->member_matric .')';
+                        }
+                        $html .= $br . $m->member_name . $matric;
+                        $i++;
+                    
+                }
+            }
+            return $html;
+        }
+    ];
     
     $exportColumns[] = [
         'label' =>'Group/Booth ID',
@@ -49,6 +72,43 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             if($reg->booth_number){
                 $html .= $reg->booth_number;
+            }
+            return $html;
+        }
+    ];
+
+    $exportColumns[] = [
+        'label' =>'Group Name',
+        'value' => function($model){
+            $reg = $model->registration;
+            return $reg->group_name;
+        }
+    ];
+
+    $exportColumns[] = [
+        'label' =>'Project Title',
+        'value' => function($model){
+            $reg = $model->registration;
+            return $reg->project_name;
+        }
+    ];
+
+    $exportColumns[] = [
+        'label' =>'Mentor',
+        'value' => function($model){
+            $reg = $model->registration;
+            $main = $reg->mentorMain;
+            $co = $reg->mentorCo;
+            $html = '';
+            if($main){
+                if($main->user){
+                    $html .= $main->user->fullname;
+                }
+            }
+            if($co){
+                if($co->user){
+                    $html .= "\n" . $co->user->fullname;
+                } 
             }
             return $html;
         }

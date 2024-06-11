@@ -437,12 +437,12 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
     public function getMentorMain()
     {
-        return $this->hasOne(User::class, ['id' => 'mentor_main']);
+        return Mentor::findOne(['program_reg_id' => $this->id, 'is_main' => 1]);
     }
 
     public function getMentorCo()
     {
-        return $this->hasOne(User::class, ['id' => 'mentor_co']);
+        return Mentor::findOne(['program_reg_id' => $this->id, 'is_main' => 0]);
     }
 
     /**

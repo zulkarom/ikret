@@ -15,13 +15,18 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
-<div class="d-flex  py-4">
-                <a href="index.html" class="logo d-flex w-auto">
-          
-                  <span class="d-none d-lg-block"><?=$this->title?></span>
-                </a>
-              </div>
 
+
+              <div class="pagetitle">
+<h1><?=$this->title?></h1></div>
+
+<nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="<?=Url::to(['/'])?>"><i class="bi bi-house-door"></i></a></li>
+        <li class="breadcrumb-item"><a href="<?=Url::to(['/program-registration/manager', 'id' => $model->program_id, 'sub' => $model->program_sub])?>">Participants</a></li>
+        <li class="breadcrumb-item active"><?=$this->title?></li>
+        </ol>
+        </nav>
       
 
               <?php 
@@ -54,6 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?=$this->render('../program/_view_register', [    
 'register' => $model,
-'arr_fields' => $arr_fields
+'arr_fields' => $arr_fields,
+'edit' => false
 ]);
 ?>
