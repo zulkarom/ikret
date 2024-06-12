@@ -56,7 +56,7 @@ class Committee extends \yii\db\ActiveRecord
     {
         return $this->hasMany(UserRole::class, ['committee_id' => 'id']);
     }
-
+p
     public static function listCommittees($control = false){
         if($control){
             $user = Yii::$app->user->identity;

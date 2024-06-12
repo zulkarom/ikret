@@ -32,6 +32,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 {
     const STATUS_DRAFT = 0;
     const STATUS_REGISTERED = 10;
+    const STATUS_NULLIFIED = 15;
     const STATUS_COMPLETE = 20;
 
     public $poster_instance;
@@ -131,12 +132,13 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return [
             self::STATUS_DRAFT => 'DRAFT', 
             self::STATUS_REGISTERED => 'REGISTERED',
+            self::STATUS_NULLIFIED => 'NULLIFIED',
             self::STATUS_COMPLETE => 'COMPLETE'
         ];
     }
 
     public static function getStatusColor(){
-	    return [self::STATUS_DRAFT => 'danger', self::STATUS_REGISTERED => 'primary', self::STATUS_COMPLETE => 'success'];
+	    return [self::STATUS_DRAFT => 'danger', self::STATUS_REGISTERED => 'primary', self::STATUS_NULLIFIED => 'warning', self::STATUS_COMPLETE => 'success'];
 	}
 
     public function getStatusText(){

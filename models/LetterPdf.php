@@ -62,7 +62,7 @@ class LetterPdf
 	public function writeRef(){
 
 		
-		$ref = 'UMK.A01.100-12/3/2 JLD 7';
+		$ref = 'UMK.A01.100-12/3/2 JLD 9 ( 518  )';
 		
 		$html = '<br /><br />
         <div style="line-height:24px;">&nbsp;</div>
@@ -92,11 +92,22 @@ EOD;
 	
 	public function writeTitle(){
 
-		$html = $this->model->user->fullname . '
+		/* $html = $this->model->user->fullname . '
 		<br />Faculty of Entrepreneurship and Business
-		<br />Universiti Malaysia Kelantan <br/><br/>';
+		<br />Universiti Malaysia Kelantan <br/><br/>'; */
+		
+		$html = $this->model->user->fullname;
+		$l = '';
+		if($this->model->committee->is_jawatankuasa == 1){
+			$l = 'AHLI ';
+			if($this->model->is_leader == 1){
+				$l = 'KETUA ';
+			}
+		}
+		$html .= '<br />' . $l.$this->model->committee->com_name;
+		$html .= '<br /><br />';
 
-		$html .= 'Dear Dr./ Sir/ Madam,<br /><br />
+		$html .= 'Dear Prof./Assoc. Prof. /Dr./ Sir/ Madam,<br /><br />
 		    
 		<b>APPOINTMENT AS A COMMITTEE MEMBER FOR THE INTERNATIONAL CONVENTION ON RESOURCEFUL ENTREPRENEURS ACHIEVING TOMORROW’S EXCELLENCE (I-CREATE 2024), FACULTY OF ENTREPRENEURSHIP AND BUSINESS (FEB), UNIVERSITI MALAYSIA KELANTAN (UMK)</b>
 		<br /><br />
@@ -104,7 +115,7 @@ EOD;
 		The above matter is cordially referred.
 		<br /><br />
 		 <table ><tr><td>
-		<span style="text-align:justify;">2. &nbsp;&nbsp;&nbsp;</span><span style="text-align:justify;">We are pleased to inform you that Faculty of Entrepreneurship and Business (FEB), Universiti Malaysia Kelantan (UMK) has the greatest pleasure and honour to appoint you as a committee for the <b>INTERNATIONAL CONVENTION ON RESOURCEFUL ENTREPRENEURS ACHIEVING TOMORROW’S EXCELLENCE (I-CREATE 2024)</b> with effect from '. $this->date .'.</span>
+		<span style="text-align:justify;">2. &nbsp;&nbsp;&nbsp;</span><span style="text-align:justify;">We are honoured to inform you that the Faculty of Entrepreneurship and Business (FEB), Universiti Malaysia Kelantan (UMK) has appointed you as a committee member for the <b>INTERNATIONAL CONVENTION ON RESOURCEFUL ENTREPRENEURS ACHIEVING TOMORROW’S EXCELLENCE (I-CREATE 2024)</b> effective March 17th, 2024 until the completion of tasks related to the program.</span>
 </td></tr>
 </table>
 <br /><br />
@@ -140,6 +151,7 @@ $html .='<table border="0">
 <br /><br />
 We sincerely thank you for your contribution and great support for this event.
 <br /><br />
+<b>"ISLAM MEMIMPIN, RAJA MENAUNGI, NEGERI BERKAT"</b><br />
 <b>"MALAYSIA MADANI"</b><br />
 <b>"BERKHIDMAT UNTUK NEGARA"</b><br />
 <br />

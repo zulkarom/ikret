@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Committee;
 use app\models\ProgramRegistration;
 use app\models\UserRole;
 use app\models\LetterPdf;
@@ -90,8 +91,17 @@ class CommitteeController extends Controller
         ]);
     }
 
+    public function actionIndex()
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+        $list = Committee::find()->all();
+        return $this->render('list', [
+            'list' => $list,
+        ]);
+    }
+
     public function actionLetter(){
-        if(!Yii::$app->user->identity->isCommittee)return;
+        if(!Yii::$app->user->identity->isCommittee) return;
 
         $dataProvider = new ActiveDataProvider([
             'query' => UserRole::find()
