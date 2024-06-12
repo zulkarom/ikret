@@ -81,7 +81,11 @@ class SiteController extends Controller
         ->all();
 
         $next = null;
-        $kira_curr = count($curr);
+        $kira_curr = 0;
+        if($curr){
+            $kira_curr = count($curr);
+        }
+        
         if($kira_curr < 2){
             $next = Session::find()
             ->where(['>', 'datetime_start', new Expression('NOW()')])
@@ -92,7 +96,13 @@ class SiteController extends Controller
         
 
         $previous = null;
-        $kira_session = count($next) + $kira_curr;
+        $kira_session  = 0;
+        if($next){
+            $kira_session = count($next) + $kira_curr;
+        }else{
+            $kira_session =  $kira_curr;
+        }
+        
 
 
         if($kira_session < 2){

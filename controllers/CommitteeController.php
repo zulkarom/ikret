@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\models\CertificateCommittee;
+use app\models\CertificateTemplate;
 use app\models\Committee;
 use app\models\ProgramRegistration;
 use app\models\UserRole;
@@ -118,12 +120,38 @@ class CommitteeController extends Controller
     }
 
     public function actionLetterPdf($id){
+        if(!$this->canAccessDoc($id)) return false;
+
         $model = $this->findRole($id);
         $pdf = new LetterPdf;
         $pdf->model = $model;
         $pdf->generatePdf();
         exit;
     }
+
+    public function actionCertificate($id){
+        if(!$this->canAccessDoc($id)) return false;
+
+        $pdf = new CertificateCommittee;
+        $role = $this->findRole($id);
+        $pdf->template = CertificateTemplate::findOne(2);
+        $pdf->model = $role;
+        $pdf->generatePdf();
+        exit;
+    }
+
+    private function canAccessDoc($id){
+        if(Yii::$app->user->identity->isAdmin){
+            return true;
+        }else{
+            $role = $this->findRole($id);
+            if($role->user_id == Yii::$app->user->identity->id){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Creates a new ProgramRegistration model.

@@ -60,20 +60,26 @@ $this->params['breadcrumbs'][] = $this->title;
 
 function renderComm($u){
     ?>
-<table>
+<table width="100%">
     <tbody>
         <?php 
         if($u->userRoles){
             $i=1;
             foreach($u->userRoles as $c){
+                $l = '';
+                if($c->committee->is_jawatankuasa == 1){
+                    if($c->is_leader == 1){
+                        $l = ' (KETUA) ';
+                    }
+                }
                 $style='style="color:red"';
                 if($c->status == 10){
                     $style='';
                 }
 
                 echo '<tr>
-                <td width="90%"><span '.$style.'>'.$c->user->fullname.'</span></td>
-                <td width="10%">'. Html::a('pdf', ['/committee/letter-pdf', 'id' => $c->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']) .'</td>
+                <td width="80%"><span '.$style.'>'.$c->user->fullname. $l . '</span></td>
+                <td width="20%">'. Html::a('loa', ['/committee/letter-pdf', 'id' => $c->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']) .' '. Html::a('cert', ['/committee/certificate', 'id' => $c->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']) .'</td>
                 </tr>';
                 $i++;
             }

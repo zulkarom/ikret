@@ -54,9 +54,10 @@ class Committee extends \yii\db\ActiveRecord
      */
     public function getUserRoles()
     {
-        return $this->hasMany(UserRole::class, ['committee_id' => 'id']);
+        return $this->hasMany(UserRole::class, ['committee_id' => 'id'])
+        ->orderBy('is_leader ASC');
     }
-p
+
     public static function listCommittees($control = false){
         if($control){
             $user = Yii::$app->user->identity;
