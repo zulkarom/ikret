@@ -86,14 +86,12 @@ class SiteController extends Controller
             $kira_curr = count($curr);
         }
         
-        if($kira_curr < 2){
+        if($kira_curr < 4){
             $next = Session::find()
             ->where(['>', 'datetime_start', new Expression('NOW()')])
-            ->limit(5)
+            ->limit(4)
             ->all();
         }
-
-        
 
         $previous = null;
         $kira_session  = 0;
@@ -103,8 +101,6 @@ class SiteController extends Controller
             $kira_session =  $kira_curr;
         }
         
-
-
         if($kira_session < 2){
             $previous = Session::find()
             ->where(['<', 'datetime_end', new Expression('NOW()')])
