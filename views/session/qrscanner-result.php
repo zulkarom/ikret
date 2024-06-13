@@ -40,8 +40,7 @@ function record($t, $user_id){
                 }
             }
         }else{
-            $msg = 'Invalid Session Time';
-            $err .= 'start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
+            $msg = 'Invalid Session Time - start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
         }
     }else{
         $msg = 'Invalid Session Code';
