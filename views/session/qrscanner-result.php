@@ -39,7 +39,8 @@ function record($t, $user_id){
                 }
             }
         }else{
-            $msg = 'Invalid Session Time - name - '.$session->session_name.' start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
+            $msg = 'Invalid Session Time';
+            //$msg = 'Invalid Session Time - name - '.$session->session_name.' start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
         }
     }else{
         $msg = 'Invalid Session Code';
