@@ -39,7 +39,7 @@ function record($t, $user_id){
                 }
             }
         }else{
-            $msg = 'Invalid Session Time <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /> start-'.$start. '-end-'. $end . '-curr-'.date('Y-m-d h:i:s A', time());
+            $msg = 'Invalid Session Time';
         }
     }else{
         $msg = 'Invalid Session Code';
