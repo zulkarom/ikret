@@ -104,7 +104,7 @@ EOD;
 				$l = 'KETUA ';
 			}
 		}
-		$html .= '<br />' . $l.$this->model->committee->com_name;
+		$html .= '<br />' . $l.$this->model->committee->com_name_en;
 		$html .= '<br /><br />';
 
 		$html .= 'Dear Prof./Assoc. Prof. /Dr./ Sir/ Madam,<br /><br />
@@ -164,7 +164,7 @@ cum Advisor I-CREATE 2024
 <div align="center"><i>This is a computer-generated document and no signature is required.</i></div>
 cc: 
 <br />
-Fail Program I-CREATE 2024
+I-CREATE 2024 Program File
 		';
 		
 		

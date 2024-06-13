@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     foreach($list as $r){
                                         echo '<tr>
                                         <td>'.$i.'. </td>
-                                        <td>'.$r->com_name.'</td>
+                                        <td>'.$r->com_name_en.'</td>
                                         <td>';
                                         renderComm($r);
                                         

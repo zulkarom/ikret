@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
                       }
                       if($r->role_name == 'committee'){
                         if($r->committee){
-                            $str .= '<br />('.$r->committee->com_name.')';
+                            $str .= '<br />('.$r->committee->com_name_en.')';
                           if($r->committee->is_jawatankuasa == 1){
                             if($r->is_leader == 1){
                                 $str .= '<b> - Leader</b>';

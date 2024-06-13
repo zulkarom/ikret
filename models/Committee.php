@@ -31,7 +31,7 @@ class Committee extends \yii\db\ActiveRecord
     {
         return [
             [['is_jawatankuasa'], 'integer'],
-            [['com_name'], 'string', 'max' => 54],
+            [['com_name','com_name_en'], 'string', 'max' => 54],
         ];
     }
 
@@ -64,16 +64,16 @@ class Committee extends \yii\db\ActiveRecord
             if($user->is_student == 1){
                 return ArrayHelper::map(self::find()
                 ->where(['is_student' => 1])
-                ->all(),'id', 'com_name');
+                ->all(),'id', 'com_name_en');
             }else if($user->is_student == 0){
-                return ArrayHelper::map(self::find()->all(),'id', 'com_name');
+                return ArrayHelper::map(self::find()->all(),'id', 'com_name_en');
             }else{
                 return [''];
             }
 
             
         }else{
-            return ArrayHelper::map(self::find()->all(),'id', 'com_name');
+            return ArrayHelper::map(self::find()->all(),'id', 'com_name_en');
         }
         
     }

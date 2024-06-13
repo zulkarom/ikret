@@ -171,7 +171,7 @@ if($roles){
     }
     if($r->role_name == 'committee'){
       if($r->committee){
-        echo '<br />('.$r->committee->com_name.')';
+        echo '<br />('.$r->committee->com_name_en.')';
         if($r->committee->is_jawatankuasa == 1){
           if($r->is_leader == 1){
             echo '<b> - Leader</b>';
