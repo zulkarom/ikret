@@ -67,6 +67,19 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
+    public function actionJuryCertPage()
+    {
+        if(!Yii::$app->user->identity->isJury) return false;
+
+        //cari unique program/sub
+        //pastikan semua assignemnt siap
+        $list = [];
+
+        return $this->render('jury-cert-page', [
+            'list' => $list,
+        ]);
+    }
+
     public function actionJuryAssignment()
     {
         if(!Yii::$app->user->identity->isJury) return false;
@@ -77,11 +90,9 @@ class ProgramRegistrationController extends Controller
         return $this->render('jury-assignment', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
         ]);
     }
+
     public function actionJuryDelete($id, $p, $s = null){
         if(!Yii::$app->user->identity->isManager) return false;
 

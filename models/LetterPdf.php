@@ -73,7 +73,7 @@ class LetterPdf
 		</tr>
 		<tr>
 			<td></td>
-			<td align="left">'. $this->date .'</td>
+			<td align="left">June 2024</td>
 		</tr>
 		</table>
 		<br /><br />';
@@ -99,13 +99,12 @@ EOD;
 		$html = $this->model->user->fullname;
 		$l = '';
 		if($this->model->committee->is_jawatankuasa == 1){
-			$l = 'AHLI ';
 			if($this->model->is_leader == 1){
-				$l = 'KETUA ';
+				$l = 'Head of ';
 			}
 		}
-		$html .= '<br />' . $l.$this->model->committee->com_name_en;
-		$html .= '<br /><br />';
+		$html .= '<br /><b>' . $l.$this->model->committee->com_name_en;
+		$html .= '</b><br /><br />';
 
 		$html .= 'Dear Prof./Assoc. Prof. /Dr./ Sir/ Madam,<br /><br />
 		    

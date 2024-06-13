@@ -206,7 +206,7 @@ class ProgramController extends Controller
         $setting = Setting::findOne(1);
         $allow_from = $setting->allow_cert_from;
         if(time() < strtotime($allow_from)){
-            Yii::$app->session->addFlash('info', "The certificate will be available after the program date.");
+            Yii::$app->session->addFlash('info', "The certificates are expected to be released soon.");
             //return $this->render('empty');
         }
 

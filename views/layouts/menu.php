@@ -29,6 +29,7 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isJury){
           $menu[] = ['name' => 'Jury Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Assignments', 'url' => ['/program-registration/jury-assignment'], 'icon' => 'bi bi-file-earmark-medical'];
+          $menu[] = ['name' => 'Certificate', 'url' => ['/program-registration/jury-cert-page'], 'icon' => 'bi bi-award'];
 
 
         }
@@ -36,7 +37,7 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isCommittee){
           $menu[] = ['name' => 'Committee Menu', 'heading' => true];
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
-          $menu[] = ['name' => 'Certificate', 'url' => ['/committee/cert'], 'icon' => 'bi bi-award'];
+          $menu[] = ['name' => 'Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
 
         }
 

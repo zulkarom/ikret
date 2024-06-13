@@ -152,6 +152,24 @@ class CommitteeController extends Controller
         return false;
     }
 
+    public function actionCertificatePage()
+    {
+        if(!Yii::$app->user->identity->isCommittee) return false;
+
+        $list = UserRole::find()
+        ->where([
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'committee',
+            'status' => 10
+            ])
+        ->all();
+
+        return $this->render('certificate-page', [
+            'list' => $list,
+        ]);
+
+    }
+
 
     /**
      * Creates a new ProgramRegistration model.
