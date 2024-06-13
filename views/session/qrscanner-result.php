@@ -13,6 +13,7 @@ date_default_timezone_set("Asia/Kuala_Lumpur");
 function record($t, $user_id){
     date_default_timezone_set("Asia/Kuala_Lumpur");
     $msg = '';
+    $err = '<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />';
     //pastikan kelas wujud
     $session = Session::find()->where(['token' => $t])->one();
     $start = strtotime($session->datetime_start);
@@ -40,6 +41,7 @@ function record($t, $user_id){
             }
         }else{
             $msg = 'Invalid Session Time';
+            $err .= 'start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
         }
     }else{
         $msg = 'Invalid Session Code';
@@ -76,7 +78,7 @@ if($result[0]){
 ?>
 
 <button type="button" class="btn btn-primary btn-lg"  id="tutup">Close</button> 
-
+<?=$err?>
 </div>
 </div>
 </div>
