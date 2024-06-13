@@ -84,6 +84,7 @@ class SessionAttendance extends \yii\db\ActiveRecord
     }
 
     public function validateAttendance($session, $user_id){
+        date_default_timezone_set("Asia/Kuala_Lumpur");
         $start = strtotime($session->datetime_start);
     $end = strtotime($session->datetime_end);
     $valid = time() >= $start && time() <= $end;

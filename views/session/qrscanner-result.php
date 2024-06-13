@@ -11,6 +11,7 @@ use yii\helpers\Url;
 
 date_default_timezone_set("Asia/Kuala_Lumpur");
 function record($t, $user_id){
+    date_default_timezone_set("Asia/Kuala_Lumpur");
     $msg = '';
     //pastikan kelas wujud
     $session = Session::find()->where(['token' => $t])->one();
