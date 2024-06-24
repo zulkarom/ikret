@@ -45,7 +45,7 @@ class JurySearch extends User
         ->leftJoin('program_reg_jury s', 's.user_id = a.id')
         ->where(['r.role_name' => 'jury'])
         ->groupBy('a.id')
-        ->orderBy('r.approve_at DESC')
+        //->orderBy('r.approve_at DESC')
         ;
         
 
