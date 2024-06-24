@@ -44,8 +44,9 @@ class JurySearch extends User
         ->innerJoin('user_role r','r.user_id = a.id')
         ->leftJoin('program_reg_jury s', 's.user_id = a.id')
         ->where(['r.role_name' => 'jury'])
-        ->orderBy('kira DESC, r.approve_at DESC')
-        ->groupBy('a.id, kira');
+        ->groupBy('a.id')
+        ->orderBy('r.approve_at DESC')
+        ;
         
 
         $dataProvider = new ActiveDataProvider([
