@@ -131,7 +131,7 @@ class ProgramRegistrationController extends Controller
             }
             //kena dapatkan unique program
             $programs = JuryAssign::find()->alias('a')
-            ->select('a.*, r.program_id, r.program_sub')
+            ->select('r.program_id, r.program_sub')
             ->joinWith(['registration r'])
             ->where(['a.user_id' => $user->id])
             ->groupBy('r.program_id, r.program_sub')
@@ -799,7 +799,7 @@ class ProgramRegistrationController extends Controller
         $model = $this->findModel($id);
         $program_id = $model->program_id;
         $program_sub = $model->program_sub;
-        
+
         $transaction = Yii::$app->db->beginTransaction();
         try {
             Member::deleteAll(['program_reg_id' => $id]);

@@ -57,6 +57,24 @@ class Program extends \yii\db\ActiveRecord
         return $this->hasMany(ProgramSub::class, ['program_id' => 'id']);
     }
 
+    public static function programNameLong($program_id, $program_sub = null){
+        $str = '';
+        $program = Program::findOne($program_id);
+        if($program){
+            $str .= $program->program_name;
+        }
+
+        if($program_sub){
+            $sub = ProgramSub::findOne($program_sub);
+            if($sub){
+                $str .= '<br />(' . $sub->sub_name . ')';
+            }
+        }
+
+        return $str;
+    }
+
+
     public function listSubPrograms(){
         $list = $this->getProgramSubs()->all();
         return ArrayHelper::map($list, 'id', 'subProgramText');

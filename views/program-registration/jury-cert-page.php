@@ -31,7 +31,9 @@ $this->title = 'Jury Certificate';
     if($programs){
       $i = 1;
       foreach($programs as $j){
-        echo '<tr><td>'.$i.'</td><td>' . $j->registration->programNameShort . '</td><td><a href="'. Url::to(['jury-cert-pdf', 'p' => $j->program_id, 's' =>$j->program_sub, 'u' => $user->id]) .'" target="_blank" class="btn btn-primary btn-sm">Certificate</a></td></tr>';
+        $program = Program::programNameLong($j->program_id, $j->program_sub);
+
+        echo '<tr><td>'.$i.'</td><td>' . $program. '</td><td><a href="'. Url::to(['jury-cert-pdf', 'p' => $j->program_id, 's' =>$j->program_sub, 'u' => $user->id]) .'" target="_blank" class="btn btn-primary btn-sm">Certificate</a></td></tr>';
         $i++;
       }
     }
