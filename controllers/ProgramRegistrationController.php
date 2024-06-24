@@ -2,10 +2,14 @@
 
 namespace app\controllers;
 
+use app\models\CertificateJury;
+use app\models\CertificateTemplate;
 use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
 use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
+use app\models\Member;
+use app\models\Mentor;
 use app\models\ParticipantAchieve;
 use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
@@ -14,6 +18,7 @@ use app\models\ProgramRegistrationSearch;
 use app\models\ProgramSub;
 use app\models\Rubric;
 use app\models\RubricAnswer;
+use app\models\Setting;
 use app\models\User;
 use app\models\UserRole;
 use Yii;
@@ -67,16 +72,82 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
-    public function actionJuryCertPage()
-    {
-        if(!Yii::$app->user->identity->isJury) return false;
+    public function actionJuryCertPdf($p, $s = null, $u = null){
+        //$u = Yii::$app->user->identity->id;
+        if($u){
+            $u = $this->findUser($u);
+        }else{
+            $u = Yii::$app->user->identity;
+        }
+        if(!$this->canAccessDoc($u, $p,$s)) return false;
 
+        $pdf = new CertificateJury;
+        
+        $assign = $this->findAssignmentByProgram($u, $p, $s);
+        $pdf->template = CertificateTemplate::findOne(3);
+        $pdf->model = $assign;
+        $pdf->generatePdf();
+        exit;
+    }
+
+    private function canAccessDoc($u, $p, $s){
+        if(Yii::$app->user->identity->isManager){
+            return true;
+        }else{
+            $role = $this->findAssignmentByProgram($u, $p, $s);
+            if($role->user_id == Yii::$app->user->identity->id){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function actionJuryCertPage($u=null)
+    {
+        $setting = Setting::findOne(1);
+        $admin = $u && Yii::$app->user->identity->isManager;
+        if(time() < strtotime($setting->allow_cert_from) && !$admin){
+            Yii::$app->session->addFlash('info', "Certificates have not been published.");
+            return $this->render("empty");
+        }
+        if($u){
+            $user = $this->findUser($u);
+        }else{
+            $user = Yii::$app->user->identity;
+        }
+
+        if(!$user->isJury) return false;
         //cari unique program/sub
         //pastikan semua assignemnt siap
-        $list = [];
+        $list = JuryAssign::find()
+        ->where(['user_id' => $user->id])
+        ->all();
+        if($list){
+            foreach($list as $a){
+                if($a->status != 20){
+                    Yii::$app->session->addFlash('error', "Sorry, you need to finish all the assignments.");
+                    return $this->render('empty');
+                }
+            }
+            //kena dapatkan unique program
+            $programs = JuryAssign::find()->alias('a')
+            ->select('a.*, r.program_id, r.program_sub')
+            ->joinWith(['registration r'])
+            ->where(['a.user_id' => $user->id])
+            ->groupBy('r.program_id, r.program_sub')
+            ->all();
+
+        }else{
+            //cari & test ni dulu
+            Yii::$app->session->addFlash('error', "Sorry, you dont't have any assignment.");
+            return $this->render('empty');
+        }
+
 
         return $this->render('jury-cert-page', [
             'list' => $list,
+            'programs' => $programs,
+            'user' => $user
         ]);
     }
 
@@ -124,7 +195,6 @@ class ProgramRegistrationController extends Controller
             $assign->save();
         }
         
-
         //kita create terus klu takde
         //mapping one to one mcm xkena, tp just proceeds
         $ada = RubricAnswer::findOne([
@@ -142,54 +212,76 @@ class ProgramRegistrationController extends Controller
             $model->save();
         }
 
-        if ($assign->status <= 10 && $this->request->isPost && $model->load($this->request->post())) {
+        if($assign->status <= 10 && $this->request->isPost && $model->load($this->request->post())) {
             
             $action = $this->request->post('action');
+            //print_r($this->request->post());
+
+            $nullify = $this->request->post('nullify');
+            $assign->is_nullified = $nullify == 1 ? 1 : 0;
+            $assign->reason_nullified = $this->request->post('reason_nullified');
+            $valid = true;
+            if($assign->is_nullified == 1 && !$assign->reason_nullified){
+                Yii::$app->session->addFlash('error', "You need to state the reason of nullification.");
+                $valid = false;
+            }
+
+            //echo $nullify;die();
+            
             $model->updated_at = new Expression('NOW()');
-            if($action == 'submit'){
-                
-                if($model->isComplete){
+            if($action == 'submit' && $valid){
+                if($model->isComplete || $assign->is_nullified == 1){
                     $model->submitted_at = new Expression('NOW()');
                     $transaction = Yii::$app->db->beginTransaction();
+
                     try {
                         if($model->save()){
                             $assign->status = 20;
+
                             //put score in jury assign
-                            $assign->score = $model->scoreValue;
+                            if($assign->is_nullified == 1){
+                                $assign->score = 0;
+                            }else{
+                                $assign->score = $model->scoreValue;
+                            }
+                            
                             if($assign->save()){
                                 //calc average put score in registration
                                 $register->setScoreAndAward();
                                 $register->save();
-                                
                             }else{
                                 Yii::$app->session->addFlash('error', "Failed to update status");
                             }
                         }
                         
+                        
                         $transaction->commit();
+
                         Yii::$app->session->addFlash('success', "Thank you, you have completed the judging session for this participant.");
                         return $this->refresh();
-                        
-                    }
-                    catch (\Exception $e) 
-                    {
+                    }catch (\Exception $e){
                         $transaction->rollBack();
                         Yii::$app->session->addFlash('error', $e->getMessage());
                     }
-                    
                 }else{
                     Yii::$app->session->addFlash('error', "You need to complete all first before submitting.");
                 }
             }else{
-                if($model->save()){
+
+                //put score in jury assign
+                if($assign->is_nullified == 1){
+                    $assign->score = 0;
+                }else{
+                    $assign->score = $model->scoreValue;
+                }
+                if($assign->save()){
+                    if($model->save()){
                     Yii::$app->session->addFlash('success', "Data Updated");
                     return $this->refresh();
                 }
+                }
                 
             }
-            
-            
-            
         }
 
         return $this->render('jury-judge', [
@@ -211,6 +303,7 @@ class ProgramRegistrationController extends Controller
     {
         return $this->render('view', [
             'model' => $this->findModel($id),
+            
         ]);
     }
 
@@ -247,7 +340,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerView($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
-        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
 
         if(!$role){
             return;
@@ -440,6 +533,7 @@ class ProgramRegistrationController extends Controller
         $session = Yii::$app->session;
         //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
+
         $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
         $programSub = null;
         $program = $role->program;
@@ -699,6 +793,30 @@ class ProgramRegistrationController extends Controller
         return $this->redirect(['index']);
     }
 
+    public function actionDeleteRegistration($id)
+    {
+        //kita delete member & mentor shj
+        $model = $this->findModel($id);
+        $program_id = $model->program_id;
+        $program_sub = $model->program_sub;
+        
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            Member::deleteAll(['program_reg_id' => $id]);
+            Mentor::deleteAll(['program_reg_id' => $id]);
+            $model->delete();
+            $transaction->commit();
+            //$this->findModel($id)->delete();
+            Yii::$app->session->addFlash('success', "Registration Deleted");
+            //return $this->redirect(['index']);
+        } catch(\yii\db\IntegrityException $e) {
+            throw new \yii\web\ForbiddenHttpException('Could not delete this registration, other record related to it (jury or achievement)');
+        }
+
+        return $this->redirect(['manager', 'id' => $program_id, 'sub' => $program_sub]);
+
+    }
+
     /**
      * Finds the ProgramRegistration model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -715,6 +833,15 @@ class ProgramRegistrationController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
+    protected function findUser($id)
+    {
+        if (($model = User::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist. (user)');
+    }
+
     protected function findAssignment($id)
     {
         if (($model = JuryAssign::findOne(['id' => $id])) !== null) {
@@ -723,6 +850,25 @@ class ProgramRegistrationController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+    
+
+    protected function findAssignmentByProgram($u, $p, $s = null)
+    {
+        $model = JuryAssign::find()->alias('a')
+        ->joinWith(['registration r'])
+        ->where(['a.user_id' => $u, 'r.program_id' => $p]);
+        if($s){
+            $model = $model->andWhere(['r.program_sub' => $s]);
+        }
+        $model = $model->one();
+
+        if ($model !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
     protected function findAchievement($id)
     {
         if (($model = ParticipantAchieve::findOne(['id' => $id])) !== null) {

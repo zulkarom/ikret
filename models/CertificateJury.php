@@ -3,10 +3,10 @@ namespace app\models;
 
 use Yii;
 
-class CertificateCommittee
+class CertificateJury
 {
 
-    public $model;
+    public $model; //assignment
     public $template;
     public $pdf;
     public $system;
@@ -85,7 +85,7 @@ class CertificateCommittee
             $size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
+<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px"><b>' . strtoupper($this->model->user->fullname) . '</b></td></tr>';
         }
 
 
@@ -115,17 +115,12 @@ EOD;
        
             //$size = $this->template->field1_size;
 
-            $l = '';
-		if($this->model->committee->is_jawatankuasa == 1){
-			if($this->model->is_leader == 1){
-				$l = 'Head of ';
-			}
-		}
+
 
             $html .= '
-<tr><td height="120"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:25px">
-' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
+<tr><td height="140"></td></tr>
+<tr><td align="'.$this->align.'" style="font-size:22px">
+' . strtoupper($this->model->registration->programNameLong) . '</td></tr>';
         
         $html .= '</table>';
         $html .= '</td></tr>';

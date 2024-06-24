@@ -90,11 +90,13 @@ class UserController extends Controller
                 Yii::$app->session->addFlash('error', "The user already a jury");
             }else{
                 $userRole->status = 10;
-                $userRole->role_name = ['jury'];
+                $userRole->role_name = 'jury';
                 $userRole->approve_at = new Expression('NOW()');
                 if($userRole->save()){
                     Yii::$app->session->addFlash('success', "Jury Added");
                     return $this->refresh();
+                }else{
+                    $userRole->flashError();
                 }
             }
             

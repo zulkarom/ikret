@@ -315,7 +315,7 @@ class ProgramController extends Controller
         $quest_likert = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 1]);
         $quest_essay = Questionnaire::findAll(['pre_post' => 2, 'question_type' => 2]);
         $quest_checkbox = Questionnaire::find()
-        ->where(['pre_post' => 1, 'question_type' => 3])
+        ->where(['pre_post' => 2, 'question_type' => 3])
         ->orderBy('question_order ASC')
         ->all();
 
@@ -350,7 +350,11 @@ class ProgramController extends Controller
 
 
     public function actionRegisterForm($id, $reg = null, $edit = false){
-
+        $end = Setting::findOne(1)->date_end;
+        if(time() > strtotime($end)) {
+            Yii::$app->session->addFlash('error', "Registration closed, the program had ended");
+            return $this->render('empty');
+        }
         date_default_timezone_set("Asia/Kuala_Lumpur");
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if(!$check){

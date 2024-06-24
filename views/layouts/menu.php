@@ -23,13 +23,13 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
           $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
           $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
-          $menu[] = ['name' => 'Certificate', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
+          $menu[] = ['name' => 'Certificates', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
         }
 
         if(Yii::$app->user->identity->isJury){
           $menu[] = ['name' => 'Jury Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Assignments', 'url' => ['/program-registration/jury-assignment'], 'icon' => 'bi bi-file-earmark-medical'];
-          $menu[] = ['name' => 'Certificate', 'url' => ['/program-registration/jury-cert-page'], 'icon' => 'bi bi-award'];
+          $menu[] = ['name' => 'Jury Certificate', 'url' => ['/program-registration/jury-cert-page'], 'icon' => 'bi bi-award'];
 
 
         }
@@ -37,7 +37,7 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isCommittee){
           $menu[] = ['name' => 'Committee Menu', 'heading' => true];
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
-          $menu[] = ['name' => 'Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
+          $menu[] = ['name' => 'Committee Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
 
         }
 

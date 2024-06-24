@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Certificate';
+$this->title = 'Committee Certificate';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -24,18 +24,39 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body pt-4">
             <table class="table">
                             <tbody>
-                                <tr><th>No.</th><th>Committee</th><th></th></tr>
+                                <tr><th>No.</th><th>Name</th><th>Committee</th><th></th></tr>
                                 <?php 
             if($list){
                 $i=1;
-                foreach($list as $c){
-                    $r = $c->committee;
+                foreach($list as $r){
+                    //$r = $c->committee;
                     echo '<tr>
                     <td>'.$i.'. </td>
-                    <td>'.$r->com_name_en.'</td>
+                    <td>'.$r->user->fullname.'. </td>
+                    <td>';
+                    //$r->com_name_en;
+
+                    $str = '';
+                      if($r->role_name == 'committee'){
+                        if($r->committee){
+                            $str .= $r->committee->com_name_en ;
+                          if($r->committee->is_jawatankuasa == 1){
+                            if($r->is_leader == 1){
+                                $str .= '<b> - Leader</b>';
+                            }else{
+                                $str .= '<b> - Member</b>';
+                            }
+                            
+                          }
+                        }
+                      }
+
+                    echo $str;
+                    
+                    echo '</td>
                     <td>';
 
-                    echo Html::a('<i class="bi bi-download"></i>  Certificate', ['certificate', 'id' => $c->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']);
+                    echo Html::a('<i class="bi bi-download"></i>  Certificate', ['certificate', 'id' => $r->id], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']);
                     echo '</td>
                     </tr>';
                     $i++;

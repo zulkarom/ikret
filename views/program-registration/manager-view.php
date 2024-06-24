@@ -8,7 +8,7 @@ use yii\widgets\DetailView;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
 
-$this->title = 'Registration Details / Achievement';
+$this->title = 'Registration Details';
 $this->params['breadcrumbs'][] = ['label' => 'Program Registrations', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -63,3 +63,6 @@ $this->params['breadcrumbs'][] = $this->title;
 'edit' => false
 ]);
 ?>
+
+
+<a href="<?=Url::to(['delete-registration', 'id' => $model->id])?>" class="btn btn-danger btn-sm" data-confirm="Are you sure to delete this registration? This action cannot be undone!"><i class="bi bi-trash"></i></a>

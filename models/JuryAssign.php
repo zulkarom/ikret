@@ -26,6 +26,8 @@ class JuryAssign extends \yii\db\ActiveRecord
     public $users;
     public $keep_data;
     public $keep_open;
+    public $program_id;
+    public $program_sub;
 
     /**
      * {@inheritdoc}

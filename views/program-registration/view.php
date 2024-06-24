@@ -25,6 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?=$this->render('../program/_view_register', [    
 'register' => $model,
-'arr_fields' => $arr_fields
+'arr_fields' => $arr_fields,
+'edit' => false
 ]);
 ?>

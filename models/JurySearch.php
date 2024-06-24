@@ -40,15 +40,20 @@ class JurySearch extends User
     public function search($params)
     {
         $query = User::find()->alias('a')
+        ->select('a.*, COUNT(s.id) as kira')
         ->innerJoin('user_role r','r.user_id = a.id')
-        ->where(['r.role_name' => 'jury']);
+        ->leftJoin('program_reg_jury s', 's.user_id = a.id')
+        ->where(['r.role_name' => 'jury'])
+        ->orderBy('kira DESC, r.approve_at DESC')
+        ->groupBy('a.id');
+        
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
 		'pagination' => [
                 'pageSize' => 100,
             ],
-            'sort'=> ['defaultOrder' => ['id'=>SORT_DESC]],
+            //'sort'=> ['defaultOrder' => ['id'=>SORT_DESC]],
         ]);
 
         $this->load($params);

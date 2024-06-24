@@ -1,5 +1,6 @@
 <?php
 
+use app\models\JuryAssign;
 use app\models\User;
 use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
@@ -131,21 +132,36 @@ $("#btn-hide-new-user").click(function(){
                 'label' => 'Email /Phone',
                 'format' => 'html',
                 'value' => function($model){
-                    return $model->email . '<br />' . $model->phone;
+                    return $model->email . ' ' . $model->phone;
                 }
             ],
-            /* ['class' => 'yii\grid\ActionColumn',
-                'contentOptions' => ['style' => 'width: 13%'],
+            [
+                'attribute' => 'kira',
+                'label' => 'No. Assign',
+                'format' => 'html',
+                 'value' => function($model){
+                    //cari berapa complete
+                    $complete = JuryAssign::find()->where(['user_id' => $model->id, 'status' => 20])->count();
+                    $all = $model->kira;
+                    if($complete == $all){
+                        $color = 'success';
+                    }else{
+                        $color = 'warning';
+                    }
+                    return '<span class="badge bg-'.$color.'">' . $complete . ' / ' . $all . '</span>';
+                } 
+            ],
+            ['class' => 'yii\grid\ActionColumn',
+            //'contentOptions' => ['style' => 'width: 13%'],
             'template' => '{view}',
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
-                    return Html::a('<span class="bi bi-pencil-square
-                    "></span> Update',['update', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    return Html::a('View',['/program-registration/jury-cert-page', 'u' => $model->id],['class'=>'btn btn-primary btn-sm']);
                 },
             ],
         
-        ], */
+        ],
   
         ],
     ]); ?>

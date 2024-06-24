@@ -141,7 +141,7 @@ class CommitteeController extends Controller
     }
 
     private function canAccessDoc($id){
-        if(Yii::$app->user->identity->isAdmin){
+        if(Yii::$app->user->identity->isManager){
             return true;
         }else{
             $role = $this->findRole($id);

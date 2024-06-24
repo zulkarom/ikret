@@ -13,7 +13,7 @@ use yii\widgets\ActiveForm;
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Committee';
+$this->title = 'Letter of Appointment';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">
@@ -41,18 +41,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
-                'label' =>'Role',
+                'label' =>'Committee',
                 'format' => 'html',
                 'value' => function($r){
-                    $str = $r->roleText;
-                    if($r->role_name == 'manager'){
-                        if($r->program){
-                            $str .= '<br />('.$r->program->program_abbr.')';
-                        }
-                      }
+                    $str = '';
                       if($r->role_name == 'committee'){
                         if($r->committee){
-                            $str .= '<br />('.$r->committee->com_name_en.')';
+                            $str .= $r->committee->com_name_en ;
                           if($r->committee->is_jawatankuasa == 1){
                             if($r->is_leader == 1){
                                 $str .= '<b> - Leader</b>';
@@ -68,18 +63,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
-                'label' =>'Status',
-                'format' => 'html',
-                'value' => function($model){
-                    return $model->statusLabel;
-                }
-            ],
-            [
                 'label' =>'',
                 'attribute' => 'dateSearch',
                 'format' => 'raw',
                 'value' => function($model){
-                    return Html::a('Download',['letter-pdf','id' => $model->id],['class' => 'btn btn-info', 'target' => '_blank']);
+                    return Html::a('Download',['letter-pdf','id' => $model->id],['class' => 'btn btn-primary btn-sm', 'target' => '_blank']);
                 }
             ],
             /* ['class' => 'yii\grid\ActionColumn',

@@ -34,7 +34,14 @@ $formName =  $model->formName();
                 <ul>
                   <li>Status: <?=$assign->statusLabel?></li>
                   
-                  <?php list($total, $score, $percent, $award) = $model->totalScorePercent?>
+                  <?php 
+                  list($total, $score, $percent, $award) = $model->totalScorePercent;
+                  if($assign->is_nullified == 1){
+                    $score = 0 . ' (nullified)';
+                    $percent = 0;
+                  }
+                  
+                  ?>
                   <li>Complete: <?=$model->isCompleteText?></li>
                   <li>Full Score: <?=$total?></li>
                   <li>Score Earned: <?=$score?></li>
@@ -65,7 +72,10 @@ $formName =  $model->formName();
 </div>
 
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php $form = ActiveForm::begin(); 
+    $hide_form = $assign->is_nullified == 1 ? 'style="display: none;"' : '';
+    ?>
+    <div id="con-form" <?=$hide_form?>>
     <?php  
     $i = 1;
     if($rubric && $rubric->categories){
@@ -196,11 +206,43 @@ $formName =  $model->formName();
     ?>
     
           
-          
-        <?php if($write){?>  
+    </div>
+        <?php if($write){
+          $check = $assign->is_nullified == 1 ? 'checked' : '';
+          $hide = $assign->is_nullified == 1 ? '' : 'style="display: none;"';
+          ?>  
     <div class="form-group">
-        
+
+    <div>
+    <label for="nullify" id="lbl-nullify"> 
+      <input type="checkbox" name="nullify" id="nullify" value="1" <?=$check?>> Mark this participant as nullified (e.g. in case of absent, non-compliant etc.)
+  </label>
+  
+</div><br />
+
+    <div id="con-nullified" <?=$hide?>>
+      <label>State your reason</label>
+      <textarea name="reason_nullified" id="reason_nullified" class="form-control"><?=$assign->reason_nullified?></textarea>
+      <br />
+    </div>
+  <?php
+
+  $this->registerJs('
+      $("#nullify").change(function(){
+           if ($(this).prop("checked")==true){ 
+              $("#con-nullified").slideDown();
+              $("#con-form").hide();
+          }else{
+            $("#con-form").show();
+              $("#con-nullified").slideUp();
+          }
+      });
+  ');
+
+  ?>  
+  <?=$form->field($model, 'updated_at')->hiddenInput(['value' => time()])->label(false)?>
         <?= Html::submitButton('Save & Preview', ['name' => 'action', 'value' => 'save', 'class' => 'btn btn-primary']) ?> 
+
         <?= Html::submitButton('Finalise & Submit', ['name' => 'action', 'value' => 'submit','class' => 'btn btn-success', 'data-confirm' => 'Are you sure to submit this form?']) ?>
             </div>
             <?php }else{
