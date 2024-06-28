@@ -157,7 +157,7 @@ $("#btn-hide-new-user").click(function(){
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
-                    return Html::a('View',['/program-registration/jury-cert-page', 'u' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    return Html::a('Cert.',['/program-registration/jury-cert-page', 'u' => $model->id],['class'=>'btn btn-primary btn-sm']);
                 },
             ],
         

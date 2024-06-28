@@ -3,7 +3,7 @@ namespace app\models;
 
 use Yii;
 
-class CertificateCommittee
+class CertificateAchievement
 {
 
     public $model;
@@ -48,21 +48,25 @@ class CertificateCommittee
     public function writeData()
     { 
         //$left = $this->template->margin_left + 0;
-        $left = 75;
+
+        $left = 70;
         $this->pdf->SetFont('montserrat', 'b', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
             $this->pdf->SetXY($left,0);
             $this->html_name();
+            $this->pdf->SetXY($left,101);
+            $this->html_award();
             $this->pdf->SetX($left);
-            $this->html_position();
-            $this->pdf->SetXY($left,0);
-            $this->pdf->SetFont('montserrat', '', 10);
-            $this->pdf->SetXY($left,0);
+
+            $this->html_program();
+            
         } else {
             $html = $this->template->custom_html;
         }
+
+        
     }
 
 
@@ -83,7 +87,7 @@ class CertificateCommittee
             $size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
+<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</td></tr>';
         }
 
 
@@ -101,8 +105,9 @@ EOD;
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
     }
 
-    public function html_position()
+    public function html_award()
     {
+        //$a->awardTextColor()
         /* echo $this->model->committee->com_name_en;
         die();
          */
@@ -111,19 +116,12 @@ EOD;
     <td align="'.$this->align.'">';
         $html .= '<table border="0" align="'.$this->align.'">';
        
-            //$size = $this->template->field1_size;
-
-            $l = '';
-		if($this->model->committee->is_jawatankuasa == 1){
-			if($this->model->is_leader == 1){
-				$l = 'Head of ';
-			}
-		}
+    //$size = $this->template->field1_size;
 
             $html .= '
-<tr><td height="100"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
+<tr><td></td></tr>
+<tr><td align="'.$this->align.'" style="font-size:30px">
+' . strtoupper($this->model->awardTextColor()) . '</td></tr>';
         
         $html .= '</table>';
         $html .= '</td></tr>';
@@ -132,9 +130,40 @@ EOD;
 $tbl = <<<EOD
 $html
 EOD;
-
+        $this->pdf->SetFont('helvetica', 'b', 0);
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
     }
+
+    public function html_program()
+    {
+        //$a->awardTextColor()
+        /* echo $this->model->committee->com_name_en;
+        die();
+         */
+        //$margin_name = $this->template->field1_mt;
+        $html = '<table border="0"><tr>
+    <td align="'.$this->align.'">';
+        $html .= '<table border="0" align="'.$this->align.'">';
+       
+    //$size = $this->template->field1_size;
+
+            $html .= '
+<tr><td height="53"></td></tr>
+<tr><td align="'.$this->align.'" style="font-size:20px">
+' . strtoupper($this->model->programNameLong) . '</td></tr>';
+        
+        $html .= '</table>';
+        $html .= '</td></tr>';
+        $html .= '</table>';
+
+$tbl = <<<EOD
+$html
+EOD;
+        $this->pdf->SetFont('montserrat', '', 0);
+        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+    }
+
+    
 
     public function startPage()
     {
@@ -167,8 +196,7 @@ EOD;
         // $this->pdf->SetMargins(25, 10, PDF_MARGIN_RIGHT);
 
         //$right = $this->template->margin_right + 0;
-
-        $right = 12;
+        $right = 11;
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

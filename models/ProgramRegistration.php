@@ -41,6 +41,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public $mentor_main;
     public $mentor_co;
     public $purata;
+    public $achieve_name;
 
     /**
      * {@inheritdoc}
@@ -310,19 +311,6 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return $text;
     }
 
-    public static function listCategoryComeXX(){
-        return [
-            1 => 'E-Preneur / Dr. Fatihah Mohd & Dr. Yusmazida',
-            2 => 'Business Product Pitching / Dr. Noor Raihani Binti Zainol',
-            3 => 'Product Marketing Creative Video Competition / Dr. Azira Hanani Binti Ab Rahman',
-            4 => 'Most Viable Student  /  Dr. Wan Farha Binti Wan Zulkiffli',
-            5 => 'Takaful Product Innovation / Mrs. Farah Hanan Binti Muhamad',
-            6 => 'TaxPro Idea Competition / Dr. Amira Binti Jamil',
-            7 => 'Poster Presentation / Dr. Siti Fariha Binti Muhamad'
-        ];
-    }
-
-
     public static function listNeweekAdvisor(){
         return [
             1 => '(L1) DR NURUL IZYAN BINTI MAT DAUD',
@@ -400,7 +388,15 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return [
             80 => 'GOLD',
             60 => 'SILVER',
-            0 => 'BRONZE'
+            10 => 'BRONZE'
+        ];
+    }
+
+    public static function listAwardColor(){
+        return [
+            80 => '#DA9100',
+            60 => '#7A7A7A',
+            10 => '#A87143'
         ];
     }
 
@@ -411,6 +407,20 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             $text = $array[$this->award];
         }
         return $text;
+    }
+
+    public function awardTextColor(){
+        $text = '';
+        $array = $this->listAward();
+        if(array_key_exists($this->award, $array)){
+            $text = $array[$this->award];
+        }
+        $color = '';
+        $array = $this->listAwardColor();
+        if(array_key_exists($this->award, $array)){
+            $color = $array[$this->award];
+        }
+        return '<span style="color:'.$color.'">' . $text . ' AWARD</span>';
     }
 
 
@@ -455,6 +465,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return Mentor::findOne(['program_reg_id' => $this->id, 'is_main' => 0]);
     }
 
+    public function getMentors()
+    {
+        return $this->hasMany(Mentor::class, ['program_reg_id' => 'id'])->orderBy('is_main DESC');
+    }
+
     /**
      * Gets query for [[ProgramRegMembers]].
      *
@@ -463,6 +478,43 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public function getMembers()
     {
         return $this->hasMany(Member::class, ['program_reg_id' => 'id']);
+    }
+
+    public function getMemberStr(){
+        $str = '';
+        $strBr = '';
+        $members = $this->members;
+        $mentors = $this->mentors;
+
+        $i = 0;
+        if($members){
+            foreach($members as $m){
+            $comma = $i == 0 ? '' : ', ';
+            $br = $i == 0 ? '' : '<br />';
+            $str .= $comma. $m->member_name;
+            $strBr .= $br. $m->member_name;
+            $i++;
+            }
+        }
+        
+        if($mentors){
+            foreach($mentors as $m){
+            $comma = $i == 0 ? '' : ', ';
+            $br = $i == 0 ? '' : '<br />';
+            if($m->user){
+                $str .= $comma. $m->user->fullname;
+                $strBr .= $br. $m->user->fullname;
+                $i++;
+            }
+            
+            }
+        }
+        if($i <= 4){
+            return $strBr;
+        }else{
+            return $str;
+        }
+        
     }
 
     public function getJuries()

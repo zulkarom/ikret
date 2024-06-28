@@ -118,7 +118,7 @@ EOD;
 
 
             $html .= '
-<tr><td height="140"></td></tr>
+<tr><td height="210"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:22px">
 ' . strtoupper($this->model->registration->programNameLong) . '</td></tr>';
         
@@ -165,7 +165,7 @@ EOD;
 
         //$right = $this->template->margin_right + 0;
 
-        $right = 10;
+        $right = 14;
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

@@ -6,18 +6,18 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var app\models\Session $model */
 
-$this->title = 'I-CREATE ATTENDANCE';
+$this->title = 'Attendance & Certificate';
 $this->params['breadcrumbs'][] = ['label' => 'Sessions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="session-create">
 
 
-    <div class="pagetitle" style="text-align: center;">
+    <div class="pagetitle">
 <h1><?= Html::encode($this->title) ?></h1>
 
-<div class="d-grid gap-2 mt-3">
-                <button class="btn btn-primary btn-lg" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
+<div>
+                <button class="btn btn-primary" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button> <a href="<?=Url::to(['cert-qr'])?>" class="btn btn-warning" style="margin-top: 20px; margin-bottom:20px" target="_blank"><i class="bi bi-award"></i>  CERTIFICATE</a>
               </div>
 
 <?php

@@ -3,7 +3,7 @@ namespace app\models;
 
 use Yii;
 
-class CertificateCommittee
+class CertificateQr
 {
 
     public $model;
@@ -48,16 +48,14 @@ class CertificateCommittee
     public function writeData()
     { 
         //$left = $this->template->margin_left + 0;
-        $left = 75;
+        $left = 72;
         $this->pdf->SetFont('montserrat', 'b', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
             $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetX($left);
-            $this->html_position();
-            $this->pdf->SetXY($left,0);
+            $this->pdf->SetXY($left,89);
             $this->pdf->SetFont('montserrat', '', 10);
             $this->pdf->SetXY($left,0);
         } else {
@@ -83,7 +81,7 @@ class CertificateCommittee
             $size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
+<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';
         }
 
 
@@ -92,41 +90,6 @@ class CertificateCommittee
 
         $html .= '</td>
 </tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
-    }
-
-    public function html_position()
-    {
-        /* echo $this->model->committee->com_name_en;
-        die();
-         */
-        //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-            //$size = $this->template->field1_size;
-
-            $l = '';
-		if($this->model->committee->is_jawatankuasa == 1){
-			if($this->model->is_leader == 1){
-				$l = 'Head of ';
-			}
-		}
-
-            $html .= '
-<tr><td height="100"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
         $html .= '</table>';
 
 $tbl = <<<EOD
@@ -167,8 +130,7 @@ EOD;
         // $this->pdf->SetMargins(25, 10, PDF_MARGIN_RIGHT);
 
         //$right = $this->template->margin_right + 0;
-
-        $right = 12;
+        $right = 14;
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

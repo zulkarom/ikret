@@ -10,6 +10,7 @@ use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
 use app\models\Member;
 use app\models\Mentor;
+use app\models\MentorMenteesSearch;
 use app\models\ParticipantAchieve;
 use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
@@ -148,6 +149,64 @@ class ProgramRegistrationController extends Controller
             'list' => $list,
             'programs' => $programs,
             'user' => $user
+        ]);
+    }
+
+    public function actionMentorMentees($u = null)
+    {
+        $setting = Setting::findOne(1);
+        $admin = $u && Yii::$app->user->identity->isManager;
+        if(time() < strtotime($setting->allow_cert_from) && !$admin){
+            Yii::$app->session->addFlash('info', "Certificates have not been published.");
+            return $this->render("empty");
+        }
+        if($u){
+            $user = $this->findUser($u);
+        }else{
+            $user = Yii::$app->user->identity;
+        }
+
+
+        if(!$user->isMentor) return false;
+        
+
+        $searchModel = new MentorMenteesSearch(['user' => $user]);
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('mentor-mentees', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'user' => $user
+        ]);
+    }
+
+    public function actionManagerViewCerts($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+
+        $programSub = null;
+        $program = $role->program;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+        
+        $searchModel = new ProgramRegistrationManagerSearch();
+            $searchModel->program_id = $role->program_id;
+            $searchModel->program_sub = $sub;
+            $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('manager-view-certs', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'role' => $role,
+            'programSub' => $programSub
+
         ]);
     }
 
@@ -651,9 +710,6 @@ class ProgramRegistrationController extends Controller
             return $this->render('manager', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
                 'role' => $role,
                 'model' => $model,
                 'programSub' => $programSub
@@ -722,9 +778,6 @@ class ProgramRegistrationController extends Controller
             return $this->render('manager-analysis', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
                 'role' => $role,
                 'model' => $model,
                 'programSub' => $programSub,

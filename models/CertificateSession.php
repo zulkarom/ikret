@@ -3,7 +3,7 @@ namespace app\models;
 
 use Yii;
 
-class CertificateCommittee
+class CertificateSession
 {
 
     public $model;
@@ -57,9 +57,10 @@ class CertificateCommittee
             $this->html_name();
             $this->pdf->SetX($left);
             $this->html_position();
+            $this->pdf->SetX($left);
+            $this->html_program();
             $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('montserrat', '', 10);
-            $this->pdf->SetXY($left,0);
         } else {
             $html = $this->template->custom_html;
         }
@@ -83,7 +84,7 @@ class CertificateCommittee
             $size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
+<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';
         }
 
 
@@ -111,19 +112,43 @@ EOD;
     <td align="'.$this->align.'">';
         $html .= '<table border="0" align="'.$this->align.'">';
        
-            //$size = $this->template->field1_size;
 
-            $l = '';
-		if($this->model->committee->is_jawatankuasa == 1){
-			if($this->model->is_leader == 1){
-				$l = 'Head of ';
-			}
-		}
 
             $html .= '
 <tr><td height="100"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
+' . strtoupper($this->model->session_name) . '<br/>
+<span style="font-size:16px">BY ' . strtoupper($this->model->speaker) . '</span>
+</td></tr>';
+        
+        $html .= '</table>';
+        $html .= '</td></tr>';
+        $html .= '</table>';
+
+$tbl = <<<EOD
+$html
+EOD;
+
+        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+    }
+
+    public function html_program()
+    {
+        /* echo $this->model->committee->com_name_en;
+        die();
+         */
+        //$margin_name = $this->template->field1_mt;
+        $html = '<table border="0"><tr>
+    <td align="'.$this->align.'">';
+        $html .= '<table border="0" align="'.$this->align.'">';
+       
+
+
+            $html .= '
+<tr><td height="55"></td></tr>
+<tr><td align="'.$this->align.'" style="font-size:23px">
+' . strtoupper($this->model->program_name) . '
+</td></tr>';
         
         $html .= '</table>';
         $html .= '</td></tr>';

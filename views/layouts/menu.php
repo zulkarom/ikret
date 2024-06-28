@@ -16,22 +16,21 @@ use yii\helpers\Url;
         $menu[] = ['name' => 'Register', 'url' => ['/site/register'], 'icon' => 'bi bi-card-list'];
       }else{
 
-        $menu[] = ['name' => 'Session Attendance', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
+        $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
+     
 
         if(Yii::$app->user->identity->isParticipant){
           $menu[] = ['name' => 'Participant Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
           $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
           $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
-          $menu[] = ['name' => 'Certificates', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
+          $menu[] = ['name' => 'Certificates & Awards', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
         }
 
         if(Yii::$app->user->identity->isJury){
           $menu[] = ['name' => 'Jury Menu', 'heading' => true];
           $menu[] = ['name' => 'List of Assignments', 'url' => ['/program-registration/jury-assignment'], 'icon' => 'bi bi-file-earmark-medical'];
           $menu[] = ['name' => 'Jury Certificate', 'url' => ['/program-registration/jury-cert-page'], 'icon' => 'bi bi-award'];
-
-
         }
 
         if(Yii::$app->user->identity->isCommittee){
@@ -39,6 +38,11 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
           $menu[] = ['name' => 'Committee Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
 
+        }
+
+        if(Yii::$app->user->identity->isMentor){
+          $menu[] = ['name' => 'Mentor Menu', 'heading' => true];
+          $menu[] = ['name' => 'Mentees & Certificates', 'url' => ['/program-registration/mentor-mentees'], 'icon' => 'bi bi-file-earmark-medical'];
         }
 
         if(Yii::$app->user->identity->isManager){
@@ -65,12 +69,14 @@ use yii\helpers\Url;
                   $url4 = ['/program/rubrics','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $url8 = ['/program-registration/manager-view-certs','id' => $p->program_id, 'sub' => $p->program_sub];
                 }
 
                 $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
                   ['name' => 'Participants & Juries Assignment', 'url' => $url],
                   ['name' => 'Result By Assignments', 'url' => $url2],
                   ['name' => 'Analysis & Achievement', 'url' => $url7],
+                  ['name' => 'Certificates', 'url' => $url8],
                   ['name' => 'Registration Fields', 'url' => $url3],
                   ['name' => 'Rubrics', 'url' => $url4],
                   ['name' => 'Achievements', 'url' => $url5],
@@ -83,6 +89,7 @@ use yii\helpers\Url;
             }
 
             $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
+            $menu[] = ['name' => 'List of Mentors', 'url' => ['/user/mentor'], 'icon' => 'bi bi-person-badge'];
             $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
             $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [

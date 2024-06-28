@@ -26,8 +26,7 @@ $this->title = 'Jury Certificate';
       <table class="table">
                       <tbody>
                           <tr><th>No.</th><th>Program</th><th></th></tr>
-                          <?php 
-    
+                          <?php
     if($programs){
       $i = 1;
       foreach($programs as $j){

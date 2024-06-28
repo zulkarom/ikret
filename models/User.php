@@ -336,6 +336,15 @@ class User extends ActiveRecord implements IdentityInterface
         }
     }
 
+    public function getIsMentor(){
+        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'mentor', 'status' => 10]);
+        if($role){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public function getIsJury(){
         $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'jury', 'status' => 10]);
         if($role){

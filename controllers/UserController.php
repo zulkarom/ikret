@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\ChangePasswordForm;
 use app\models\JurySearch;
+use app\models\MentorSearch;
 use app\models\ProgramSub;
 use app\models\RegisterForm;
 use Yii;
@@ -121,11 +122,19 @@ class UserController extends Controller
         return $this->render('jury', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
             'userRole' => $userRole,
             'newUser' => $newUser
+        ]);
+    }
+
+    public function actionMentor(){
+        if(!Yii::$app->user->identity->isManager) return false;
+        $searchModel = new MentorSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('mentor', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
         ]);
     }
 

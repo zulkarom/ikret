@@ -2,12 +2,13 @@
 
 /* @var $this yii\web\View */
 
+use app\models\Program;
+use app\models\ProgramRegistration;
 use yii\helpers\Url;
 
-$this->title = 'Programme Registered';
 ?>
   <div class="pagetitle">
-<h1>Certificate of Participation</h1></div>
+<h1>Certificates</h1></div>
 
     </div><!-- End Page Title -->
 
@@ -18,44 +19,70 @@ $this->title = 'Programme Registered';
             <div class="table-responsive">
     <table class="table">
     <tbody>
-        <tr><th>No.</th><th>List of Registered Programs</th></tr>
-        <?php
+        <tr><th>No.</th><th>Type</th><th>Programs</th><th></th></tr>
+    <?php
+    $i = 1;
         if($registered){
-          $i = 1;
+          
           foreach($registered as $program){
-            echo ' <tr><td>'.$i.'. </td><td>'.$program->program->program_name;
-            if($program->project_name){
-              echo '<br /><i>Project Title: '. $program->project_name .'</i>';
-            }
-            echo '<table class="table table-borderless">
-                <tbody>
-                    <tr><th>No. </th><th>Group Members</th><th></th></tr>';
-                    $members = $program->members;
-                    if($members){
-                      $i = 1;
-                      foreach($members as $m){
-                        echo '<tr><td>'.$i.'. </td><td>'.$m->member_name.'</td><td>';
-                        
-                        /* echo '<a href="'.Url::to(['cert-participation','reg' => $program->id, 'm' => $m->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a>'; */
-                        
-                        echo '</td></tr>';
-                        $i++;
-                      }
-                    }
-                    
-            echo '</tbody>
-            </table>';
-
-
-            echo '</td></tr>';
+            echo ' <tr><td>'.$i.'. </td><td>Certificate of Participation</td><td>'.$program->programNameLong;
+            echo '<div style="font-size:12px;">';
+            echo $program->memberStr;
+            echo '</div></td><td>
+            <a href="'.Url::to(['cert-participation','reg' => $program->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a></td></tr>';
             $i++;
           }
-        }else{
-          echo '<tr><td colspan="2"><i>You have not registered to any program so far.</i></td></tr>';
         }
-        
-        
-        ?>
+
+        if($sessions){
+          
+          foreach($sessions as $s){
+            echo ' <tr><td>'.$i.'. </td><td>Certificate of Participation</td><td>'.$s->program->program_name ;
+            echo '<div style="font-size:12px;">';
+            echo $s->session_name;
+            echo '</div>';
+            echo '<div style="font-size:12px;">BY ';
+            echo strtoupper($s->speaker);
+            echo '</div>';
+            echo '</td><td>
+            <a href="'.Url::to(['cert-participation-session','reg' => $s->reg_id, 's' => $s->id, 'u' => Yii::$app->user->identity->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a></td></tr>';
+            $i++;
+          }
+        }
+
+        if($medals){
+          foreach($medals as $a){
+            echo ' <tr><td>'.$i.'. </td><td>Certificate of Achievement
+            <br /><b>('.$a->awardTextColor().')</b>
+            </td><td>'.$a->programNameLong;
+            echo '<div style="font-size:12px;">';
+            echo $a->memberStr;
+            echo '</div></td><td>
+            <a href="'.Url::to(['cert-achievement','reg' => $a->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a></td></tr>';
+            $i++;
+          }
+        }
+
+        if($excel){
+          foreach($excel as $b){
+           //echo '<pre>';
+           // print_r($b);
+            $reg = ProgramRegistration::findOne($b["id"]);
+            echo ' <tr><td>'.$i.'. </td><td>Certificate of Excellence
+            <br /><b>(<span style="color:#DA9100">'.strtoupper($b["achieve_name"]).'</span>)</b>
+            </td><td>'.$reg->programNameLong;
+            echo '<div style="font-size:12px;">';
+            echo $reg->memberStr;
+            echo '</div></td><td>
+            <a href="'.Url::to(['cert-excellence','reg' => $reg->id]).'" class="btn btn-sm btn-primary" target="_blank">DOWNLOAD</a></td></tr>';
+            $i++;
+          }
+        }
+        if($i == 1){
+          echo '<tr><td colspan="3">No Certificate found.</td></tr>';
+        }
+
+    ?>
        
     </tbody>
 </table>

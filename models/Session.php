@@ -21,6 +21,11 @@ use Yii;
  */
 class Session extends \yii\db\ActiveRecord
 {
+    public $reg_id;
+    public $user_id;
+    public $fullname;
+    public $program_name;
+
     /**
      * {@inheritdoc}
      */

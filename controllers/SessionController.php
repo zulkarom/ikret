@@ -2,6 +2,8 @@
 
 namespace app\controllers;
 
+use app\models\CertificateQr;
+use app\models\CertificateTemplate;
 use app\models\Session;
 use app\models\SessionAttendance;
 use app\models\SessionAttendanceSearch;
@@ -146,6 +148,26 @@ class SessionController extends Controller
         $pdf->model = $member;
         $pdf->generatePdf();
         exit;
+    }
+
+    public function actionCertQr($u = null){
+        if(Yii::$app->user->identity->isManager && $u){
+            $user = User::findOne($u);
+        }else{
+            $user = Yii::$app->user->identity;
+        }
+        $att = SessionAttendance::findOne(['user_id' => $user->id]);
+        if($att){
+            $pdf = new CertificateQr;
+            $pdf->template = CertificateTemplate::findOne(6);
+            $pdf->model = $user;
+            $pdf->generatePdf();
+            exit;
+        }else{
+            Yii::$app->session->addFlash('error', "You have not attended any event so far.");
+            return $this->render('empty');
+        }
+        
     }
 
     /**
