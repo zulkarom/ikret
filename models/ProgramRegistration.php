@@ -517,6 +517,26 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         
     }
 
+    public function getMemberCountAll(){
+        $members = $this->members;
+        $mentors = $this->mentors;
+        $i = 0;
+        if($members){
+            foreach($members as $m){
+            $i++;
+            }
+        }
+        
+        if($mentors){
+            foreach($mentors as $m){
+            if($m->user){
+                $i++;
+            }
+            }
+        }
+        return $i;
+    }
+
     public function getJuries()
     {
         return $this->hasMany(JuryAssign::class, ['reg_id' => 'id']);

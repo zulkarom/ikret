@@ -74,6 +74,11 @@ class Certificate
 
 
         $margin_name = $this->template->name_mt;
+        $size = 21;
+        $kira = $this->model->memberCountAll;
+        if($kira > 10){
+            $size = 18;
+        }
 
         $html = '<table border="0">
 <tr>
@@ -83,7 +88,7 @@ class Certificate
         $html .= '<table border="0" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
-            $size = $this->template->name_size;
+            //$size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</td></tr>';
