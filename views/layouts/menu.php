@@ -60,6 +60,7 @@ use yii\helpers\Url;
                 $url4 = ['/program/rubrics','id' => $p->program_id];
                 $url5 = ['/program/achievement','id' => $p->program_id];
                 $url6 = ['/program/info','id' => $p->program_id];
+                $url8 = ['/program-registration/manager-view-certs','id' => $p->program_id];
                 
 
                 if($p->programSub){
