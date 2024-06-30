@@ -8,6 +8,7 @@ use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
 use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
+use app\models\ManagerSessionSearch;
 use app\models\Member;
 use app\models\Mentor;
 use app\models\MentorMenteesSearch;
@@ -741,7 +742,7 @@ class ProgramRegistrationController extends Controller
 
         if($role && $role->program){
         
-            $searchModel = new ProgramRegistrationManagerSearch();
+            $searchModel = new ManagerSessionSearch();
             $searchModel->program_id = $role->program_id;
             $searchModel->program_sub = $sub;
             $dataProvider = $searchModel->search($this->request->queryParams);
