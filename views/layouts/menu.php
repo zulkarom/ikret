@@ -228,7 +228,11 @@ use yii\helpers\Url;
     {
       //echo Yii::$app->controller->id;
       //echo  Yii::$app->controller->action->id;
-			$count = count($url);
+      $count = 0;
+      if(is_array($url)){
+        $count = count($url);
+      }
+			
       if($count == 1 && array_key_exists(0,$url) && $url[0] == '/'){
         if(Yii::$app->controller->id == 'site' && Yii::$app->controller->action->id == 'index'){
           //echo 'masuk';
