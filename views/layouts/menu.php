@@ -53,6 +53,7 @@ use yii\helpers\Url;
               if($p->program){
                 $sub = '';
                 $url = ['/program-registration/manager','id' => $p->program_id];
+                $urls = ['/program-registration/manager-session','id' => $p->program_id];
                 $url7 = ['/program-registration/manager-analysis','id' => $p->program_id];
                 $url2 = ['/program-registration/jury-result','id' => $p->program_id];
                 $url3 = ['/program/register-fields','id' => $p->program_id];
@@ -64,6 +65,7 @@ use yii\helpers\Url;
                 if($p->programSub){
                   $sub = '/' . $p->programSub->sub_abbr;
                   $url = ['/program-registration/manager','id' => $p->program_id, 'sub' => $p->program_sub];
+                  $urls = ['/program-registration/manager-session','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url7 = ['/program-registration/manager-analysis','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url2 = ['/program-registration/jury-result','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url4 = ['/program/rubrics','id' => $p->program_id, 'sub' => $p->program_sub];
@@ -71,18 +73,25 @@ use yii\helpers\Url;
                   $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
                   $url8 = ['/program-registration/manager-view-certs','id' => $p->program_id, 'sub' => $p->program_sub];
                 }
+                $sub_menu = [];
 
-                $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => [
-                  ['name' => 'Participants & Juries Assignment', 'url' => $url],
-                  ['name' => 'Result By Assignments', 'url' => $url2],
-                  ['name' => 'Analysis & Achievement', 'url' => $url7],
-                  ['name' => 'Certificates', 'url' => $url8],
-                  ['name' => 'Registration Fields', 'url' => $url3],
-                  ['name' => 'Rubrics', 'url' => $url4],
-                  ['name' => 'Achievements', 'url' => $url5],
-                  ['name' => 'Program Info', 'url' => $url6],
-                  
-                ]];
+                if($p->program->program_type == 1){
+
+                  $sub_menu[] = ['name' => 'Participants & Juries Assignment', 'url' => $url];
+                  $sub_menu[] = ['name' => 'Result By Assignments', 'url' => $url2];
+                  $sub_menu[] = ['name' => 'Analysis & Achievement', 'url' => $url7];
+                  $sub_menu[] = ['name' => 'Certificates', 'url' => $url8];
+                  $sub_menu[] = ['name' => 'Registration Fields', 'url' => $url3];
+                  $sub_menu[] = ['name' => 'Rubrics', 'url' => $url4];
+                  $sub_menu[] = ['name' => 'Achievements', 'url' => $url5];
+                }else{
+                  $sub_menu[] = ['name' => 'Participants & Certificates', 'url' => $urls];
+                }
+                
+
+                $sub_menu[] = ['name' => 'Program Info', 'url' => $url6];
+
+                $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => $sub_menu];
 
               }
               

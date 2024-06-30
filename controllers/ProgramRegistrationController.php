@@ -596,6 +596,9 @@ class ProgramRegistrationController extends Controller
         $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
         $programSub = null;
         $program = $role->program;
+        if($program->program_type == 2){
+            return $this->redirect(['manager-session', 'id' => $id, 'sub' => $sub]);
+        }
 
         if($role->program->has_sub == 1){
             if($sub){
@@ -712,6 +715,41 @@ class ProgramRegistrationController extends Controller
                 'dataProvider' => $dataProvider,
                 'role' => $role,
                 'model' => $model,
+                'programSub' => $programSub
+            ]);
+        }
+
+        
+    }
+
+    public function actionManagerSession($id, $sub = null){
+        $session = Yii::$app->session;
+        //print_r($session->get('keep-data'));die();
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $programSub = null;
+        $program = $role->program;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        if($role && $role->program){
+        
+            $searchModel = new ProgramRegistrationManagerSearch();
+            $searchModel->program_id = $role->program_id;
+            $searchModel->program_sub = $sub;
+            $dataProvider = $searchModel->search($this->request->queryParams);
+    
+            return $this->render('manager-session', [
+                'searchModel' => $searchModel,
+                'dataProvider' => $dataProvider,
+                'role' => $role,
                 'programSub' => $programSub
             ]);
         }

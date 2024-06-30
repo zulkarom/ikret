@@ -11,10 +11,10 @@ use yii\helpers\Html;
 <div class="program-registration-search">
 
     <?php 
-    $url = ['manager', 'id' => $model->program_id];
+    $url = [$action, 'id' => $model->program_id];
     //buat utk sub
     if($programSub){
-        $url = ['manager', 'id' => $model->program_id, 'sub' => $programSub->id];
+        $url = [$action, 'id' => $model->program_id, 'sub' => $programSub->id];
     }
     
     $form = ActiveForm::begin([

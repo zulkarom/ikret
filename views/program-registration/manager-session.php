@@ -1,10 +1,12 @@
 <?php
 
+use app\models\Session;
 use kartik\export\ExportMenu;
 use kartik\form\ActiveForm;
 //use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\grid\GridView;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
@@ -22,16 +24,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <section class="section dashboard">
         <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-info'])?> 
-        <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
+
     </div> 
 
-        <?php
-        $this->registerJs('
-        $("#dwl-exl").click(function(){
-            $("#w0-xls")[0].click();
-        });
-        ');
-        ?>
+
 
         <?php
         $this->registerJs('
@@ -63,29 +59,9 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_search', [
         'model' => $searchModel,
         'programSub' => $programSub,
-        'action' => 'manager'
+        'action' => 'manager-session'
     ]) ?>
 </div></div>
-
-    <?php 
-    $fstyle = 'style="display:none"';
-    $session = Yii::$app->session;
-    if ($session->has('keep-open') && $session->get('keep-open') == 1){
-        $fstyle = '';
-    }
-    $form = ActiveForm::begin(['id' => 'jury-assign-form']); ?>
-    <div class="card" <?=$fstyle?> id="con-jury-form">
-    <div class="card-header">Jury Assignment Form</div>
-    <div class="card-body pt-4">
-    <?= $this->render('_form_jury', [
-        'model' => $model,
-        'form' => $form,
-        'program' => $program,
-        'programSub' => $programSub,
-    ]) ?>
-</div></div>
-
-
 
 
     <div class="card">
@@ -93,7 +69,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="table-responsive">
 
     <?php
-    $colums[] = ['class' => 'yii\grid\CheckboxColumn'];
     $colums[] = ['class' => 'yii\grid\SerialColumn'];
 
     /* $colums[] = [
@@ -111,35 +86,37 @@ $this->params['breadcrumbs'][] = $this->title;
             'attribute' => 'fullnameSearch',
             'format' => 'html',
             'value' => function($model){
-                $html = '';
-                if($model->flag == 1){
-                    $html .= '<i class="bi bi-flag-fill" style="color:blue"></i> ';
-                }
-                $html .= $model->shortFieldsHtml;
-                return $html;
+                return $model->user->fullname;
             }
         ];
 
         $colums[] = [
-            'label' =>'Assigned Juries',
+            'label' =>'Certificates',
             'format' => 'raw',
             'value' => function($model){
-                $juries = $model->juries;
                 $html = '';
-                if($juries){
-                    $html .= '<ul>';
-                    foreach($juries as $jury){
-                        $html .= $jury->infoHtml(true);
+            $certs = Session::find()->alias('a')
+        ->select('a.*, r.id as reg_id')
+        ->joinWith(['sessionAttendances t'])
+        ->innerJoin('program_reg r', 'r.program_id = a.program_id')
+        ->where(['r.user_id' => $model->user_id, 'r.status' => 10, 'r.program_id' => $model->program_id, 't.user_id' => $model->user_id])
+        ->all();
+                if($certs){
+                    $html .='<ul>';
+                    foreach ($certs as $item) {
+                        $html .= '<li><a href="'.Url::to(['/program/cert-participation-session', 'reg' => $item->reg_id, 's' => $item->id, 'u' => $model->user_id]).'" target="_blank">Certificate of Participation</a> <br /><span style="font-size:12px">('.$item->session_name.')</span></li>';
+                        
                     }
-                    $html .= '<ul>';
+                    $html .='</ul>';
                 }
+
                 return $html;
             }
         ];
     }
 
     $colums[] = ['class' => 'yii\grid\ActionColumn',
-'template' => '{view} {flag}',
+'template' => '{view}',
 //'visible' => false,
 'buttons'=>[
     'view'=>function ($url, $model) {
@@ -147,33 +124,15 @@ $this->params['breadcrumbs'][] = $this->title;
         if($model->programSub){
             $url = ['manager-view', 'id' => $model->id, 'sub' => $model->programSub->id];
         }
-        return Html::a('<span class="bi bi-eye"></span> View',$url,['class'=>'btn btn-primary btn-sm']);
-    },
-    'flag'=>function ($url, $model) {
-        if($model->flag == 0){
-            $url = ['manager-flag', 'id' => $model->id];
-            if($model->programSub){
-                $url = ['manager-flag', 'id' => $model->id, 'flag' => 1, 'sub' => $model->programSub->id];
-            }
-            return Html::a('<span class="bi bi-flag"></span> Flag', $url,['class'=>'btn btn-warning btn-sm']);
-        }else if($model->flag == 1){
-            $url = ['manager-flag', 'id' => $model->id];
-            if($model->programSub){
-                $url = ['manager-flag', 'id' => $model->id,'flag' => 0, 'sub' => $model->programSub->id];
-            }
-            return Html::a('<span class="bi bi-flag"></span> Unflag', $url,['class'=>'btn btn-outline-warning btn-sm']);
-        }
-    },
+        return Html::a('View',$url,['class'=>'btn btn-primary btn-sm']);
+    }
 ],
 
 ];
     
     echo GridView::widget([
         'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
-                'pager' => [
+            'pager' => [
             'class' => 'yii\bootstrap5\LinkPager',
         ],
         //'filterModel' => $searchModel,
@@ -185,6 +144,4 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
 
-        <?php ActiveForm::end(); ?>
-        <i>* if you want to select multiple participants, but they are in different pages, flag them first to be on top of the list first.</i>
     </section>

@@ -55,9 +55,9 @@ class CertificateSession
         if ($preset == 1) {
             $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetX($left);
+            $this->pdf->SetXY($left,65);
             $this->html_position();
-            $this->pdf->SetX($left);
+            $this->pdf->SetXY($left,110);
             $this->html_program();
             $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('montserrat', '', 10);
@@ -108,6 +108,7 @@ EOD;
         die();
          */
         //$margin_name = $this->template->field1_mt;
+        //echo $this->model->session_name;die();
         $html = '<table border="0"><tr>
     <td align="'.$this->align.'">';
         $html .= '<table border="0" align="'.$this->align.'">';
