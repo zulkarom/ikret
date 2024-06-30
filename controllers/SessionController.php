@@ -9,6 +9,7 @@ use app\models\SessionAttendance;
 use app\models\SessionAttendanceSearch;
 use app\models\SessionQr;
 use app\models\SessionSearch;
+use app\models\Setting;
 use app\models\User;
 use Yii;
 use yii\db\Expression;
@@ -154,6 +155,12 @@ class SessionController extends Controller
         if(Yii::$app->user->identity->isManager && $u){
             $user = User::findOne($u);
         }else{
+            $setting = Setting::findOne(1);
+            $allow_from = $setting->allow_cert_from;
+            if(time() < strtotime($allow_from)){
+                Yii::$app->session->addFlash('info', "The certificates are expected to be released soon.");
+                return $this->render('empty');
+            }
             $user = Yii::$app->user->identity;
         }
         $att = SessionAttendance::findOne(['user_id' => $user->id]);
