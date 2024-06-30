@@ -263,7 +263,7 @@ class ProgramController extends Controller
         $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
         if($check){
             if(!$fresh){
-                Yii::$app->session->addFlash('error', "You have answered this pre-event question.");
+                Yii::$app->session->addFlash('info', "You have answered this pre-event question.");
             }
             return $this->render('empty');
         }
@@ -345,7 +345,7 @@ class ProgramController extends Controller
         $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
         if($check){
             if(!$fresh){
-                Yii::$app->session->addFlash('error', "You have answered this post-event question.");
+                Yii::$app->session->addFlash('info', "You have answered this post-event question.");
             }
             
             return $this->render('empty');
