@@ -50,7 +50,7 @@ class Certificate
         //$left = $this->template->margin_left + 0;
 
         $left = 75;
-        $this->pdf->SetFont('montserrat', 'b', 10);
+        $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
@@ -59,7 +59,7 @@ class Certificate
             $this->pdf->SetXY($left,89);
             $this->html_program();
             $this->pdf->SetXY($left,0);
-            $this->pdf->SetFont('montserrat', '', 10);
+            $this->pdf->SetFont('iniriaserif', '', 10);
             $this->pdf->SetXY($left,0);
         } else {
             $html = $this->template->custom_html;
@@ -74,10 +74,10 @@ class Certificate
 
 
         $margin_name = $this->template->name_mt;
-        $size = 21;
+        $size = 23;
         $kira = $this->model->memberCountAll;
         if($kira > 10){
-            $size = 18;
+            $size = 21;
         }
 
         $html = '<table border="0">

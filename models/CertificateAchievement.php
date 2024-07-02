@@ -50,7 +50,7 @@ class CertificateAchievement
         //$left = $this->template->margin_left + 0;
 
         $left = 70;
-        $this->pdf->SetFont('montserrat', 'b', 10);
+        $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
@@ -73,10 +73,10 @@ class CertificateAchievement
     public function html_name()
     {
         $margin_name = $this->template->name_mt;
-        $size = 21;
+        $size = 23;
         $kira = $this->model->memberCountAll;
         if($kira > 10){
-            $size = 18;
+            $size = 21;
         }
 
         $html = '<table border="0">
@@ -162,7 +162,7 @@ EOD;
 $tbl = <<<EOD
 $html
 EOD;
-        $this->pdf->SetFont('montserrat', '', 0);
+        $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
     }
 

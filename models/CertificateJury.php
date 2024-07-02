@@ -49,7 +49,7 @@ class CertificateJury
     { 
         //$left = $this->template->margin_left + 0;
         $left = 75;
-        $this->pdf->SetFont('montserrat', 'b', 10);
+        $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
@@ -58,7 +58,7 @@ class CertificateJury
             $this->pdf->SetX($left);
             $this->html_position();
             $this->pdf->SetXY($left,0);
-            $this->pdf->SetFont('montserrat', '', 10);
+            $this->pdf->SetFont('iniriaserif', '', 10);
             $this->pdf->SetXY($left,0);
         } else {
             $html = $this->template->custom_html;
@@ -85,7 +85,7 @@ class CertificateJury
             $size = $this->template->name_size;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px"><b>' . strtoupper($this->model->user->fullname) . '</b></td></tr>';
+<tr><td align="'.$this->align.'" style="font-size:28px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
         }
 
 
@@ -119,7 +119,7 @@ EOD;
 
             $html .= '
 <tr><td height="210"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:22px">
+<tr><td align="'.$this->align.'" style="font-size:21px">
 ' . strtoupper($this->model->registration->programNameLong) . '</td></tr>';
         
         $html .= '</table>';

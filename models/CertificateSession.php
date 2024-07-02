@@ -49,7 +49,7 @@ class CertificateSession
     { 
         //$left = $this->template->margin_left + 0;
         $left = 75;
-        $this->pdf->SetFont('montserrat', 'b', 10);
+        $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
@@ -60,7 +60,7 @@ class CertificateSession
             $this->pdf->SetXY($left,110);
             $this->html_program();
             $this->pdf->SetXY($left,0);
-            $this->pdf->SetFont('montserrat', '', 10);
+            $this->pdf->SetFont('iniriaserif', '', 10);
         } else {
             $html = $this->template->custom_html;
         }

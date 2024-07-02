@@ -49,14 +49,14 @@ class CertificateQr
     { 
         //$left = $this->template->margin_left + 0;
         $left = 72;
-        $this->pdf->SetFont('montserrat', 'b', 10);
+        $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
             $this->pdf->SetXY($left,0);
             $this->html_name();
             $this->pdf->SetXY($left,89);
-            $this->pdf->SetFont('montserrat', '', 10);
+            $this->pdf->SetFont('iniriaserif', '', 10);
             $this->pdf->SetXY($left,0);
         } else {
             $html = $this->template->custom_html;
@@ -78,7 +78,7 @@ class CertificateQr
         $html .= '<table border="0" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
-            $size = $this->template->name_size;
+            $size = 28;
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';

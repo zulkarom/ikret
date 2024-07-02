@@ -491,8 +491,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             foreach($members as $m){
             $comma = $i == 0 ? '' : ', ';
             $br = $i == 0 ? '' : '<br />';
-            $str .= $comma. $m->member_name;
-            $strBr .= $br. $m->member_name;
+            $str .= $comma. trim($m->member_name);
+            $strBr .= $br. trim($m->member_name);
             $i++;
             }
         }
