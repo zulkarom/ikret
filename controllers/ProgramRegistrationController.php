@@ -462,6 +462,13 @@ class ProgramRegistrationController extends Controller
             }
         }
 
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            if($model->save()){
+                Yii::$app->session->addFlash('success', "Medal updated");
+                return $this->refresh();
+            }
+        }
+
         return $this->render('manager-award', [
             'model' => $model,
             'achieve' => $achieve,

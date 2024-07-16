@@ -845,7 +845,7 @@ class ProgramController extends Controller
         $model = ProgramRegistration::find()->alias('a')
         ->joinWith(['program p'])
         ->where(['a.id' => $id])
-        ->andWhere(['>', 'a.score', 0])
+        ->andWhere(['>', 'a.award', 0])
         ->one();
         if ($model !== null) {
             return $model;

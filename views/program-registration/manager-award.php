@@ -26,17 +26,33 @@ $this->title = 'Achievement Award';
     </div><!-- End Page Title -->
 
 
+    <?php $form = ActiveForm::begin(); ?>
+
+
+<div class="card">
+<div class="card-header">MEDAL AWARD FOR <?= $achieve->registration->participantText?></div>
+       <div class="card-body pt-4">
+
+
+       <div class="row">
+<div class="col-md-8"><?= $form->field($model, 'award')->dropDownList($model->listAward(), ['prompt' => 'No Award'])->label(false) ?></div>
+<div class="col-md-4"><?= Html::submitButton('<i class="bi bi-shield-plus"></i> Change', ['class' => 'btn btn-primary btn-sm']) ?></div>
+</div>
+
+       </div>
+   </div>
+   <?php ActiveForm::end(); ?>
 
 <?php $form = ActiveForm::begin(); ?>
 
 
                <div class="card">
-              <div class="card-header">ACHIEVEMENT AWARD FOR <?= $achieve->registration->participantText?></div>
+              <div class="card-header">EXCELLENCE AWARD FOR <?= $achieve->registration->participantText?></div>
                       <div class="card-body pt-4">
 
 
                       <div class="row">
-    <div class="col-md-8"><?= $form->field($achieve, 'achieve_id')->dropDownList($list, ['prompt' => 'Select Achievement'])->label(false) ?></div>
+    <div class="col-md-8"><?= $form->field($achieve, 'achieve_id')->dropDownList($list, ['prompt' => 'Select Award'])->label(false) ?></div>
     <div class="col-md-4"><?= Html::submitButton('<i class="bi bi-shield-plus"></i> Add Achievement', ['class' => 'btn btn-primary btn-sm']) ?></div>
 </div>
 

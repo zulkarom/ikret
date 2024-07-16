@@ -64,7 +64,7 @@ $colums[] = [
         $str = '<ul>';
         $str .= '<li>' . Html::a('Cert. of Participation',['/program/cert-participation', 'reg' => $reg->id],['target' => '_blank']) . '</li>';
 
-        if($reg->award > 0 && $reg->score > 0){
+        if($reg->award > 0 ){ //&& $reg->score > 0
             $str .= '<li>' . Html::a('Cert. of Achievement ('.$reg->awardTextColor().')',['/program/cert-achievement', 'reg' => $reg->id],['target' => '_blank']) . '</li>';
         }
         if($reg->achievements){
