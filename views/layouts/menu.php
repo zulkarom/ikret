@@ -35,7 +35,22 @@ use yii\helpers\Url;
 
         if(Yii::$app->user->identity->isCommittee){
           $menu[] = ['name' => 'Committee Menu', 'heading' => true];
-          $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
+
+          
+
+          $staff = UserRole::find()->alias('a')
+          ->joinWith(['committee c'])
+          ->where(['a.user_id' => Yii::$app->user->identity->id, 
+          'a.role_name' => 'committee', 
+          'a.status' => 10,
+          'c.is_student' => 0,
+          'c.cert_only' => 0
+          ])
+          ->one();
+
+          if($staff){
+            $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
+          }
           $menu[] = ['name' => 'Committee Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
 
           //head

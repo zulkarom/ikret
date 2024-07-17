@@ -7,3 +7,6 @@ UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 11; UPDATE `
 
 
 ALTER TABLE `committee`  ADD `can_approve` TINYINT(1) NOT NULL DEFAULT '0'  AFTER `is_pengarah`;
+
+
+ALTER TABLE `committee`  ADD `cert_only` TINYINT(1) NOT NULL DEFAULT '0'  AFTER `can_approve`;
