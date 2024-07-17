@@ -5,6 +5,8 @@ namespace app\controllers;
 use app\models\CertificateCommittee;
 use app\models\CertificateTemplate;
 use app\models\Committee;
+use app\models\CommitteeRequestSearch;
+use app\models\CommitteeStudentSearch;
 use app\models\ProgramRegistration;
 use app\models\UserRole;
 use app\models\LetterPdf;
@@ -12,6 +14,7 @@ use app\models\RoleRequestSearch;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -78,6 +81,78 @@ class CommitteeController extends Controller
             'dataProvider' => $dataProvider,
             'searchModel' => $searchModel,
         ]);
+    }
+
+    public function actionActionCommittee()
+    {
+        //if(!Yii::$app->user->identity->isAdmin) return false;
+        //adakah dia boleh approve
+        $qry = UserRole::find()->alias('a')
+          ->joinWith(['committee c'])
+          ->where(['a.user_id' => Yii::$app->user->identity->id, 
+          'a.role_name' => 'committee', 
+          'a.status' => 10,
+          ]);
+
+          if($qry->one()){
+            $canApprove = UserRole::find()->alias('a')
+            ->joinWith(['committee c'])
+            ->where(['a.user_id' => Yii::$app->user->identity->id, 
+            'a.role_name' => 'committee', 
+            'a.status' => 10,
+            ])->andWhere(['c.can_approve' => 1])->one();
+            
+            if($canApprove){
+
+                $searchModel = new CommitteeRequestSearch(['canApprove' => true]);
+
+            }else if($head = $qry->andWhere(['a.is_leader' => 1, 'c.is_jawatankuasa' => 1])->one()){
+
+                $searchModel = new CommitteeRequestSearch(['isHead' => true, 'committee_id' => $head->committee_id]);
+
+            }else{
+                throw new ForbiddenHttpException('No access');
+            }
+    
+            $dataProvider = $searchModel->search($this->request->queryParams);
+
+            $searchStudent = new CommitteeStudentSearch();
+            $dataProviderStudent = $searchStudent->search($this->request->queryParams);
+            
+            if (Yii::$app->request->post()) {
+                $post = Yii::$app->request->post();
+    
+                if(isset($post['selection'])){
+    
+                    $selection = $post['selection'];
+                    foreach($selection as $select){
+                        
+                        $kd = UserRole::findOne($select);
+                        if($post['actiontype'] == 'approve'){
+                            $kd->status = 10;
+                        }
+                        else{
+                            $kd->status = 0;
+                        }
+                        if(!$kd->save()){
+                            $kd->flashError();
+                        }
+                    }
+                    Yii::$app->session->addFlash('success', "Data Updated");
+                    return $this->refresh();
+                }
+            }
+    
+            return $this->render('request-com', [
+                'dataProvider' => $dataProvider,
+                'searchModel' => $searchModel,
+                'dataProviderStudent' => $dataProviderStudent,
+                'searchStudent' => $searchStudent,
+            ]);
+            
+          }
+
+        
     }
 
     /**

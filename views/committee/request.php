@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body pt-4">
     <p>
     <?= Html::submitButton('APPROVE SELECTED', ['data-confirm' => 'Are you sure to approve the selected request?','class' => 'btn btn-success', 'name' => 'actiontype', 'value' => 'approve']) ?> 
-    <?= Html::submitButton('REVOKE SELECTED', ['data-confirm' => 'Are you sure to revole the selected request?','class' => 'btn btn-warning', 'name' => 'actiontype', 'value' => 'revoke']) ?>
+    <?= Html::submitButton('REVOKE SELECTED', ['data-confirm' => 'Are you sure to revoke the selected request?','class' => 'btn btn-warning', 'name' => 'actiontype', 'value' => 'revoke']) ?>
     </p>
             <div class="table-responsive">
 

@@ -841,7 +841,6 @@ class ProgramController extends Controller
 
     protected function findRegistrationAchievement($id)
     {
-        
         $model = ProgramRegistration::find()->alias('a')
         ->joinWith(['program p'])
         ->where(['a.id' => $id])
@@ -850,7 +849,6 @@ class ProgramController extends Controller
         if ($model !== null) {
             return $model;
         }
-
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 

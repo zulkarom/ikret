@@ -1,0 +1,9 @@
+ALTER TABLE `committee`  ADD `can_approve` TINYINT(1) NOT NULL DEFAULT '0'  AFTER `com_name_en`;
+
+ALTER TABLE `committee` CHANGE `can_approve` `is_pengarah` TINYINT(1) NOT NULL DEFAULT '0';
+
+
+UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 11; UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 12; UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 13; UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 14; UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 15; UPDATE `committee` SET `is_pengarah` = '1' WHERE `committee`.`id` = 16;
+
+
+ALTER TABLE `committee`  ADD `can_approve` TINYINT(1) NOT NULL DEFAULT '0'  AFTER `is_pengarah`;
