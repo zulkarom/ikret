@@ -1,7 +1,7 @@
 <?php
 
 $params = require __DIR__ . '/params.php';
-$dbOld = require __DIR__ . '/db.php';
+$db = require __DIR__ . '/db.php';
 
 $config = [
     'id' => 'basic',
@@ -49,7 +49,6 @@ $config = [
             ],
         ],
         'db' => $db,
-        'dbOld' => $dbOld,
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
