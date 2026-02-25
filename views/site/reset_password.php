@@ -11,10 +11,12 @@ use yii\helpers\Html;
 $this->title = 'Reset password';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <div class="site-reset-password">
 
-    <div class="row justify-content-center">
+<div class="row justify-content-center">
         <div class="col-lg-4">
+
             <h1><?= Html::encode($this->title) ?></h1>
 
             <p>Please fill in your new password:</p>
