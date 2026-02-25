@@ -1,7 +1,8 @@
 <?php
 
 $params = require __DIR__ . '/params.php';
-$db = require __DIR__ . '/db.php';
+
+$db = require __DIR__ . '/db_old.php';
 
 $config = [
     'id' => 'basic',
