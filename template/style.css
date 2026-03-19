@@ -1544,6 +1544,23 @@ a {
 
   .hero-section {
     padding-top: 90px;
+    background:
+      radial-gradient(circle at 78% 14%, rgba(255, 255, 255, 0.16), transparent 14%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(242, 245, 249, 0.16)),
+      url('background.png') center top / cover no-repeat,
+      radial-gradient(circle at top right, rgba(255, 31, 31, 0.18), transparent 20%),
+      radial-gradient(circle at 12% 18%, rgba(15, 94, 166, 0.18), transparent 22%),
+      linear-gradient(125deg, rgba(15, 94, 166, 0.06) 0%, rgba(15, 94, 166, 0.06) 12%, transparent 12%, transparent 24%, rgba(229, 57, 53, 0.05) 24%, rgba(229, 57, 53, 0.05) 34%, transparent 34%, transparent 48%, rgba(15, 94, 166, 0.05) 48%, rgba(15, 94, 166, 0.05) 58%, transparent 58%),
+      linear-gradient(135deg, rgba(254, 254, 254, 0.14) 0%, rgba(242, 245, 249, 0.12) 55%, rgba(255, 255, 255, 0.14) 100%);
+  }
+
+  .hero-overlay {
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.26), transparent 20%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.08)),
+      linear-gradient(120deg, transparent 0%, transparent 8%, rgba(255, 255, 255, 0.78) 8%, rgba(255, 255, 255, 0.78) 16%, transparent 16%, transparent 24%, rgba(255, 255, 255, 0.56) 24%, rgba(255, 255, 255, 0.56) 32%, transparent 32%, transparent 40%, rgba(255, 255, 255, 0.66) 40%, rgba(255, 255, 255, 0.66) 48%, transparent 48%),
+      radial-gradient(circle at center, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.02) 62%);
+    opacity: 1;
   }
 
   .hero-ribbon {
@@ -1587,6 +1604,11 @@ a {
   .logo-title {
     font-size: 0.68rem;
     line-height: 1.18;
+  }
+
+  .hero-section {
+    background-position: center top, center center, 68% top, top right, 12% 18%, center center, center center;
+    background-size: auto, auto, cover, auto, auto, auto, auto;
   }
 
   .registration-table-wrap {
