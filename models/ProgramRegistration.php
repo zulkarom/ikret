@@ -63,6 +63,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [self::getProgramRequiredFields(4), 'required', 'on' => 'program4'],
             [self::getProgramRequiredFields(5), 'required', 'on' => 'program5'],
             [self::getProgramRequiredFields(6), 'required', 'on' => 'program6'],
+            [self::getProgramRequiredFields(7), 'required', 'on' => 'program7'],
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
 
@@ -184,6 +185,12 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             case 6: //jfed
             $array = ['project_name', 'group_member', 'group_code'];
             break;
+
+            case 7: //IISEIC
+            $array =  ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution'];
+            break;
+
+
         }
         return $array;
     }
@@ -213,6 +220,10 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
             case 6: //jfed
             $array = ['project_name', 'group_member', 'mentor_main', 'mentor_co', 'group_code', 'group_name'];
+            break;
+
+            case 7: //IISEIC
+            $array = ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'mentor_main', 'mentor_co'];
             break;
         }
         return $array;

@@ -85,6 +85,24 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionCreate()
+    {
+        if (!Yii::$app->user->identity->isManager) return false;
+
+        $model = new Program();
+
+        if ($model->load(Yii::$app->request->post())) {
+            if ($model->save()) {
+                Yii::$app->session->addFlash('success', "Program Created");
+                return $this->redirect(['info', 'id' => $model->id]);
+            }
+        }
+
+        return $this->render('create', [
+            'model' => $model
+        ]);
+    }
+
     public function actionInfo($id){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
