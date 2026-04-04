@@ -4,6 +4,8 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
+use app\models\ProgramRegField;
+
 $this->title = 'Registration Fields';
 
 ?>
@@ -36,11 +38,12 @@ $this->title = 'Registration Fields';
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th width="45%">Field</th>
-                            <th width="15%">Enabled</th>
-                            <th width="15%">Required</th>
-                            <th width="15%">Show Matric</th>
-                            <th width="15%">Sort</th>
+                            <th width="32%">Field</th>
+                            <th width="12%">Enabled</th>
+                            <th width="12%">Required</th>
+                            <th width="16%">Layout</th>
+                            <th width="12%">Show Matric</th>
+                            <th width="16%">Sort</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,6 +51,7 @@ $this->title = 'Registration Fields';
                             $row = array_key_exists($fieldName, $existing) ? $existing[$fieldName] : null;
                             $enabled = $row ? (int)$row->is_enabled === 1 : 0;
                             $required = $row ? (int)$row->is_required === 1 : 0;
+                            $layoutWidth = $row ? (int)$row->layout_width : ProgramRegField::LAYOUT_FULL;
                             $showMatric = $row ? (int)$row->show_matric === 1 : 1;
                             $sort = $row ? (int)$row->sort_order : 0;
                         ?>
@@ -61,6 +65,13 @@ $this->title = 'Registration Fields';
                             </td>
                             <td class="text-center">
                                 <input type="checkbox" name="Field[required][<?=$fieldName?>]" value="1" <?=$required ? 'checked' : ''?> />
+                            </td>
+                            <td>
+                                <select class="form-select" name="Field[layout_width][<?=$fieldName?>]">
+                                    <?php foreach(ProgramRegField::layoutWidthOptions() as $value => $text){ ?>
+                                        <option value="<?=$value?>" <?=$layoutWidth === (int)$value ? 'selected' : ''?>><?=$text?></option>
+                                    <?php } ?>
+                                </select>
                             </td>
                             <td class="text-center">
                                 <?php if($fieldName === 'group_member'){ ?>

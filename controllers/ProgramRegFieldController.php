@@ -60,6 +60,7 @@ class ProgramRegFieldController extends Controller
                 $enabled = array_key_exists('enabled', $post) && array_key_exists($fieldName, $post['enabled']) ? 1 : 0;
                 $required = array_key_exists('required', $post) && array_key_exists($fieldName, $post['required']) ? 1 : 0;
                 $sort = array_key_exists('sort', $post) && array_key_exists($fieldName, $post['sort']) ? (int)$post['sort'][$fieldName] : 0;
+                $layoutWidth = array_key_exists('layout_width', $post) && array_key_exists($fieldName, $post['layout_width']) ? (int)$post['layout_width'][$fieldName] : ProgramRegField::LAYOUT_FULL;
                 $showMatric = array_key_exists('show_matric', $post) && array_key_exists($fieldName, $post['show_matric']) ? 1 : 0;
 
                 if(array_key_exists($fieldName, $existing)){
@@ -72,6 +73,7 @@ class ProgramRegFieldController extends Controller
 
                 $model->is_enabled = $enabled;
                 $model->is_required = $enabled ? $required : 0;
+                $model->layout_width = $layoutWidth;
                 if($fieldName === 'group_member'){
                     $model->show_matric = $showMatric;
                 }

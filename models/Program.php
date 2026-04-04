@@ -10,6 +10,7 @@ use yii\helpers\ArrayHelper;
  *
  * @property int $id
  * @property string $program_name
+ * @property boolean $public_registration_enabled
  */
 class Program extends \yii\db\ActiveRecord
 {
@@ -31,6 +32,10 @@ class Program extends \yii\db\ActiveRecord
 
             [['date_start', 'date_end'], 'safe'],
 
+            [['public_reg_enabled'], 'integer'],
+
+            [['public_reg_enabled'], 'default', 'value' => 1],
+
             [['reg_info', 'program_abbr'], 'string'],
             [['program_name'], 'string', 'max' => 255],
         ];
@@ -44,8 +49,22 @@ class Program extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'program_name' => 'Program Name',
-            'reg_info' => 'Registration Information'
+            'reg_info' => 'Registration Information',
+            'public_reg_enabled' => 'Enable Public Registration'
         ];
+    }
+
+    public static function listPublicPrograms()
+    {
+        return self::find()
+        ->where(['public_reg_enabled' => 1])
+        ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
+        ->all();
+    }
+
+    public function getPublicRegistrationLabel()
+    {
+        return (int)$this->public_reg_enabled === 1 ? 'Enabled' : 'Disabled';
     }
 
     public static function listPrograms(){

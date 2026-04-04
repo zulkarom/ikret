@@ -13,7 +13,7 @@ use yii\helpers\Url;
       if(Yii::$app->user->isGuest){
         
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
-        $menu[] = ['name' => 'Register', 'url' => ['/site/register'], 'icon' => 'bi bi-card-list'];
+        $menu[] = ['name' => 'Register', 'post_url' => ['/storage/index'], 'post_data' => ['storage_action' => 'public-programs', 'storage_entry' => 1], 'icon' => 'bi bi-card-list'];
       }else{
 
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
@@ -165,6 +165,8 @@ use yii\helpers\Url;
 
           $menu[] = ['name' => 'Registration Fields Config', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
 
+          $menu[] = ['name' => 'Public Registration Settings', 'url' => ['/program/public-registration-settings'], 'icon' => 'bi bi-toggle-on'];
+
           $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
 
           
@@ -202,8 +204,8 @@ use yii\helpers\Url;
 
     function echoMenuItem($item, $i){
         $html= '';
-        if(array_key_exists('url', $item)){
-          $active = isItemActive($item['url']);
+        if(array_key_exists('url', $item) || array_key_exists('post_url', $item)){
+          $active = array_key_exists('url', $item) ? isItemActive($item['url']) : false;
           
         $collapse = $active ? '' : 'collapsed';
         $children=null;
@@ -222,15 +224,27 @@ use yii\helpers\Url;
         
         if($children){
           $html .= '<a class="nav-link '.$collapse.'" data-bs-target="#components-nav-'.$i.'" data-bs-toggle="collapse" href="#">';
+          $html .=  '<i class="'. $item['icon'] .'"></i>
+          <span>'. $item['name'] .'</span>';
+          $html .= '<i class="bi bi-chevron-down ms-auto"></i>';
+          $html .= '</a>';
+        }else if(array_key_exists('post_url', $item)){
+          $html .= '<form method="post" action="' . Url::to($item['post_url']) . '" style="margin:0;">';
+          $html .= \yii\helpers\Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken());
+          foreach($item['post_data'] as $postKey => $postValue){
+            $html .= \yii\helpers\Html::hiddenInput($postKey, $postValue);
+          }
+          $html .= '<button type="submit" class="nav-link '.$collapse.'" style="width:100%;border:none;background:none;text-align:left;">';
+          $html .=  '<i class="'. $item['icon'] .'"></i>
+          <span>'. $item['name'] .'</span>';
+          $html .= '</button>';
+          $html .= '</form>';
         }else{
           $html .= '<a class="nav-link '.$collapse.'" href="' . Url::to($item['url']) . '">';
-        }
-        $html .=  '<i class="'. $item['icon'] .'"></i>
+          $html .=  '<i class="'. $item['icon'] .'"></i>
           <span>'. $item['name'] .'</span>';
-          if($children){
-            $html .= '<i class="bi bi-chevron-down ms-auto"></i>';
-          }
           $html .= '</a>';
+        }
         if($children){
           $show = $children_has_active ? 'show' : '';
           $html .= '<ul id="components-nav-'.$i.'" class="nav-content collapse '.$show.'" data-bs-parent="#sidebar-nav">';
@@ -333,3 +347,5 @@ use yii\helpers\Url;
         return false;
     }
   ?>
+
+

@@ -5,7 +5,10 @@ use app\models\Setting;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
- if($register->status > 0 and $edit == false){?>
+ $publicMode = $publicMode ?? false;
+ $storageEntry = $storageEntry ?? false;
+
+ if($edit == false){?>
       <div class="card profile">
       <div class="card-header">Registration Details</div>
     <div class="card-body profile-overview pt-4">
@@ -27,14 +30,24 @@ use yii\helpers\Url;
 
     <div class="row">
       <div class="col-lg-3 col-md-4 label ">Registration by</div>
-      <div class="col-lg-9 col-md-8"><?=$register->user->fullname?></div>
+      <div class="col-lg-9 col-md-8"><?php
+      if($register->user){
+        echo $register->user->fullname;
+      }else if($register->contact_person){
+        echo $register->contact_person;
+      }else{
+        echo $register->contact_email;
+      }
+      ?></div>
     </div>
 
     <?php
+    if($register->user){
     ///showFieldUser($register->user, 'fullname');
     showFieldUser($register->user, 'matric');
     showFieldUser($register->user, 'phone');
     showFieldUser($register->user, 'email');
+    }
 
     showField($register, $arr_fields,'nric');
     showField($register, $arr_fields,'project_name');
@@ -165,12 +178,40 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
 $set = Setting::findOne(1);
 $due = strtotime($set->allow_edit_reg_until.' 23:59:59');
-if(Yii::$app->user->identity->id == $register->user_id && time() < $due){
-echo Html::a('<i class="bi bi-pencil"></i> Edit', ['register-form', 'id' => $register->program_id, 'reg' => $register->id, 'edit' => true], ['class' => 'btn btn-outline-warning btn-sm'])?><br />
+$allowUpdate = false;
+$updateUrl = null;
+
+if($publicMode && !$register->isNewRecord){
+    $allowUpdate = true;
+    $updateUrl = ['public-register-form', 'id' => $register->program_id, 'reg' => $register->id, 'edit' => 1];
+}else if(!Yii::$app->user->isGuest && Yii::$app->user->identity->id == $register->user_id){
+    $allowUpdate = true;
+    $updateUrl = ['register-form', 'id' => $register->program_id, 'reg' => $register->id, 'edit' => true];
+}
+
+if($allowUpdate){
+?>
+<div class="mt-4">
+<?php if(time() < $due){ ?>
+<?php if($publicMode && $storageEntry){ ?>
+<?= Html::beginForm(['/storage/index'], 'post', ['style' => 'display:inline-block;']) ?>
+<?= Html::hiddenInput('storage_action', 'public-register-form') ?>
+<?= Html::hiddenInput('storage_entry', 1) ?>
+<?= Html::hiddenInput('program_id', $register->program_id) ?>
+<?= Html::hiddenInput('reg_id', $register->id) ?>
+<?= Html::hiddenInput('edit', 1) ?>
+<?= Html::submitButton('<i class="bi bi-pencil"></i> Update', ['class' => 'btn btn-outline-warning']) ?>
+<?= Html::endForm() ?><br />
+<?php }else{ ?>
+<?= Html::a('<i class="bi bi-pencil"></i> Update', $updateUrl, ['class' => 'btn btn-outline-warning']) ?><br />
+<?php } ?>
+<?php } else { ?>
+<?= Html::button('<i class="bi bi-pencil"></i> Update', ['class' => 'btn btn-outline-secondary', 'disabled' => true]) ?><br />
+<?php } ?>
 <i style="font-size: 12px;">* finalise before/at <?=date('d/m/Y', strtotime($set->allow_edit_reg_until))?></i>
-<?php } 
-
-
+</div>
+<?php
+}
 ?>
 
     </div>

@@ -12,6 +12,12 @@ use yii\web\JsExpression;
 
 $web = Yii::getAlias('@web');
 
+$edit = $edit ?? false;
+$err = $err ?? false;
+$demo = $demo ?? false;
+$publicMode = $publicMode ?? false;
+$storageEntry = $storageEntry ?? false;
+
 $this->title = 'Registration - ' . $model->program_name;
 
 ?>
@@ -22,13 +28,25 @@ $this->title = 'Registration - ' . $model->program_name;
                 </a>
               </div><!-- End Logo -->
               <?php $arr_fields = $register->getProgramFields($register->program_id);?>
+              <?php $fieldLayouts = $register->getProgramFieldLayouts($register->program_id); ?>
+              <?php $fieldColClass = function($fieldName, $default = 'col-12') use ($fieldLayouts) {
+                  if(!array_key_exists($fieldName, $fieldLayouts)){
+                      return $default;
+                  }
 
+                  return (int)$fieldLayouts[$fieldName] === 6 ? 'col-md-6' : 'col-12';
+              }; ?>
+
+              <?php if(!$publicMode || !$register->isNewRecord){ ?>
               <?=$this->render('_view_register', [    
         'register' => $register,
         'arr_fields' => $arr_fields,
-        'edit' => $edit
+        'edit' => $edit,
+        'publicMode' => $publicMode,
+        'storageEntry' => $storageEntry,
     ]);
     ?>
+    <?php } ?>
 
       <?php if(!$edit){ //program information 
         ?>
@@ -40,7 +58,7 @@ $this->title = 'Registration - ' . $model->program_name;
         </div>
       <?php } ?>
 
-                  <?php if($register->status == 0 || $edit){?>
+                  <?php if($register->status == 0 || $edit || $err){?>
               <div class="card mb-3">
               <div class="card-header">Registration Form</div>
                 <div class="card-body">
@@ -50,9 +68,23 @@ $this->title = 'Registration - ' . $model->program_name;
                     <p class="small">Enter your project details to register in this program.</p>
                   </div>
 
-                  <?php $form = ActiveForm::begin(['class' => 'row g-3 needs-validation','id' => 'dynamic-form', 'action' => Url::to(['register']), 'options' => ['enctype' => 'multipart/form-data']]); ?>
+                  <?php $form = ActiveForm::begin([
+                      'id' => 'dynamic-form',
+                      'action' => Url::to([$publicMode && $storageEntry ? '/storage/index' : ($publicMode ? 'public-register' : 'register')]),
+                      'options' => [
+                          'class' => 'row g-3 needs-validation',
+                          'enctype' => 'multipart/form-data',
+                      ],
+                      'enableClientValidation' => true,
+                  ]); ?>
+
+                  <?= $form->errorSummary($register, ['class' => 'alert alert-danger']) ?>
 
                   <input type="hidden" name="program_id" value="<?=$model->id?>" />
+                  <?php if($publicMode && $storageEntry){ ?>
+                  <input type="hidden" name="storage_action" value="public-register" />
+                  <input type="hidden" name="storage_entry" value="1" />
+                  <?php } ?>
 
                   <?php 
                   if(!$register->isNewRecord && !$err){
@@ -65,89 +97,58 @@ $this->title = 'Registration - ' . $model->program_name;
 
                    
 
-                    <div class="col-12">
+                    <?php if(in_array('project_name',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('project_name')?>">
+                    <?= $form->field($register, 'project_name')->textarea(['rows' => 2]) ?>
+                    </div>
+                    <?php } ?>
 
-                    <?php 
-                    
-                    if(in_array('project_name',$arr_fields)){
-                      echo $form
-                      ->field($register, 'project_name')->textarea(['rows' => 2]);
-                    }
-                    
-            ?>
-            </div>
+                    <?php if(in_array('project_desc',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('project_desc')?>">
+                    <?= $form->field($register, 'project_desc')->textarea(['rows' => 4]) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
+                    <?php if(in_array('participant_cat_local',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('participant_cat_local')?>">
+                    <?= $form->field($register, 'participant_cat_local')->radioList($register->listParticipantLocal()) ?>
+                    </div>
+                    <?php } ?>
 
-                    <?php 
-                    if(in_array('project_desc',$arr_fields)){
-                    echo $form
-            ->field($register, 'project_desc')->textarea(['rows' => 4]);
-                    }
-                    ?>
-            </div>
+                    <?php if(in_array('participant_cat_group',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('participant_cat_group')?>">
+                    <?= $form->field($register, 'participant_cat_group')->radioList($register->listParticipantGroup()) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('participant_cat_local',$arr_fields)){
-                    echo $form
-            ->field($register, 'participant_cat_local')->radioList($register->listParticipantLocal());
-        }
-          ?>
-            </div>
-
-           
-
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('participant_cat_group',$arr_fields)){
-                    echo $form
-            ->field($register, 'participant_cat_group')->radioList($register->listParticipantGroup());
-        }
-          ?>
-            </div>
-
-            
-
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('competition_type',$arr_fields)){
-                    echo $form
-            ->field($register, 'competition_type')->radioList([
+                    <?php if(in_array('competition_type',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('competition_type')?>">
+                    <?= $form->field($register, 'competition_type')->radioList([
               1 => 'Community Project Ideation', 
               2 => 'Community Project Implementation'
-          ]);
-        }
-          ?>
-            </div>
+          ]) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
+                    <?php if(in_array('program_sub',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('program_sub')?>">
+                    <?= $form->field($register, 'program_sub')->dropDownList($register->program->listSubPrograms(),['prompt' => 'Select Category']) ?>
+                    </div>
+                    <?php } ?>
 
-            <?php 
-                    if(in_array('program_sub',$arr_fields)){
-                    echo $form
-            ->field($register, 'program_sub')->dropDownList($register->program->listSubPrograms(),['prompt' => 'Select Category']);
-        }
-          ?>
-            </div>
-
-
-
-            <?php 
-                    if(in_array('advisor_dropdown',$arr_fields)){
-                    echo $form
-            ->field($register, 'advisor_dropdown')->dropDownList($register->listNeweekAdvisor(), ['prompt' => 'Selct Lecturer']);
-        }
-          ?>
+                    <?php if(in_array('advisor_dropdown',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('advisor_dropdown')?>">
+                    <?= $form->field($register, 'advisor_dropdown')->dropDownList($register->listNeweekAdvisor(), ['prompt' => 'Selct Lecturer']) ?>
+                    </div>
+                    <?php } ?>
 
 
 <?php 
         if(in_array('booth_number',$arr_fields)){
+        echo '<div class="' . $fieldColClass('booth_number') . '">';
         echo $form
 ->field($register, 'booth_number')->dropDownList($register->listNeweekBooth(), ['prompt' => 'Select Booth']);
+        echo '</div>';
 }
 ?>
 
@@ -157,7 +158,7 @@ $this->title = 'Registration - ' . $model->program_name;
 
 <?php 
                     if(in_array('nric',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('nric') . '">';
                     echo $form
 ->field($register, 'nric')->textInput();
 echo '</div>';
@@ -167,24 +168,30 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_mode',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_mode') . '">';
         echo $form
 ->field($register, 'participant_mode')->radioList($register->listParticipantMode());
+        echo '</div>';
 }
 ?>
 
 
 <?php 
         if(in_array('participant_cat_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_cat_program') . '">';
         echo $form
 ->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category']);
+        echo '</div>';
 }
 ?>
 
 
 <?php 
         if(in_array('competition_cat_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('competition_cat_program') . '">';
         echo $form
 ->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category']);
+        echo '</div>';
 }
 ?>
 
@@ -198,8 +205,10 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_cat_umk',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_cat_umk') . '">';
         echo $form
 ->field($register, 'participant_cat_umk')->radioList($register->listParticipantUMK());
+        echo '</div>';
 }
 ?>
 
@@ -208,9 +217,11 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_program') . '">';
         echo $form
 ->field($register, 'participant_program')->radioList($register->listParticipantProgram());
 echo '<input class="form-control" name="ProgramRegistration[other_program]" placeholder="Specify other program..." /><br />';
+echo '</div>';
 }
 ?>
 
@@ -218,15 +229,19 @@ echo '<input class="form-control" name="ProgramRegistration[other_program]" plac
 <?php 
                     if(in_array('advisor',$arr_fields)){
 
+                    echo '<div class="' . $fieldColClass('advisor') . '">';
+
                     echo $form
 ->field($register, 'advisor')->textInput();
+
+                    echo '</div>';
 
                     } ?>
 
 
 <?php 
                     if(in_array('institution',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('institution') . '">';
                     echo $form
 ->field($register, 'institution')->textInput();
 echo '</div>';
@@ -236,7 +251,7 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_person',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_person') . '">';
                     echo $form
 ->field($register, 'contact_person')->textInput();
 echo '</div>';
@@ -245,7 +260,7 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_no',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_no') . '">';
                     echo $form
 ->field($register, 'contact_no')->textInput();
 echo '</div>';
@@ -254,12 +269,21 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_email',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_email') . '">';
                     echo $form
 ->field($register, 'contact_email')->textInput();
 echo '</div>';
 
                     } ?>
+
+<?php if($publicMode && $register->isNewRecord){ ?>
+                    <div class="<?=$fieldColClass('edit_password')?>">
+                    <?= $form->field($register, 'edit_password')->passwordInput() ?>
+                    </div>
+                    <div class="<?=$fieldColClass('edit_password_confirm')?>">
+                    <?= $form->field($register, 'edit_password_confirm')->passwordInput() ?>
+                    </div>
+<?php } ?>
 
 
 
@@ -546,6 +570,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
     <div class="form-group">
 <?= $form->field($register, 'video_link')->textInput(['placeholder' => 'Paste YouTube / Google Drive link here']) ?>
 <i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+    </div>
 <?php } ?>
 
 <br /><br />
@@ -576,7 +601,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
 
 
-      <?php if(!$demo && !$edit){?>
+      <?php if(!$demo && !$publicMode && (!$edit || (int)$register->status === 0)){?>
       <div class="col-12">
 
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
@@ -586,7 +611,11 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
       </div> 
       <?php } 
       
-      if($edit){
+      if($publicMode && !$edit){
+        echo Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']);
+      }
+
+      if($edit && ($publicMode || (int)$register->status !== 0)){
         //echo '<input type="hidden" name="edit" value="1" />';
         echo Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'update']);
       }
@@ -624,12 +653,9 @@ $js = <<<'EOD'
 
 
 jQuery(".dynamicform_wrapper").on("afterInsert", function(e, item) {
-    var first = $(item).find("input")[0];
-    first.setAttribute("value", "");
-    var second = $(item).find("input")[1];
-    second.setAttribute("value", "");
-    var third = $(item).find("input")[2];
-    third.setAttribute("value", "");
+    $(item).find("input, textarea").each(function() {
+        $(this).val("");
+    });
 });
 
 
