@@ -173,6 +173,22 @@ echo '</div>';
 ?>
 
 
+<?php 
+        if(in_array('participant_cat_program',$arr_fields)){
+        echo $form
+->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category']);
+}
+?>
+
+
+<?php 
+        if(in_array('competition_cat_program',$arr_fields)){
+        echo $form
+->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category']);
+}
+?>
+
+
 
 <?php /* 
                     if(in_array('competition_type',$arr_fields)){
@@ -218,6 +234,34 @@ echo '</div>';
                     } ?>
 
 
+<?php 
+                    if(in_array('contact_person',$arr_fields)){
+                  echo '<div class="col-12">';
+                    echo $form
+->field($register, 'contact_person')->textInput();
+echo '</div>';
+
+                    } ?>
+
+<?php 
+                    if(in_array('contact_no',$arr_fields)){
+                  echo '<div class="col-12">';
+                    echo $form
+->field($register, 'contact_no')->textInput();
+echo '</div>';
+
+                    } ?>
+
+<?php 
+                    if(in_array('contact_email',$arr_fields)){
+                  echo '<div class="col-12">';
+                    echo $form
+->field($register, 'contact_email')->textInput();
+echo '</div>';
+
+                    } ?>
+
+
 
 <?php 
 if(in_array('group_member',$arr_fields)){
@@ -226,6 +270,8 @@ if(in_array('group_member',$arr_fields)){
 }else{
   $show_group = 'style="display:none"';
 }
+
+ $show_matric = $register->groupMemberShowMatric($register->program_id);
   ?>
 
 
@@ -258,7 +304,9 @@ if(in_array('group_member',$arr_fields)){
         <thead>
             <tr>
                 <th>Full Name</th>
+                <?php if($show_matric){ ?>
                 <th width="25%">Matric No.</th>
+                <?php } ?>
                 <th class="text-center">
                     
                 </th>
@@ -277,10 +325,12 @@ if(in_array('group_member',$arr_fields)){
                     <?= $form->field($member, "[{$i}]member_name")->textInput(['style' => 'text-transform: uppercase'])->label(false) ?>
                 </td>
                 
+                <?php if($show_matric){ ?>
                 <td class="vcenter">
                 <?= $form->field($member, "[{$i}]member_matric")->label(false) ?>
 
                 </td>
+                <?php } ?>
 
                 <td class="text-center vcenter" style="width: 90px;">
                     <button type="button" class="remove-member btn btn-default btn-sm"><span class="bi bi-trash"></span></button>
@@ -292,7 +342,7 @@ if(in_array('group_member',$arr_fields)){
         <tfoot>
             <tr>
    
-                <td colspan="2">
+                <td colspan="<?= $show_matric ? 2 : 1 ?>">
                 <button type="button" class="add-member btn btn-outline-success btn-sm"><span class="bi bi-plus"></span> Add members</button>
                 
                 </td>
@@ -455,12 +505,30 @@ if(in_array('group_member',$arr_fields)){
 
                     } ?></div>
   </div>
-<i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as a mentor.</i>
 
+<?php if(in_array('mentor_main',$arr_fields) || in_array('mentor_co',$arr_fields)){ ?>
+<i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as a mentor.</i>
+<?php } ?>
+<?php if(in_array('abstract_file', $arr_fields)){?>
+    <br /><br />
+    <div class="form-group">
+<?php 
+if(!$register->isNewRecord && $register->abstract_file){
+echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['download-abstract-file','id' => $register->id]), ['target' => '_blank']);
+}
+?>
+</div>
+<?= $form->field($register, 'abstract_instance')->fileInput() ?>
+<i>(Please upload abstract in MS Word format: .doc or .docx)</i>
+<?php } ?>
+
+<br /><br />
+
+
+<div id="online-mode-only">
 
 
     <?php if(in_array('poster_file', $arr_fields)){?>
-    <br /><br />
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->poster_file){
@@ -469,9 +537,20 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 ?>
 </div>
 <?= $form->field($register, 'poster_instance')->fileInput() ?>
-<i>(Please upload poster in PDF format only)</i>
+<i>(Allowed formats: PDF, PPTX, JPG, JPEG, PNG)</i>
 <?php } ?>
+
 <br /><br />
+
+<?php if(in_array('video_link', $arr_fields)){?>
+    <div class="form-group">
+<?= $form->field($register, 'video_link')->textInput(['placeholder' => 'Paste YouTube / Google Drive link here']) ?>
+<i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+<?php } ?>
+
+<br /><br />
+
+</div>
 
 <?php if(in_array('payment_file', $arr_fields)){?>
     <div class="form-group">
@@ -559,4 +638,100 @@ EOD;
 
 
 $this->registerJs($js);
+
+
+if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode',$arr_fields)){
+  $catPhysical = $register->listParticipantCatProgram($register->program_id, 1);
+  $catOnline = $register->listParticipantCatProgram($register->program_id, 2);
+
+  $catsByMode = [
+    1 => $catPhysical,
+    2 => $catOnline,
+  ];
+
+  $jsonCatsByMode = json_encode($catsByMode);
+
+  $jsCat = <<<JS
+(function(){
+  var catsByMode = $jsonCatsByMode;
+  var modeName = 'ProgramRegistration[participant_mode]';
+  var catId = 'programregistration-participant_cat_program';
+  var catEl = document.getElementById(catId);
+
+  if(!catEl){
+    return;
+  }
+
+  function selectedMode(){
+    var checked = document.querySelector('input[name="' + modeName + '"]:checked');
+    return checked ? checked.value : '';
+  }
+
+  function rebuildOptions(mode){
+    var currentValue = catEl.value;
+    var map = (mode && catsByMode[mode]) ? catsByMode[mode] : {};
+
+    while (catEl.options.length > 0) {
+      catEl.remove(0);
+    }
+
+    catEl.options.add(new Option('Select Category', ''));
+
+    var hasCurrent = false;
+    Object.keys(map).forEach(function(key){
+      var opt = new Option(map[key], key);
+      if(String(key) === String(currentValue)){
+        opt.selected = true;
+        hasCurrent = true;
+      }
+      catEl.options.add(opt);
+    });
+
+    if(!hasCurrent){
+      catEl.value = '';
+    }
+  }
+
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.name === modeName){
+      rebuildOptions(selectedMode());
+    }
+  });
+
+  rebuildOptions(selectedMode());
+})();
+JS;
+
+  $this->registerJs($jsCat);
+}
+
+
+if(in_array('participant_mode',$arr_fields) && (in_array('poster_file',$arr_fields) || in_array('video_link',$arr_fields))){
+  $mode = (string)$register->participant_mode;
+  $jsOnline = <<<JS
+(function(){
+  var modeName = 'ProgramRegistration[participant_mode]';
+  var box = document.getElementById('online-mode-only');
+  if(!box){
+    return;
+  }
+  function selectedMode(){
+    var checked = document.querySelector('input[name="' + modeName + '"]:checked');
+    return checked ? checked.value : '';
+  }
+  function toggle(){
+    var mode = selectedMode();
+    box.style.display = (String(mode) === '2') ? '' : 'none';
+  }
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.name === modeName){
+      toggle();
+    }
+  });
+  toggle();
+})();
+JS;
+  $this->registerJs($jsOnline);
+}
+
 ?>

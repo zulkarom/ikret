@@ -522,6 +522,8 @@ class ProgramController extends Controller
                     $register->status = 10;
                     $register->scenario = 'program'.$id;
                     $register->submitted_at = new Expression('NOW()');
+                }else if($action == 'draft'){
+                    $register->scenario = 'draft';
                 }
     
                 $register->group_member = 1;
@@ -531,8 +533,6 @@ class ProgramController extends Controller
                 }
                 
                 $register->updated_at = time();
-                $register->uploadFile('payment');
-                $register->uploadFile('poster');
     
                 if(!$register->isNewRecord){
                     $oldIDs = ArrayHelper::map($members, 'id', 'id');
@@ -554,8 +554,11 @@ class ProgramController extends Controller
                    
                     $transaction = Yii::$app->db->beginTransaction();
                     try {
+                        $register->uploadFile('payment');
+                        $register->uploadFile('poster');
+                        $register->uploadFile('abstract');
                         
-                        if ($flag = $register->save()) {
+                        if ($flag = $register->save(false)) {
                             if(!$register->isNewRecord){
                                 if (! empty($deletedIDs)) {
                                     Member::deleteAll(['id' => $deletedIDs]);
@@ -594,9 +597,15 @@ class ProgramController extends Controller
                             }else if($action == 'update'){
                                 Yii::$app->session->addFlash('success', "The information has been successfully updated.");
                             }
-    
-    
-                            return $this->redirect(['register-form', 'id' => $register->program_id, 'reg' => $register->id]);
+
+                            return $this->render('_post_redirect', [
+                                'url' => Yii::$app->urlManager->createUrl(['storage/index']),
+                                'data' => [
+                                    'program_id' => $register->program_id,
+                                    'reg_id' => $register->id,
+                                    'edit' => $edit,
+                                ],
+                            ]);
                             
     
                         } else {
@@ -719,10 +728,6 @@ class ProgramController extends Controller
             $register->project_name = $this->myTrim($register->project_name);
             $register->updated_at = time();
             $action =  Yii::$app->request->post('action');
-
-
-        $register->uploadFile('payment');
-        $register->uploadFile('poster');
 
         $oldIDs = ArrayHelper::map($members, 'id', 'id');
             
@@ -893,6 +898,11 @@ class ProgramController extends Controller
     public function actionDownloadPaymentFile($id){
         $model = $this->findRegistration($id);
         Upload::download($model, 'payment', 'Payment_iCreate');
+    }
+
+    public function actionDownloadAbstractFile($id){
+        $model = $this->findRegistration($id);
+        Upload::download($model, 'abstract', 'Abstract_iCreate');
     }
 
     private function meAsMentor($reg){

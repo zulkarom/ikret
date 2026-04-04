@@ -37,6 +37,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
     public $poster_instance;
     public $payment_instance;
+    public $abstract_instance;
+    public $video_instance;
     public $group_member;
     public $mentor_main;
     public $mentor_co;
@@ -66,10 +68,17 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [self::getProgramRequiredFields(7), 'required', 'on' => 'program7'],
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
+            [['project_name'], 'required', 'on' => 'draft'],
 
             [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award', 'participant_mode', 'participant_program'], 'integer'],
 
-            [['institution', 'poster_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
+            [['participant_cat_program'], 'integer'],
+
+            [['competition_cat_program'], 'integer'],
+
+            [['contact_person', 'contact_no', 'contact_email'], 'string', 'max' => 255],
+
+            [['institution', 'poster_file', 'abstract_file', 'video_link', 'payment_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
 
             [['project_name', 'group_name', 'advisor'], 'string', 'max' => 255],
 
@@ -87,11 +96,58 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
             [['poster_instance'], 'file',
             'maxSize' => 1024 * 1024 * 5, // 5MB
-            'extensions' => 'pdf', 
-            'mimeTypes' => 'application/pdf',
+            'extensions' => 'pdf, pptx, jpg, jpeg, png', 
             ],
 
+            [['poster_instance'], 'required',
+            'when' => function($model){
+                return $model->scenario !== 'draft' && (int)$model->program_id === 7 && (int)$model->participant_mode === 2 && empty($model->poster_file);
+            },
+            'whenClient' => 'function (attribute, value) {
+  var el = document.querySelector("input[name=\"ProgramRegistration[participant_mode]\"]:checked");
+  return el && String(el.value) === "2";
+}',
+            ],
+
+            [['abstract_instance'], 'file',
+            'maxSize' => 1024 * 1024 * 5, // 5MB
+            'extensions' => 'doc, docx',
+            ],
+
+            [['participant_cat_program'], 'validateParticipantCatProgram'],
+
         ];
+    }
+
+    public function validateParticipantCatProgram($attribute, $params)
+    {
+        if((int)$this->program_id !== 7){
+            return;
+        }
+
+        if(!$this->$attribute){
+            return;
+        }
+
+        if(!$this->participant_mode){
+            return;
+        }
+
+        $cat = ParticipantCatProgram::findOne((int)$this->$attribute);
+        if(!$cat || (int)$cat->program_id !== (int)$this->program_id){
+            $this->addError($attribute, 'Invalid category.');
+            return;
+        }
+
+        if((int)$cat->mode !== (int)$this->participant_mode){
+            $this->addError($attribute, 'Selected category is not available for the selected participation mode.');
+            return;
+        }
+
+        if((int)$cat->is_active !== 1){
+            $this->addError($attribute, 'Selected category is not active.');
+            return;
+        }
     }
 
     /**
@@ -110,10 +166,16 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'participant_cat_umk' => 'Category of Participant',
             'advisor' => 'Name of Project Advisor (Lecturer)',
             'institution' => 'Institution',
+            'contact_person' => 'Name of contact person',
+            'contact_no' => 'Contact number',
+            'contact_email' => 'Email',
             'project_desc' => 'Project Description',
             'competition_type' => 'Participation on Competition',
             'poster_file' => 'Upload Poster',
+            'abstract_file' => 'Upload Abstract',
+            'abstract_instance' => 'Upload Abstract',
             'poster_instance' => 'Submission of Poster',
+            'video_link' => 'Video Link',
             'payment_file' => 'Proof of Payment',
             'payment_instance' => 'Upload Proof of Payment',
             'program_sub' => 'Category of Competition',
@@ -121,6 +183,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'advisor_dropdown' => 'Lecturer\'s Name',
             'nric' => 'Identification Card Number',
             'participant_mode' => 'Mode of Participation',
+            'participant_cat_program' => 'Category of Participant',
+            'competition_cat_program' => 'Competition Category',
             'participant_program' => 'Participant\'s Program',
             'group_member' => 'Individual/ Group Members',
             'mentor_main' => 'Main Mentor (optional)',
@@ -160,6 +224,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     }
 
     public static function getProgramRequiredFields($program_id){
+        $fromDb = self::getProgramFieldsFromDb($program_id, true);
+        if($fromDb !== null){
+            return $fromDb;
+        }
+
         $array = [];
         switch($program_id){
             case 1: //impact
@@ -187,7 +256,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 7: //IISEIC
-            $array =  ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution'];
+            $array =  ['participant_mode', 'participant_cat_umk', 'participant_program', 'group_member','institution', 'contact_person', 'contact_no', 'contact_email', 'project_name', 'abstract_file', 'poster_file', 'payment_file'];
             break;
 
 
@@ -196,6 +265,11 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     }
 
     public static function getProgramFields($program_id){
+        $fromDb = self::getProgramFieldsFromDb($program_id, false);
+        if($fromDb !== null){
+            return $fromDb;
+        }
+
         $array = [];
         switch($program_id){
             case 1: //impact
@@ -223,10 +297,95 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             break;
 
             case 7: //IISEIC
-            $array = ['participant_mode', 'participant_cat_umk', 'participant_program', 'institution', 'mentor_main', 'mentor_co'];
+            $array = ['participant_mode', 'participant_cat_program', 'competition_cat_program', 'group_member', 'institution', 'contact_person', 'contact_no', 'contact_email', 'project_name', 'abstract_file', 'poster_file', 'video_link', 'payment_file'];
             break;
         }
         return $array;
+    }
+
+    private static function getProgramFieldsFromDb($programId, $requiredOnly)
+    {
+        if(!class_exists(ProgramRegField::class)){
+            return null;
+        }
+
+        $query = ProgramRegField::find()
+            ->where(['program_id' => (int)$programId, 'is_enabled' => 1]);
+
+        if($requiredOnly){
+            $query->andWhere(['is_required' => 1]);
+        }
+
+        $rows = $query
+            ->orderBy(['sort_order' => SORT_ASC, 'field_name' => SORT_ASC])
+            ->all();
+
+        if(!$rows){
+            return null;
+        }
+
+        return ArrayHelper::getColumn($rows, 'field_name');
+    }
+
+    public static function availableRegistrationFields()
+    {
+        $tmp = new self();
+        $labels = $tmp->attributeLabels();
+
+        $fields = [
+            'project_name',
+            'project_desc',
+            'participant_cat_local',
+            'participant_cat_group',
+            'participant_mode',
+            'participant_cat_umk',
+            'participant_program',
+            'other_program',
+            'program_sub',
+            'advisor_dropdown',
+            'booth_number',
+            'advisor',
+            'institution',
+            'contact_person',
+            'contact_no',
+            'contact_email',
+            'group_member',
+            'group_code',
+            'group_name',
+            'mentor_main',
+            'mentor_co',
+            'poster_file',
+            'abstract_file',
+            'video_link',
+            'payment_file',
+            'nric',
+            'competition_type',
+            'participant_cat_program',
+            'competition_cat_program',
+        ];
+
+        $out = [];
+        foreach($fields as $f){
+            $out[$f] = array_key_exists($f, $labels) ? $labels[$f] : $f;
+        }
+        return $out;
+    }
+
+    public static function groupMemberShowMatric($programId)
+    {
+        if(!class_exists(ProgramRegField::class)){
+            return true;
+        }
+
+        $row = ProgramRegField::find()
+            ->where(['program_id' => (int)$programId, 'field_name' => 'group_member'])
+            ->one();
+
+        if(!$row){
+            return true;
+        }
+
+        return (int)$row->show_matric === 1;
     }
 
     public function getShortFields(){
@@ -380,6 +539,42 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             6 => 'SAR',
             99 => 'Others',
         ];
+    }
+
+    public function getParticipantCatProgramModel()
+    {
+        return $this->hasOne(ParticipantCatProgram::class, ['id' => 'participant_cat_program']);
+    }
+
+    public function getCompetitionCatProgramModel()
+    {
+        return $this->hasOne(CompetitionCatProgram::class, ['id' => 'competition_cat_program']);
+    }
+
+    public static function listCompetitionCatProgram($programId)
+    {
+        $rows = CompetitionCatProgram::find()
+            ->where(['program_id' => $programId, 'is_active' => 1])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        return ArrayHelper::map($rows, 'id', 'cat_name');
+    }
+
+    public static function listParticipantCatProgram($programId, $mode = null)
+    {
+        $query = ParticipantCatProgram::find()
+            ->where(['program_id' => $programId, 'is_active' => 1]);
+
+        if($mode !== null && $mode !== ''){
+            $query->andWhere(['mode' => (int)$mode]);
+        }
+
+        $rows = $query
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        return ArrayHelper::map($rows, 'id', 'cat_name');
     }
 
     public static function listNeweekBooth(){
@@ -646,6 +841,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         $path =  $this->program_id . '/'.$type;
         $instance = UploadedFile::getInstance($this, $inst_property);
         if($instance){
+            $this->$inst_property = $instance;
             
             $old_path = Yii::getAlias('@upload/' . $this->$attr_db);
                 if (is_file($old_path)) {

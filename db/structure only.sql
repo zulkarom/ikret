@@ -223,6 +223,8 @@ CREATE TABLE `program_reg` (
   `participant_cat_group` tinyint(1) DEFAULT NULL COMMENT '1=local,2 international',
   `participant_cat_umk` tinyint(1) DEFAULT NULL COMMENT '1=umk 2 non umk',
   `participant_mode` tinyint(1) DEFAULT NULL COMMENT '1=physical 2 online',
+  `participant_cat_program` int(11) DEFAULT NULL,
+  `competition_cat_program` int(11) DEFAULT NULL,
   `participant_program` int(11) DEFAULT NULL,
   `other_program` varchar(255) DEFAULT NULL,
   `advisor` varchar(255) DEFAULT NULL,
@@ -239,6 +241,59 @@ CREATE TABLE `program_reg` (
   `updated_at` int(11) DEFAULT NULL,
   `submitted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `participant_cat_program`
+--
+
+CREATE TABLE `participant_cat_program` (
+  `id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `cat_name` varchar(255) NOT NULL,
+  `mode` tinyint(1) NOT NULL COMMENT '1=physical 2=online',
+  `fee` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `participant_cat_program`
+--
+
+INSERT INTO `participant_cat_program` (`id`, `program_id`, `cat_name`, `mode`, `fee`, `sort_order`, `is_active`) VALUES
+(1, 7, 'Primary School', 1, 'RM50/ Group', 1, 1),
+(2, 7, 'Secondary School', 1, 'RM60/ Group', 2, 1),
+(3, 7, 'University (UMK)', 1, 'RM70/ Group', 3, 1),
+(4, 7, 'University (External)', 2, 'RM60/ Group', 4, 1),
+(5, 7, 'Professional', 2, 'RM150/ Group', 5, 1),
+(6, 7, 'Industry', 2, 'RM200/ Group', 6, 1),
+(7, 7, 'International', 2, 'USD50/ Group', 7, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `competition_cat_program`
+--
+
+CREATE TABLE `competition_cat_program` (
+  `id` int(11) NOT NULL,
+  `program_id` int(11) NOT NULL,
+  `cat_name` varchar(255) NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT '0',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `competition_cat_program`
+--
+
+INSERT INTO `competition_cat_program` (`id`, `program_id`, `cat_name`, `sort_order`, `is_active`) VALUES
+(1, 7, 'Educator & Learning Transformation Innovation', 1, 1),
+(2, 7, 'Business & Digital Economy Innovation', 2, 1),
+(3, 7, 'AI, Emerging Technology & Digital Media Innovation', 3, 1),
+(4, 7, 'Sustainability & Environmental Innovation', 4, 1);
 
 -- --------------------------------------------------------
 

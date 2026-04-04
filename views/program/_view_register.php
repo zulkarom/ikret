@@ -48,9 +48,14 @@ use yii\helpers\Url;
     showField($register, $arr_fields,'advisor');
     showFieldList($register, $arr_fields,'booth_number','listNeweekBooth');
     showFieldList($register, $arr_fields,'participant_mode','listParticipantMode');
+    showFieldCatProgram($register, $arr_fields,'participant_cat_program');
+    showFieldCompetitionCatProgram($register, $arr_fields,'competition_cat_program');
     showFieldList($register, $arr_fields,'participant_cat_umk','listParticipantUMK');
     showFieldList($register, $arr_fields,'participant_program','listParticipantProgram','other_program');
     showField($register, $arr_fields,'institution');
+    showField($register, $arr_fields,'contact_person');
+    showField($register, $arr_fields,'contact_no');
+    showField($register, $arr_fields,'contact_email');
     showField($register, $arr_fields,'group_code');
     showField($register, $arr_fields,'group_name');
     showFieldMentor($register, $arr_fields, 'mentor_main');
@@ -92,7 +97,7 @@ use yii\helpers\Url;
 
 
 
-<?php if(in_array('poster_file', $arr_fields)){?>
+<?php if(in_array('poster_file', $arr_fields) && (int)$register->participant_mode === 2){?>
 
     <div class="row">
       <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel('poster_file')?></div>
@@ -104,6 +109,38 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 ?>
     </div>
     </div>
+
+<?php } ?>
+
+
+<?php if(in_array('abstract_file', $arr_fields)){?>
+
+    <div class="row">
+      <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel('abstract_file')?></div>
+      <div class="col-lg-9 col-md-8">
+      <?php 
+if($register->abstract_file){
+echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['download-abstract-file','id' => $register->id]), ['target' => '_blank']);
+}
+?>
+    </div>
+    </div>
+
+<?php } ?>
+
+
+<?php if(in_array('video_link', $arr_fields) && (int)$register->participant_mode === 2){?>
+
+<div class="row">
+  <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel('video_link')?></div>
+  <div class="col-lg-9 col-md-8">
+  <?php 
+if($register->video_link){
+echo Html::a('<i class="bi bi-link-45deg"></i> Video Link', $register->video_link, ['target' => '_blank']);
+}
+?>
+</div>
+</div>
 
 <?php } ?>
 
@@ -163,6 +200,40 @@ function showField($register, $arr_fields, $attr, $linebreak = false){
     </div>
     <?php
     }
+}
+
+function showFieldCatProgram($register, $arr_fields, $attr){
+  if(in_array($attr, $arr_fields)){
+  ?>
+  <div class="row">
+    <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel($attr)?></div>
+    <div class="col-lg-9 col-md-8">
+    <?php
+    $list = $register->listParticipantCatProgram($register->program_id);
+    $id = $register->$attr;
+    echo array_key_exists($id, $list) ? $list[$id] : '';
+    ?>
+    </div>
+  </div>
+  <?php
+  }
+}
+
+function showFieldCompetitionCatProgram($register, $arr_fields, $attr){
+  if(in_array($attr, $arr_fields)){
+  ?>
+  <div class="row">
+    <div class="col-lg-3 col-md-4 label "><?=$register->getAttributeLabel($attr)?></div>
+    <div class="col-lg-9 col-md-8">
+    <?php
+    $list = $register->listCompetitionCatProgram($register->program_id);
+    $id = $register->$attr;
+    echo array_key_exists($id, $list) ? $list[$id] : '';
+    ?>
+    </div>
+  </div>
+  <?php
+  }
 }
 
 function showFieldUser($user, $attr){

@@ -25,8 +25,9 @@ class Setting extends \yii\db\ActiveRecord
      */
     public function rules()
     {
+        $columns = static::getTableSchema()->getColumnNames();
         return [
-            [['allow_cert_from'], 'safe'],
+            [$columns, 'safe'],
         ];
     }
 

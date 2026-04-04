@@ -40,6 +40,18 @@ class Upload
 			$mime = 'application/pdf';
 			break;
 			
+			case 'doc':
+			$mime = 'application/msword';
+			break;
+			
+			case 'docx':
+			$mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+			break;
+			
+			case 'pptx':
+			$mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+			break;
+			
 			case 'jpg':
 			case 'jpeg':
 			$mime = 'image/jpeg';
@@ -51,6 +63,22 @@ class Upload
 			
 			case 'png':
 			$mime = 'image/png';
+			break;
+			
+			case 'mp4':
+			$mime = 'video/mp4';
+			break;
+			
+			case 'mov':
+			$mime = 'video/quicktime';
+			break;
+			
+			case 'avi':
+			$mime = 'video/x-msvideo';
+			break;
+			
+			case 'mkv':
+			$mime = 'video/x-matroska';
 			break;
 			
 			default:

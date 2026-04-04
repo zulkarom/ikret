@@ -163,6 +163,10 @@ use yii\helpers\Url;
 
           $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
+          $menu[] = ['name' => 'Registration Fields Config', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
+
+          $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
+
           
           
         }
