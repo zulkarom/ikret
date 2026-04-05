@@ -120,7 +120,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             ],
 
             [['poster_instance'], 'file',
-            'maxSize' => 1024 * 1024 * 5, // 5MB
+            'maxSize' => 1024 * 1024 * 15, // 15MB
             'extensions' => 'pdf, pptx, jpg, jpeg, png', 
             ],
 
