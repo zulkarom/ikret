@@ -117,7 +117,7 @@ use yii\helpers\Url;
       <div class="col-lg-9 col-md-8">
       <?php 
 if($register->poster_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['download-poster-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['/program/download-poster-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
     </div>
@@ -133,7 +133,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
       <div class="col-lg-9 col-md-8">
       <?php 
 if($register->abstract_file){
-echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['download-abstract-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['/program/download-abstract-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
     </div>
@@ -165,7 +165,7 @@ echo Html::a('<i class="bi bi-link-45deg"></i> Video Link', $register->video_lin
   <div class="col-lg-9 col-md-8">
   <?php 
 if($register->payment_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['/program/download-payment-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>

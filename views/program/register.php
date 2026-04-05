@@ -538,7 +538,7 @@ if(in_array('group_member',$arr_fields)){
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->abstract_file){
-echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['download-abstract-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['/program/download-abstract-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
@@ -556,7 +556,7 @@ echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->poster_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['download-poster-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['/program/download-poster-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
@@ -581,7 +581,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->payment_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['/program/download-payment-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
