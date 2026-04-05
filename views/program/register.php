@@ -70,7 +70,7 @@ $this->title = 'Registration - ' . $model->program_name;
 
                   <?php $form = ActiveForm::begin([
                       'id' => 'dynamic-form',
-                      'action' => Url::to([$publicMode && $storageEntry ? '/storage/index' : ($publicMode ? 'public-register' : 'register')]),
+                      'action' => Url::to([$publicMode ? '/storage/index' : 'register']),
                       'options' => [
                           'class' => 'row g-3 needs-validation',
                           'enctype' => 'multipart/form-data',
@@ -81,7 +81,7 @@ $this->title = 'Registration - ' . $model->program_name;
                   <?= $form->errorSummary($register, ['class' => 'alert alert-danger']) ?>
 
                   <input type="hidden" name="program_id" value="<?=$model->id?>" />
-                  <?php if($publicMode && $storageEntry){ ?>
+                  <?php if($publicMode){ ?>
                   <input type="hidden" name="storage_action" value="public-register" />
                   <input type="hidden" name="storage_entry" value="1" />
                   <?php } ?>

@@ -193,18 +193,7 @@ if($allowUpdate){
 ?>
 <div class="mt-4">
 <?php if(time() < $due){ ?>
-<?php if($publicMode && $storageEntry){ ?>
-<?= Html::beginForm(['/storage/index'], 'post', ['style' => 'display:inline-block;']) ?>
-<?= Html::hiddenInput('storage_action', 'public-register-form') ?>
-<?= Html::hiddenInput('storage_entry', 1) ?>
-<?= Html::hiddenInput('program_id', $register->program_id) ?>
-<?= Html::hiddenInput('reg_id', $register->id) ?>
-<?= Html::hiddenInput('edit', 1) ?>
-<?= Html::submitButton('<i class="bi bi-pencil"></i> Update', ['class' => 'btn btn-outline-warning']) ?>
-<?= Html::endForm() ?><br />
-<?php }else{ ?>
 <?= Html::a('<i class="bi bi-pencil"></i> Update', $updateUrl, ['class' => 'btn btn-outline-warning']) ?><br />
-<?php } ?>
 <?php } else { ?>
 <?= Html::button('<i class="bi bi-pencil"></i> Update', ['class' => 'btn btn-outline-secondary', 'disabled' => true]) ?><br />
 <?php } ?>

@@ -45,26 +45,10 @@ $this->title = 'Available Programs';
                                     </div>
                                 </div>
                                 <div class="text-md-end">
-                                    <?php if($storageEntry){ ?>
-                                        <?= Html::beginForm(['/storage/index'], 'post') ?>
-                                        <?= Html::hiddenInput('storage_action', 'public-register-form') ?>
-                                        <?= Html::hiddenInput('storage_entry', 1) ?>
-                                        <?= Html::hiddenInput('program_id', $program->id) ?>
-                                        <?= Html::submitButton('Register', ['class' => 'btn btn-primary']) ?>
-                                        <?= Html::endForm() ?>
-
-                                        <?= Html::beginForm(['/storage/index'], 'post', ['class' => 'mt-2']) ?>
-                                        <?= Html::hiddenInput('storage_action', 'public-edit-login') ?>
-                                        <?= Html::hiddenInput('storage_entry', 1) ?>
-                                        <?= Html::hiddenInput('program_id', $program->id) ?>
-                                        <?= Html::submitButton('Edit Registration', ['class' => 'btn btn-outline-secondary btn-sm']) ?>
-                                        <?= Html::endForm() ?>
-                                    <?php }else{ ?>
-                                        <?= Html::a('Register', ['public-register-form', 'id' => $program->id], ['class' => 'btn btn-primary']) ?>
-                                        <div class="mt-2">
-                                            <?= Html::a('Edit Registration', ['public-edit-login', 'id' => $program->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
-                                        </div>
-                                    <?php } ?>
+                                    <?= Html::a('Register', ['public-register-form', 'id' => $program->id], ['class' => 'btn btn-primary']) ?>
+                                    <div class="mt-2">
+                                        <?= Html::a('Edit Registration', ['public-edit-login', 'id' => $program->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>

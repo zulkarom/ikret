@@ -20,7 +20,7 @@ $this->title = 'Edit Registration - ' . $model->program_name;
         <p class="small">Enter the email and password / PIN used during registration.</p>
 
         <?php $form = ActiveForm::begin([
-            'action' => Url::to($storageEntry ? ['/storage/index'] : ['public-edit-auth', 'id' => $model->id]),
+            'action' => Url::to(['public-edit-auth', 'id' => $model->id]),
             'enableClientValidation' => true,
         ]); ?>
 
@@ -42,16 +42,7 @@ $this->title = 'Edit Registration - ' . $model->program_name;
         <?php ActiveForm::end(); ?>
 
         <div class="mt-2">
-            <?php if($storageEntry){ ?>
-                <?= Html::beginForm(['/storage/index'], 'post', ['style' => 'display:inline-block;']) ?>
-                <?= Html::hiddenInput('storage_action', 'public-register-form') ?>
-                <?= Html::hiddenInput('storage_entry', 1) ?>
-                <?= Html::hiddenInput('program_id', $model->id) ?>
-                <?= Html::submitButton('Back to Registration Form', ['class' => 'btn btn-outline-secondary']) ?>
-                <?= Html::endForm() ?>
-            <?php }else{ ?>
-                <?= Html::a('Back to Registration Form', ['public-register-form', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
-            <?php } ?>
+            <?= Html::a('Back to Registration Form', ['public-register-form', 'id' => $model->id], ['class' => 'btn btn-outline-secondary']) ?>
         </div>
     </div>
 </div>

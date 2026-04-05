@@ -13,7 +13,7 @@ use yii\helpers\Url;
       if(Yii::$app->user->isGuest){
         
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
-        $menu[] = ['name' => 'Register', 'post_url' => ['/storage/index'], 'post_data' => ['storage_action' => 'public-programs', 'storage_entry' => 1], 'icon' => 'bi bi-card-list'];
+        $menu[] = ['name' => 'Register', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
       }else{
 
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
