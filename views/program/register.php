@@ -1,6 +1,7 @@
 <?php
 
 use app\models\Mentor;
+use app\models\ParticipantCatProgram;
 use app\models\User;
 use kartik\select2\Select2;
 use yii\helpers\Html;
@@ -17,8 +18,33 @@ $err = $err ?? false;
 $demo = $demo ?? false;
 $publicMode = $publicMode ?? false;
 $storageEntry = $storageEntry ?? false;
+$participantCategoryFee = null;
+
+if(!empty($register->participant_cat_program)){
+    $participantCategory = ParticipantCatProgram::findOne((int)$register->participant_cat_program);
+    if($participantCategory && !empty($participantCategory->fee)){
+        $participantCategoryFee = $participantCategory->fee;
+    }
+}
 
 $this->title = 'Registration - ' . $model->program_name;
+
+$this->registerCss(<<<CSS
+.register-select-arrow {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #4154f1 50%), linear-gradient(135deg, #4154f1 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 2.5rem;
+}
+
+.register-select-arrow:focus {
+    background-image: linear-gradient(45deg, transparent 50%, #4154f1 50%), linear-gradient(135deg, #4154f1 50%, transparent 50%);
+}
+CSS);
 
 ?>
     <div class="d-flex justify-content-center py-4">
@@ -180,7 +206,7 @@ echo '</div>';
         if(in_array('participant_cat_program',$arr_fields)){
         echo '<div class="' . $fieldColClass('participant_cat_program') . '">';
         echo $form
-->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category']);
+->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category', 'class' => 'form-select register-select-arrow']);
         echo '</div>';
 }
 ?>
@@ -190,7 +216,7 @@ echo '</div>';
         if(in_array('competition_cat_program',$arr_fields)){
         echo '<div class="' . $fieldColClass('competition_cat_program') . '">';
         echo $form
-->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category']);
+->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category', 'class' => 'form-select register-select-arrow']);
         echo '</div>';
 }
 ?>
@@ -282,6 +308,9 @@ echo '</div>';
                     </div>
                     <div class="<?=$fieldColClass('edit_password_confirm')?>">
                     <?= $form->field($register, 'edit_password_confirm')->passwordInput() ?>
+                    </div>
+                    <div class="col-12">
+                    <i>Please keep this Password / PIN safe. You will need it later to edit your registration and for certificate-related access.</i>
                     </div>
 <?php } ?>
 
@@ -534,7 +563,20 @@ if(in_array('group_member',$arr_fields)){
 <i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as a mentor.</i>
 <?php } ?>
 <?php if(in_array('abstract_file', $arr_fields)){?>
-    <br /><br />
+    <div class="mt-4 pt-2">
+    <hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Abstract</h5>
+    <i>Abstract must be submitted in Microsoft Word format (.doc or .docx only).</i>
+    <div class="mt-3">It should include the following key elements:</div>
+    <ul class="mb-3">
+        <li>Title</li>
+        <li>Problem Statement</li>
+        <li>Objective</li>
+        <li>Target User</li>
+        <li>Features/Impact</li>
+        <li>Conclusion</li>
+    </ul>
+    <div class="mb-3">Submitted abstracts will be included in the event’s e-proceedings publication.</div>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->abstract_file){
@@ -543,7 +585,7 @@ echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::
 ?>
 </div>
 <?= $form->field($register, 'abstract_instance')->fileInput() ?>
-<i>(Please upload abstract in MS Word format: .doc or .docx)</i>
+    </div>
 <?php } ?>
 
 <br /><br />
@@ -553,6 +595,22 @@ echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::
 
 
     <?php if(in_array('poster_file', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+    <hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Poster</h5>
+    <i>Poster must be in A2 size and submitted in PDF, PPTX, JPG, JPEG, or PNG format.</i>
+    <div class="mt-3">The poster must clearly include the following content elements:</div>
+    <ul class="mb-3">
+        <li>Background</li>
+        <li>Problem Statement</li>
+        <li>Objectives</li>
+        <li>Methodologies</li>
+        <li>Impacts</li>
+        <li>Project Visualisation / Potential Application/ Commercialisation/ Photo</li>
+        <li>Achievement/ Recognition/ Award</li>
+    </ul>
+    <div>The same approved design must be used for physical printing during the event.</div>
+    <div class="mt-2 mb-3">Participants are responsible for printing and bringing their poster unless otherwise stated by the organiser.</div>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->poster_file){
@@ -561,15 +619,29 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 ?>
 </div>
 <?= $form->field($register, 'poster_instance')->fileInput() ?>
-<i>(Allowed formats: PDF, PPTX, JPG, JPEG, PNG)</i>
+    </div>
 <?php } ?>
 
 <br /><br />
 
 <?php if(in_array('video_link', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+<hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Video</h5>
+    <i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+    <div class="mt-3">Each submission must include a presentation video between 3 to 5 minutes in length.</div>
+    <div class="mt-3">The content of the video must clearly present the following:</div>
+    <ul class="mb-3">
+        <li>Background</li>
+        <li>Problem Statement</li>
+        <li>Objective</li>
+        <li>Methodology</li>
+        <li>Innovation Impact / Benefit</li>
+        <li>Conclusion</li>
+    </ul>
     <div class="form-group">
 <?= $form->field($register, 'video_link')->textInput(['placeholder' => 'Paste YouTube / Google Drive link here']) ?>
-<i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+    </div>
     </div>
 <?php } ?>
 
@@ -578,6 +650,29 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 </div>
 
 <?php if(in_array('payment_file', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+<hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Proof of Payment</h5>
+<?php if($model->payment_short){ ?>
+<i><?=$model->payment_short?></i>
+<div class="mb-3"></div>
+<?php 
+} 
+
+
+if($participantCategoryFee){
+echo '<div id="required-payment-amount" class="mb-3"><strong>Required Amount:</strong> ' . Html::encode($participantCategoryFee) . '</div>';
+}else{
+echo '<div id="required-payment-amount" class="mb-3" style="display:none;"></div>';
+}
+
+
+echo '<div><strong>Account Holder Name:</strong> Universiti Malaysia Kelantan</div>';
+echo '<div><strong>Account Number:</strong> 553038019271</div>';
+echo '<div><strong>Bank Name:</strong> Maybank Berhad</div>';
+echo '<div><strong>SWIFT Code:</strong> MBBEMYKL</div><br />';
+echo '<div><strong>Reference:</strong> IISEIC2026</div><br />';
+?>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->payment_file){
@@ -586,18 +681,13 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 ?>
 </div>
 <?= $form->field($register, 'payment_instance')->fileInput() ?>
-<?php if($model->payment_short){ ?>
-<i><?=$model->payment_short?></i>
-<br /><br />
-<?php 
-} 
+    </div>
 
-}
+<?php } ?>
 
 
 
 
-?>
 
 
 
@@ -667,12 +757,24 @@ $this->registerJs($js);
 
 
 if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode',$arr_fields)){
-  $catPhysical = $register->listParticipantCatProgram($register->program_id, 1);
-  $catOnline = $register->listParticipantCatProgram($register->program_id, 2);
+  $catPhysical = ParticipantCatProgram::find()
+    ->where(['program_id' => $register->program_id, 'mode' => 1, 'is_active' => 1])
+    ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+    ->all();
+  $catOnline = ParticipantCatProgram::find()
+    ->where(['program_id' => $register->program_id, 'mode' => 2, 'is_active' => 1])
+    ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+    ->all();
 
   $catsByMode = [
-    1 => $catPhysical,
-    2 => $catOnline,
+    1 => array_reduce($catPhysical, function($carry, $item){
+      $carry[$item->id] = ['label' => $item->cat_name, 'fee' => $item->fee];
+      return $carry;
+    }, []),
+    2 => array_reduce($catOnline, function($carry, $item){
+      $carry[$item->id] = ['label' => $item->cat_name, 'fee' => $item->fee];
+      return $carry;
+    }, []),
   ];
 
   $jsonCatsByMode = json_encode($catsByMode);
@@ -683,6 +785,7 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
   var modeName = 'ProgramRegistration[participant_mode]';
   var catId = 'programregistration-participant_cat_program';
   var catEl = document.getElementById(catId);
+  var amountEl = document.getElementById('required-payment-amount');
 
   if(!catEl){
     return;
@@ -705,7 +808,7 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
 
     var hasCurrent = false;
     Object.keys(map).forEach(function(key){
-      var opt = new Option(map[key], key);
+      var opt = new Option(map[key].label, key);
       if(String(key) === String(currentValue)){
         opt.selected = true;
         hasCurrent = true;
@@ -716,11 +819,34 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
     if(!hasCurrent){
       catEl.value = '';
     }
+
+    updateAmount();
+  }
+
+  function updateAmount(){
+    if(!amountEl){
+      return;
+    }
+
+    var mode = selectedMode();
+    var map = (mode && catsByMode[mode]) ? catsByMode[mode] : {};
+    var selected = catEl.value && map[catEl.value] ? map[catEl.value] : null;
+
+    if(selected && selected.fee){
+      amountEl.innerHTML = '<strong>Required Amount:</strong> ' + selected.fee;
+      amountEl.style.display = '';
+    }else{
+      amountEl.innerHTML = '';
+      amountEl.style.display = 'none';
+    }
   }
 
   document.addEventListener('change', function(e){
     if(e.target && e.target.name === modeName){
       rebuildOptions(selectedMode());
+    }
+    if(e.target && e.target.id === catId){
+      updateAmount();
     }
   });
 
