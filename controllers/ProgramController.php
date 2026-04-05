@@ -347,7 +347,6 @@ class ProgramController extends Controller
                     $publicUser->status = User::STATUS_ACTIVE;
                     $publicUser->generateAuthKey();
                     $publicUser->setPassword(Yii::$app->security->generateRandomString(16));
-                    $publicUser->generateEmailVerificationToken();
 
                     if(!$publicUser->save()){
                         Yii::$app->session->addFlash('error', 'Unable to prepare a public participant account for this email.');
