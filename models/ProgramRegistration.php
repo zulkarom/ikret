@@ -44,6 +44,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
     public $mentor_co;
     public $purata;
     public $achieve_name;
+    public $edit_password;
+    public $edit_password_confirm;
 
     /**
      * {@inheritdoc}
@@ -66,9 +68,30 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [self::getProgramRequiredFields(5), 'required', 'on' => 'program5'],
             [self::getProgramRequiredFields(6), 'required', 'on' => 'program6'],
             [self::getProgramRequiredFields(7), 'required', 'on' => 'program7'],
+            [self::getPublicRequiredFields(1, true), 'required', 'on' => 'public_program1_create'],
+            [self::getPublicRequiredFields(2, true), 'required', 'on' => 'public_program2_create'],
+            [self::getPublicRequiredFields(3, true), 'required', 'on' => 'public_program3_create'],
+            [self::getPublicRequiredFields(4, true), 'required', 'on' => 'public_program4_create'],
+            [self::getPublicRequiredFields(5, true), 'required', 'on' => 'public_program5_create'],
+            [self::getPublicRequiredFields(6, true), 'required', 'on' => 'public_program6_create'],
+            [self::getPublicRequiredFields(7, true), 'required', 'on' => 'public_program7_create'],
+            [self::getPublicRequiredFields(1, false), 'required', 'on' => 'public_program1_update'],
+            [self::getPublicRequiredFields(2, false), 'required', 'on' => 'public_program2_update'],
+            [self::getPublicRequiredFields(3, false), 'required', 'on' => 'public_program3_update'],
+            [self::getPublicRequiredFields(4, false), 'required', 'on' => 'public_program4_update'],
+            [self::getPublicRequiredFields(5, false), 'required', 'on' => 'public_program5_update'],
+            [self::getPublicRequiredFields(6, false), 'required', 'on' => 'public_program6_update'],
+            [self::getPublicRequiredFields(7, false), 'required', 'on' => 'public_program7_update'],
 
             [['user_id', 'program_id'], 'required', 'on' => 'draft'],
             [['project_name'], 'required', 'on' => 'draft'],
+
+            [['contact_email', 'edit_password', 'edit_password_confirm'], 'required', 'on' => ['public_create', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create']],
+            [['contact_email'], 'required', 'on' => ['public_update', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
+            [['edit_password'], 'required', 'on' => ['public_create', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create']],
+            [['edit_password'], 'string', 'min' => 4, 'on' => ['public_create', 'public_update', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
+            [['edit_password_confirm'], 'compare', 'compareAttribute' => 'edit_password', 'message' => 'Password / PIN confirmation does not match.', 'on' => ['public_create', 'public_update', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
+            [['contact_email'], 'validateUniquePublicEmail', 'on' => ['public_create', 'public_update', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
 
             [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award', 'participant_mode', 'participant_program'], 'integer'],
 
@@ -77,6 +100,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [['competition_cat_program'], 'integer'],
 
             [['contact_person', 'contact_no', 'contact_email'], 'string', 'max' => 255],
+
+            [['contact_email'], 'email'],
 
             [['institution', 'poster_file', 'abstract_file', 'video_link', 'payment_file', 'project_desc', 'booth_number', 'nric', 'other_program', 'group_code'], 'string'],
 
@@ -95,8 +120,22 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             ],
 
             [['poster_instance'], 'file',
-            'maxSize' => 1024 * 1024 * 5, // 5MB
+            'maxSize' => 1024 * 1024 * 15, // 15MB
             'extensions' => 'pdf, pptx, jpg, jpeg, png', 
+            ],
+
+            [['abstract_instance'], 'required',
+            'on' => ['public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update'],
+            'when' => function($model){
+                return empty($model->abstract_file);
+            },
+            ],
+
+            [['payment_instance'], 'required',
+            'on' => ['public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update'],
+            'when' => function($model){
+                return empty($model->payment_file);
+            },
             ],
 
             [['poster_instance'], 'required',
@@ -105,7 +144,9 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             },
             'whenClient' => 'function (attribute, value) {
   var el = document.querySelector("input[name=\"ProgramRegistration[participant_mode]\"]:checked");
-  return el && String(el.value) === "2";
+  var active = document.activeElement;
+  var isDraft = active && active.name === "action" && active.value === "draft";
+  return !isDraft && el && String(el.value) === "2";
 }',
             ],
 
@@ -117,6 +158,19 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [['participant_cat_program'], 'validateParticipantCatProgram'],
 
         ];
+    }
+
+    public function beforeValidate()
+    {
+        if(!parent::beforeValidate()){
+            return false;
+        }
+
+        if($this->contact_email){
+            $this->contact_email = $this->normalizeEmail($this->contact_email);
+        }
+
+        return true;
     }
 
     public function validateParticipantCatProgram($attribute, $params)
@@ -147,6 +201,29 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         if((int)$cat->is_active !== 1){
             $this->addError($attribute, 'Selected category is not active.');
             return;
+        }
+    }
+
+    public function validateUniquePublicEmail($attribute, $params)
+    {
+        if(!$this->$attribute || !$this->program_id){
+            return;
+        }
+
+        $query = self::find()
+            ->where([
+                'program_id' => (int)$this->program_id,
+                'contact_email' => $this->normalizeEmail($this->$attribute),
+            ]);
+
+        if(!$this->isNewRecord){
+            $query->andWhere(['<>', 'id', $this->id]);
+        }
+
+        $exists = $query->exists();
+
+        if($exists){
+            $this->addError($attribute, 'This email has already registered for this program. Please use the edit registration page.');
         }
     }
 
@@ -189,9 +266,35 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             'group_member' => 'Individual/ Group Members',
             'mentor_main' => 'Main Mentor (optional)',
             'mentor_co' => 'Co Mentor (optional)',
-            'group_code' => 'Group ID' //textinput
+            'group_code' => 'Group ID',
+            'edit_password' => 'Edit Password / PIN',
+            'edit_password_confirm' => 'Confirm Password / PIN'
             
         ];
+    }
+
+    public function setEditPassword($password)
+    {
+        $this->edit_password_hash = Yii::$app->security->generatePasswordHash($password);
+    }
+
+    public function validateEditPassword($password)
+    {
+        if(empty($this->edit_password_hash)){
+            return false;
+        }
+
+        return Yii::$app->security->validatePassword($password, $this->edit_password_hash);
+    }
+
+    public function hasEditPassword()
+    {
+        return !empty($this->edit_password_hash);
+    }
+
+    public function normalizeEmail($email)
+    {
+        return mb_strtolower(trim((string)$email));
     }
 
     public static function getStatusArray(){
@@ -262,6 +365,24 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
         }
         return $array;
+    }
+
+    public static function getPublicRequiredFields($program_id, $includePassword = true)
+    {
+        $fields = self::getProgramRequiredFields($program_id);
+
+        $fields = array_values(array_diff($fields, ['abstract_file', 'payment_file', 'poster_file']));
+
+        if(!in_array('contact_email', $fields)){
+            $fields[] = 'contact_email';
+        }
+
+        if($includePassword){
+            $fields[] = 'edit_password';
+            $fields[] = 'edit_password_confirm';
+        }
+
+        return array_values(array_unique($fields));
     }
 
     public static function getProgramFields($program_id){
@@ -388,6 +509,40 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         return (int)$row->show_matric === 1;
     }
 
+    public static function getProgramFieldLayouts($programId)
+    {
+        if(!class_exists(ProgramRegField::class)){
+            return [];
+        }
+
+        $rows = ProgramRegField::find()
+            ->where(['program_id' => (int)$programId, 'is_enabled' => 1])
+            ->all();
+
+        if(!$rows){
+            return [];
+        }
+
+        $layouts = [];
+        foreach($rows as $row){
+            $width = (int)$row->layout_width;
+            $layouts[$row->field_name] = $width === ProgramRegField::LAYOUT_HALF ? ProgramRegField::LAYOUT_HALF : ProgramRegField::LAYOUT_FULL;
+        }
+
+        return $layouts;
+    }
+
+    public static function getFieldColumnClass($programId, $fieldName, $default = 'col-12')
+    {
+        $layouts = self::getProgramFieldLayouts($programId);
+
+        if(!array_key_exists($fieldName, $layouts)){
+            return $default;
+        }
+
+        return (int)$layouts[$fieldName] === ProgramRegField::LAYOUT_HALF ? 'col-md-6' : 'col-12';
+    }
+
     public function getShortFields(){
         $program_id = $this->program_id;
         $array = [];
@@ -421,7 +576,15 @@ class ProgramRegistration extends \yii\db\ActiveRecord
 
     public function getParticipantText(){
         $kira = count($this->members);
-        $html = $this->user->fullname;
+        if($this->user){
+            $html = $this->user->fullname;
+        }else if(!empty($this->contact_person)){
+            $html = $this->contact_person;
+        }else if(!empty($this->contact_email)){
+            $html = $this->contact_email;
+        }else{
+            $html = 'Participant';
+        }
         if($kira > 1){
             $mem = $kira - 1;
             $html .= ' & ' . $mem . ' OTHERS';
@@ -837,7 +1000,15 @@ class ProgramRegistration extends \yii\db\ActiveRecord
      
         $inst_property = $type . '_instance';
         $attr_db = $type . '_file';
-        $name = Yii::$app->user->identity->matric . '_' . time();
+        $baseName = '';
+        if(!Yii::$app->user->isGuest && Yii::$app->user->identity && Yii::$app->user->identity->matric){
+            $baseName = Yii::$app->user->identity->matric;
+        }else if($this->contact_email){
+            $baseName = preg_replace('/[^a-zA-Z0-9]/', '_', $this->normalizeEmail($this->contact_email));
+        }else{
+            $baseName = 'public_reg';
+        }
+        $name = $baseName . '_' . time();
         $path =  $this->program_id . '/'.$type;
         $instance = UploadedFile::getInstance($this, $inst_property);
         if($instance){

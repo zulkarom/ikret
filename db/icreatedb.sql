@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Apr 04, 2026 at 09:32 AM
+-- Generation Time: Apr 04, 2026 at 08:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -292,6 +292,7 @@ CREATE TABLE `program` (
   `id` int(11) NOT NULL,
   `program_name` varchar(255) NOT NULL,
   `program_abbr` varchar(50) DEFAULT NULL,
+  `public_reg_enabled` tinyint(1) NOT NULL DEFAULT 1,
   `reg_info` text DEFAULT NULL,
   `payment_info` text NOT NULL,
   `payment_short` varchar(255) DEFAULT NULL,
@@ -305,14 +306,14 @@ CREATE TABLE `program` (
 -- Dumping data for table `program`
 --
 
-INSERT INTO `program` (`id`, `program_name`, `program_abbr`, `reg_info`, `payment_info`, `payment_short`, `has_sub`, `date_start`, `date_end`, `program_type`) VALUES
-(1, 'THE INITIATIVE FOR MEANINGFUL PROJECT AND COMMUNITY TRANSFORMATION (IMPACT)', 'IMPACT', '<div><span>The Initiative for Meaningful Project and Community Transformation (IMPACT) is a community project competition in conjunction with International Convention on Resourceful Entrepreneurs Achieving Tomorrow\'s Excellence (i-CREATE) where the students (participants), guided by their lecturer (advisor), showcase ideas or past community projects involved via poster presentation. The scope of the project is wide, including environmental initiatives, health awareness, arts, culture, education, skills development, community infrastructure, technology, social justice, etc. IMPACT was expected to involve participants from high institution students in the two stages of the competition.&nbsp;</span><span>Only shortlisted participants in the final stage.</span></div><div><span><br></span></div><div><span>Initial stage:&nbsp;</span></div><div><span>Date: 25th April - 23 May 2024&nbsp;</span></div><div><span>Venue: Online</span></div><div><br></div><div><span>Final Stage:</span></div><div><span>Date: 10th - 13th June 2024</span></div><div><span>Time: 8.30AM - 5.00PM</span></div><div><span>Venue: Universiti Malaysia Kelantan, City Campus.</span></div><div><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact +60134264975 (Nur A\'mirah binti Mohd Yaziz), IMPACT Director in conjunction with i-CREATE.</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>IMPACT</b></div></div>', '', '(Please upload the completed proof of payment and all information as shows in Attachment A, PDF format only)', 0, '2024-05-01', '2024-06-11', 1),
-(2, 'THE CARNIVAL OF MEGAPRENEURSHIP & INNOVATION (COMEI 3.0)', 'COME 3.0', '<div>Carnival of Megapreneurship &amp; Innovation (COMEI 3.0) will be held on 10th June 2024 until 13th June 2024 at UMK City Campus. There are seven (7) competitions will be held;&nbsp;\r\n<div>1. E-Preneur</div>\r\n<div>2. Business Idea Pitching</div>\r\n<div>3. Product Marketing Creative Video Competition</div>\r\n<div>4. Most Viable Student Venture</div>\r\n<div>5.&nbsp;Takaful Product Innovation</div>\r\n<div>6. TaxPro Idea Competition</div>\r\n<div>&nbsp;</div>\r\n<div>For any inquiries regarding the registration, please do not hesitate to email us at comei.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div>\r\n<div>&nbsp;</div>\r\n<div>Thank you.</div>\r\n<div>&nbsp;</div>\r\n<div>Regards,</div>\r\n<div><strong>THE COMMITTEE&nbsp;</strong></div>\r\n<div><strong>COMEI 3.0&nbsp;</strong></div>\r\n</div>', '', '(Please upload the proof payment here, in PDF ONLY)', 1, '2024-06-09', '2024-06-11', 1),
-(3, 'NASCENT ENTREPRENEURIAL WEEK (NEWEEK) 2024', 'NEWEEK', '<div>Nascent Entrepreneurial Week (NEWeek) will be held on <b>10th June 2024 until 13th June 2024 </b>at UMK City Campus.\r\n<div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;<br></div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>NEWEEK</b></div></div></div>', '', '', 0, '2024-06-10', '2024-06-13', 1),
-(4, 'THE ACCOUNTING, BANKING AND ISLAMIC FINANCE FESTIVAL (AIFIF)', 'AIFIF', '<div><div><span><b>Calling all accounting and finance enthusiasts!</b></span></div><span><div><span><br></span></div>The Accounting, Banking and\nIslamic Finance Festival (AIFIF) is happening</span>&nbsp;on 12th June 2024 (Wednesday) at the DTK,&nbsp; UMK City Campus. This exciting event features forum, seminar, sharing session, booth and exhibition designed to equip you with valuable financial knowledge and career insights.<div><br></div><div><b>Event Highlights:</b></div><div><ul><li><span style=\"font-weight:700\">Forum </span>titled&nbsp;Strategic Financial Management and Cultivating Financial Stability</li><li><span style=\"font-weight:700\">Seminar </span>titled&nbsp;Trailblazing your Career: Industry Trends and Taxation Tips</li><li><b>Booth and Exhibition</b>&nbsp;from Accounting, Banking, and Islamic Financial Institutions</li><li><b>Sharing Sessions</b> from selected Industries</li></ul><div><p><span style=\"font-weight:700\">Registration Fees:</span></p><ul><li>UMK Students: RM 5</li><li>Non-UMK Students: RM 10</li></ul><p><span style=\"font-weight:700\">Registration Deadline:</span> 15th May 2024</p><p><span style=\"font-weight:700\">Please note:</span><span> Registration fees are non-refundable.</span><br></p><p><span style=\"font-weight:700\">For Inquiries:</span></p><ul><li>Email: icreate.fkp@umk.edu.my</li><li>Contact Person: Dr. Amira binti Jamil (+60102540101)</li></ul><p><span style=\"font-weight:700\">Don\'t miss this opportunity to:</span></p><ul><li>Gain insights into strategic financial management and financial stability.</li><li>Learn about current industry trends and valuable taxation tips.</li><li>Network with other finance professionals.</li><li>Submit your resumes and CV for internships or job placements</li><li>Chance to win Lucky Draw prizes !</li></ul><p><span style=\"font-weight:700\">Register today and take the first step towards a successful career in finance!</span></p><p><span style=\"font-weight:700\">Organized by:</span></p><p>THE COMMITTEE\nAIFIF</p></div></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 0, '2024-06-12', '2024-07-17', 2),
-(5, 'REVOLUTIONIZING IDEAS AND STARTUP EXCELLENCE (RISE)', 'RISE', '<div><span>Revolutionizing Ideas and Startup Excellence (RISE)</span>&nbsp;will be held on 10th June 2024 until 13th June 2024 at UMK City Campus.\n<div><br></div>\n<div>The registration fee for this competition are:</div><div>i. RM 10 / group participant</div><div>ii.&nbsp;RM5 / individual participant.&nbsp;</div><div><br></div><div>Kindly make the payment latest by&nbsp;<b>30th May 2024</b>&nbsp;via:</div><div><b>Account Holder: Universiti Malaysia Kelantan</b></div><div><b>Account Number: 553038019271</b></div><div><b>Bank: Maybank Berhad</b></div><div><b>Reference: RISE</b><b>&nbsp;ICREATE</b></div><div><br></div><div>Please note that this registration fee in&nbsp;<b>not refundable.&nbsp;</b></div><div>The method of payment is&nbsp;<b>online transfer&nbsp;</b>only.&nbsp;</div><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>RISE</b></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 1, '2024-06-11', '2024-06-12', 1),
-(6, 'THE JOM FRANCHISE EXHIBITION DAY (JFED)', 'JFED', '<div>Jom Franchise Exhibition Poster will be held from 9th June 2024 until 10th June 2024 at UMK City Campus. Students are required to present the Franchise Plan project during the exhibition. There are 6 awards/achievements available:<div>a. Gold</div><div>b. Silver</div><div>c. Bronze</div><div>d. Best Franchise Poster Award</div><div>e. Best Franchise Pitching Award</div><div>f. Best Franchise Business Idea Award</div><div><br><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><strong>THE COMMITTEE&nbsp;</strong></div><div><strong>JFED</strong></div></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 0, '2024-06-10', '2024-06-10', 1),
-(7, 'I-CREATE International STEMpreneur & EduTech Innovation Challenge 2026 (IISEIC)', 'IISEIC', '<h2>About IISEIC 2026</h2>\r\n<p>IISEIC 2026 is an international innovation competition open to students, educators, professionals, and global participants to showcase transformative ideas that shape the future of learning, technology, business, and sustainability.</p>', '', NULL, 0, '2026-05-09', '2026-05-13', 1);
+INSERT INTO `program` (`id`, `program_name`, `program_abbr`, `public_reg_enabled`, `reg_info`, `payment_info`, `payment_short`, `has_sub`, `date_start`, `date_end`, `program_type`) VALUES
+(1, 'THE INITIATIVE FOR MEANINGFUL PROJECT AND COMMUNITY TRANSFORMATION (IMPACT)', 'IMPACT', 0, '<div><span>The Initiative for Meaningful Project and Community Transformation (IMPACT) is a community project competition in conjunction with International Convention on Resourceful Entrepreneurs Achieving Tomorrow\'s Excellence (i-CREATE) where the students (participants), guided by their lecturer (advisor), showcase ideas or past community projects involved via poster presentation. The scope of the project is wide, including environmental initiatives, health awareness, arts, culture, education, skills development, community infrastructure, technology, social justice, etc. IMPACT was expected to involve participants from high institution students in the two stages of the competition.&nbsp;</span><span>Only shortlisted participants in the final stage.</span></div><div><span><br></span></div><div><span>Initial stage:&nbsp;</span></div><div><span>Date: 25th April - 23 May 2024&nbsp;</span></div><div><span>Venue: Online</span></div><div><br></div><div><span>Final Stage:</span></div><div><span>Date: 10th - 13th June 2024</span></div><div><span>Time: 8.30AM - 5.00PM</span></div><div><span>Venue: Universiti Malaysia Kelantan, City Campus.</span></div><div><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact +60134264975 (Nur A\'mirah binti Mohd Yaziz), IMPACT Director in conjunction with i-CREATE.</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>IMPACT</b></div></div>', '', '(Please upload the completed proof of payment and all information as shows in Attachment A, PDF format only)', 0, '2024-05-01', '2024-06-11', 1),
+(2, 'THE CARNIVAL OF MEGAPRENEURSHIP & INNOVATION (COMEI 3.0)', 'COME 3.0', 0, '<div>Carnival of Megapreneurship &amp; Innovation (COMEI 3.0) will be held on 10th June 2024 until 13th June 2024 at UMK City Campus. There are seven (7) competitions will be held;&nbsp;\r\n<div>1. E-Preneur</div>\r\n<div>2. Business Idea Pitching</div>\r\n<div>3. Product Marketing Creative Video Competition</div>\r\n<div>4. Most Viable Student Venture</div>\r\n<div>5.&nbsp;Takaful Product Innovation</div>\r\n<div>6. TaxPro Idea Competition</div>\r\n<div>&nbsp;</div>\r\n<div>For any inquiries regarding the registration, please do not hesitate to email us at comei.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div>\r\n<div>&nbsp;</div>\r\n<div>Thank you.</div>\r\n<div>&nbsp;</div>\r\n<div>Regards,</div>\r\n<div><strong>THE COMMITTEE&nbsp;</strong></div>\r\n<div><strong>COMEI 3.0&nbsp;</strong></div>\r\n</div>', '', '(Please upload the proof payment here, in PDF ONLY)', 1, '2024-06-09', '2024-06-11', 1),
+(3, 'NASCENT ENTREPRENEURIAL WEEK (NEWEEK) 2024', 'NEWEEK', 0, '<div>Nascent Entrepreneurial Week (NEWeek) will be held on <b>10th June 2024 until 13th June 2024 </b>at UMK City Campus.\r\n<div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;<br></div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>NEWEEK</b></div></div></div>', '', '', 0, '2024-06-10', '2024-06-13', 1),
+(4, 'THE ACCOUNTING, BANKING AND ISLAMIC FINANCE FESTIVAL (AIFIF)', 'AIFIF', 0, '<div><div><span><b>Calling all accounting and finance enthusiasts!</b></span></div><span><div><span><br></span></div>The Accounting, Banking and\nIslamic Finance Festival (AIFIF) is happening</span>&nbsp;on 12th June 2024 (Wednesday) at the DTK,&nbsp; UMK City Campus. This exciting event features forum, seminar, sharing session, booth and exhibition designed to equip you with valuable financial knowledge and career insights.<div><br></div><div><b>Event Highlights:</b></div><div><ul><li><span style=\"font-weight:700\">Forum </span>titled&nbsp;Strategic Financial Management and Cultivating Financial Stability</li><li><span style=\"font-weight:700\">Seminar </span>titled&nbsp;Trailblazing your Career: Industry Trends and Taxation Tips</li><li><b>Booth and Exhibition</b>&nbsp;from Accounting, Banking, and Islamic Financial Institutions</li><li><b>Sharing Sessions</b> from selected Industries</li></ul><div><p><span style=\"font-weight:700\">Registration Fees:</span></p><ul><li>UMK Students: RM 5</li><li>Non-UMK Students: RM 10</li></ul><p><span style=\"font-weight:700\">Registration Deadline:</span> 15th May 2024</p><p><span style=\"font-weight:700\">Please note:</span><span> Registration fees are non-refundable.</span><br></p><p><span style=\"font-weight:700\">For Inquiries:</span></p><ul><li>Email: icreate.fkp@umk.edu.my</li><li>Contact Person: Dr. Amira binti Jamil (+60102540101)</li></ul><p><span style=\"font-weight:700\">Don\'t miss this opportunity to:</span></p><ul><li>Gain insights into strategic financial management and financial stability.</li><li>Learn about current industry trends and valuable taxation tips.</li><li>Network with other finance professionals.</li><li>Submit your resumes and CV for internships or job placements</li><li>Chance to win Lucky Draw prizes !</li></ul><p><span style=\"font-weight:700\">Register today and take the first step towards a successful career in finance!</span></p><p><span style=\"font-weight:700\">Organized by:</span></p><p>THE COMMITTEE\nAIFIF</p></div></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 0, '2024-06-12', '2024-07-17', 2),
+(5, 'REVOLUTIONIZING IDEAS AND STARTUP EXCELLENCE (RISE)', 'RISE', 0, '<div><span>Revolutionizing Ideas and Startup Excellence (RISE)</span>&nbsp;will be held on 10th June 2024 until 13th June 2024 at UMK City Campus.\n<div><br></div>\n<div>The registration fee for this competition are:</div><div>i. RM 10 / group participant</div><div>ii.&nbsp;RM5 / individual participant.&nbsp;</div><div><br></div><div>Kindly make the payment latest by&nbsp;<b>30th May 2024</b>&nbsp;via:</div><div><b>Account Holder: Universiti Malaysia Kelantan</b></div><div><b>Account Number: 553038019271</b></div><div><b>Bank: Maybank Berhad</b></div><div><b>Reference: RISE</b><b>&nbsp;ICREATE</b></div><div><br></div><div>Please note that this registration fee in&nbsp;<b>not refundable.&nbsp;</b></div><div>The method of payment is&nbsp;<b>online transfer&nbsp;</b>only.&nbsp;</div><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><b>THE COMMITTEE&nbsp;</b></div><div><b>RISE</b></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 1, '2024-06-11', '2024-06-12', 1),
+(6, 'THE JOM FRANCHISE EXHIBITION DAY (JFED)', 'JFED', 0, '<div>Jom Franchise Exhibition Poster will be held from 9th June 2024 until 10th June 2024 at UMK City Campus. Students are required to present the Franchise Plan project during the exhibition. There are 6 awards/achievements available:<div>a. Gold</div><div>b. Silver</div><div>c. Bronze</div><div>d. Best Franchise Poster Award</div><div>e. Best Franchise Pitching Award</div><div>f. Best Franchise Business Idea Award</div><div><br><div><br></div><div>For any inquiries regarding the registration, please do not hesitate to email us at icreate.fkp@umk.edu.my or directly contact your respective lecturer.&nbsp;</div><div><br></div><div>Thank you.</div><div><br></div><div>Regards,</div><div><strong>THE COMMITTEE&nbsp;</strong></div><div><strong>JFED</strong></div></div></div>', '', '(Please upload the proof payment here, in PDF ONLY)', 0, '2024-06-10', '2024-06-10', 1),
+(7, 'I-CREATE International STEMpreneur & EduTech Innovation Challenge 2026 (IISEIC)', 'IISEIC', 1, '<h2>About IISEIC 2026</h2>\r\n<p>IISEIC 2026 is an international innovation competition open to students, educators, professionals, and global participants to showcase transformative ideas that shape the future of learning, technology, business, and sustainability.</p>', '', NULL, 0, '2026-05-09', '2026-05-13', 1);
 
 -- --------------------------------------------------------
 
@@ -402,7 +403,8 @@ CREATE TABLE `program_reg` (
   `institution` text DEFAULT NULL,
   `contact_person` varchar(255) DEFAULT NULL,
   `contact_no` varchar(255) DEFAULT NULL,
-  `contact_email` varchar(255) DEFAULT NULL,
+  `contact_email` varchar(255) NOT NULL,
+  `edit_password_hash` varchar(255) DEFAULT NULL,
   `project_desc` text DEFAULT NULL,
   `competition_type` tinyint(1) DEFAULT NULL COMMENT '1=ideation, 2 implementation',
   `poster_file` text DEFAULT NULL,
@@ -421,8 +423,8 @@ CREATE TABLE `program_reg` (
 -- Dumping data for table `program_reg`
 --
 
-INSERT INTO `program_reg` (`id`, `user_id`, `program_id`, `program_sub`, `project_name`, `participant_cat_program`, `competition_cat_program`, `nric`, `status`, `group_code`, `group_name`, `booth_number`, `participant_cat_local`, `participant_cat_group`, `participant_cat_umk`, `participant_mode`, `participant_program`, `other_program`, `advisor`, `advisor_dropdown`, `institution`, `contact_person`, `contact_no`, `contact_email`, `project_desc`, `competition_type`, `poster_file`, `abstract_file`, `payment_file`, `score`, `award`, `flag`, `created_at`, `updated_at`, `submitted_at`, `video_link`) VALUES
-(864, 336, 7, NULL, 'dfafsdf', NULL, NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, NULL, 2, NULL, NULL, NULL, NULL, '', '', '', '', NULL, NULL, '7/poster/01619A_1775114100.pdf', NULL, NULL, NULL, NULL, 0, 1775114100, 1775114100, NULL, '');
+INSERT INTO `program_reg` (`id`, `user_id`, `program_id`, `program_sub`, `project_name`, `participant_cat_program`, `competition_cat_program`, `nric`, `status`, `group_code`, `group_name`, `booth_number`, `participant_cat_local`, `participant_cat_group`, `participant_cat_umk`, `participant_mode`, `participant_program`, `other_program`, `advisor`, `advisor_dropdown`, `institution`, `contact_person`, `contact_no`, `contact_email`, `edit_password_hash`, `project_desc`, `competition_type`, `poster_file`, `abstract_file`, `payment_file`, `score`, `award`, `flag`, `created_at`, `updated_at`, `submitted_at`, `video_link`) VALUES
+(867, 336, 7, NULL, 'asdf', 2, 3, NULL, 10, NULL, NULL, NULL, 1, NULL, NULL, 1, NULL, NULL, NULL, NULL, 'aasd', 'Ahmad Zarif', 'asd', 'zul@umk.edu.my', '$2y$13$JO1e7tOOMLkV5pA10bsGWuqOeP9oUZF2vT718EO52yQWuCMlW90Ji', NULL, NULL, NULL, '7/abstract/zul_umk_edu_my_1775325576.docx', '7/payment/zul_umk_edu_my_1775325576.pdf', NULL, NULL, 0, 1775325576, 1775326747, '2026-04-05 01:59:36', '');
 
 -- --------------------------------------------------------
 
@@ -449,6 +451,7 @@ CREATE TABLE `program_reg_field` (
   `field_name` varchar(64) NOT NULL,
   `is_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `is_required` tinyint(1) NOT NULL DEFAULT 0,
+  `layout_width` tinyint(2) NOT NULL DEFAULT 12,
   `show_matric` tinyint(1) NOT NULL DEFAULT 1,
   `sort_order` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -457,44 +460,44 @@ CREATE TABLE `program_reg_field` (
 -- Dumping data for table `program_reg_field`
 --
 
-INSERT INTO `program_reg_field` (`id`, `program_id`, `field_name`, `is_enabled`, `is_required`, `show_matric`, `sort_order`) VALUES
-(1, 7, 'participant_mode', 1, 1, 1, 10),
-(2, 7, 'participant_cat_program', 1, 0, 1, 20),
-(3, 7, 'competition_cat_program', 1, 0, 1, 30),
-(4, 7, 'group_member', 1, 1, 0, 40),
-(5, 7, 'institution', 1, 1, 1, 50),
-(6, 1, 'project_name', 0, 0, 1, 0),
-(7, 1, 'project_desc', 0, 0, 1, 0),
-(8, 1, 'participant_cat_local', 0, 0, 1, 0),
-(9, 1, 'participant_cat_group', 0, 0, 1, 0),
-(10, 1, 'participant_mode', 0, 0, 1, 0),
-(11, 1, 'participant_cat_umk', 0, 0, 1, 0),
-(12, 1, 'participant_program', 0, 0, 1, 0),
-(13, 1, 'other_program', 0, 0, 1, 0),
-(14, 1, 'program_sub', 0, 0, 1, 0),
-(15, 1, 'advisor_dropdown', 0, 0, 1, 0),
-(16, 1, 'booth_number', 0, 0, 1, 0),
-(17, 1, 'advisor', 0, 0, 1, 0),
-(18, 1, 'institution', 0, 0, 1, 0),
-(19, 1, 'group_member', 0, 0, 0, 0),
-(20, 1, 'group_code', 0, 0, 1, 0),
-(21, 1, 'group_name', 0, 0, 1, 0),
-(22, 1, 'mentor_main', 0, 0, 1, 0),
-(23, 1, 'mentor_co', 0, 0, 1, 0),
-(24, 1, 'poster_file', 0, 0, 1, 0),
-(25, 1, 'payment_file', 0, 0, 1, 0),
-(26, 1, 'nric', 0, 0, 1, 0),
-(27, 1, 'competition_type', 0, 0, 1, 0),
-(28, 1, 'participant_cat_program', 0, 0, 1, 0),
-(29, 1, 'competition_cat_program', 0, 0, 1, 0),
-(30, 7, 'contact_person', 1, 1, 1, 55),
-(31, 7, 'contact_no', 1, 1, 1, 56),
-(32, 7, 'contact_email', 1, 1, 1, 57),
-(33, 7, 'project_name', 1, 1, 1, 5),
-(34, 7, 'abstract_file', 1, 1, 1, 60),
-(35, 7, 'poster_file', 1, 1, 1, 70),
-(36, 7, 'video_link', 1, 0, 1, 80),
-(37, 7, 'payment_file', 1, 1, 1, 90);
+INSERT INTO `program_reg_field` (`id`, `program_id`, `field_name`, `is_enabled`, `is_required`, `layout_width`, `show_matric`, `sort_order`) VALUES
+(1, 7, 'participant_mode', 1, 1, 12, 1, 10),
+(2, 7, 'participant_cat_program', 1, 0, 6, 1, 20),
+(3, 7, 'competition_cat_program', 1, 0, 6, 1, 30),
+(4, 7, 'group_member', 1, 1, 12, 0, 40),
+(5, 7, 'institution', 1, 1, 6, 1, 50),
+(6, 1, 'project_name', 0, 0, 12, 1, 0),
+(7, 1, 'project_desc', 0, 0, 12, 1, 0),
+(8, 1, 'participant_cat_local', 0, 0, 12, 1, 0),
+(9, 1, 'participant_cat_group', 0, 0, 12, 1, 0),
+(10, 1, 'participant_mode', 0, 0, 12, 1, 0),
+(11, 1, 'participant_cat_umk', 0, 0, 12, 1, 0),
+(12, 1, 'participant_program', 0, 0, 12, 1, 0),
+(13, 1, 'other_program', 0, 0, 12, 1, 0),
+(14, 1, 'program_sub', 0, 0, 12, 1, 0),
+(15, 1, 'advisor_dropdown', 0, 0, 12, 1, 0),
+(16, 1, 'booth_number', 0, 0, 12, 1, 0),
+(17, 1, 'advisor', 0, 0, 12, 1, 0),
+(18, 1, 'institution', 0, 0, 12, 1, 0),
+(19, 1, 'group_member', 0, 0, 12, 0, 0),
+(20, 1, 'group_code', 0, 0, 12, 1, 0),
+(21, 1, 'group_name', 0, 0, 12, 1, 0),
+(22, 1, 'mentor_main', 0, 0, 12, 1, 0),
+(23, 1, 'mentor_co', 0, 0, 12, 1, 0),
+(24, 1, 'poster_file', 0, 0, 12, 1, 0),
+(25, 1, 'payment_file', 0, 0, 12, 1, 0),
+(26, 1, 'nric', 0, 0, 12, 1, 0),
+(27, 1, 'competition_type', 0, 0, 12, 1, 0),
+(28, 1, 'participant_cat_program', 0, 0, 12, 1, 0),
+(29, 1, 'competition_cat_program', 0, 0, 12, 1, 0),
+(30, 7, 'contact_person', 1, 1, 6, 1, 55),
+(31, 7, 'contact_no', 1, 1, 6, 1, 56),
+(32, 7, 'contact_email', 1, 1, 6, 1, 57),
+(33, 7, 'project_name', 1, 1, 12, 1, 5),
+(34, 7, 'abstract_file', 1, 1, 12, 1, 60),
+(35, 7, 'poster_file', 1, 1, 12, 1, 70),
+(36, 7, 'video_link', 1, 0, 12, 1, 80),
+(37, 7, 'payment_file', 1, 1, 12, 1, 90);
 
 -- --------------------------------------------------------
 
@@ -540,7 +543,8 @@ CREATE TABLE `program_reg_member` (
 --
 
 INSERT INTO `program_reg_member` (`id`, `program_reg_id`, `member_name`, `member_matric`) VALUES
-(4020, 864, 'ZUL KARAMI BIN CHE MUSA', NULL);
+(4042, 867, 'ZUL@UMK.EDU.MY', NULL),
+(4043, 867, '776U67868U', NULL);
 
 -- --------------------------------------------------------
 
@@ -1237,7 +1241,7 @@ CREATE TABLE `setting` (
 --
 
 INSERT INTO `setting` (`id`, `allow_cert_from`, `allow_edit_reg_until`, `date_start`, `date_end`) VALUES
-(1, '2024-07-16', '2024-07-17', '2025-03-09', '2026-05-24');
+(1, '2024-07-16', '2026-07-01', '2025-03-09', '2026-05-24');
 
 -- --------------------------------------------------------
 
@@ -1428,6 +1432,7 @@ ALTER TABLE `program_method`
 --
 ALTER TABLE `program_reg`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_program_reg_program_email` (`program_id`,`contact_email`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `program_id` (`program_id`),
   ADD KEY `program_sub` (`program_sub`);
@@ -1643,7 +1648,7 @@ ALTER TABLE `program_method`
 -- AUTO_INCREMENT for table `program_reg`
 --
 ALTER TABLE `program_reg`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=865;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=868;
 
 --
 -- AUTO_INCREMENT for table `program_reg_achieve`
@@ -1667,7 +1672,7 @@ ALTER TABLE `program_reg_jury`
 -- AUTO_INCREMENT for table `program_reg_member`
 --
 ALTER TABLE `program_reg_member`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4021;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4044;
 
 --
 -- AUTO_INCREMENT for table `program_reg_mentor`

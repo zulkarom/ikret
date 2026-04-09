@@ -19,6 +19,7 @@ use app\models\Program;
 use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
 use app\models\ProgramRubric;
+use app\models\PublicRegistrationAccessForm;
 use app\models\Questionnaire;
 use app\models\QuestionnaireAnswer;
 use app\models\QuestionnaireAnswerPost;
@@ -27,6 +28,7 @@ use app\models\RubricAnswer;
 use app\models\Session;
 use app\models\Setting;
 use app\models\Upload;
+use app\models\User;
 use app\models\UserRole;
 use yii\db\Expression;
 use yii\db\Query;
@@ -45,6 +47,11 @@ class ProgramController extends Controller
             'access' => [
                 'class' => \yii\filters\AccessControl::className(),
                 'rules' => [
+                    [
+                        'actions' => ['public-programs', 'public-register-form', 'public-register', 'public-edit-login', 'public-edit-auth', 'public-view-register', 'download-poster-file', 'download-payment-file', 'download-abstract-file'],
+                        'allow' => true,
+                        'roles' => ['?', '@'],
+                    ],
                     [
                         'allow' => true,
                         'roles' => ['@'],
@@ -116,6 +123,29 @@ class ProgramController extends Controller
 
         return $this->render('info',[
             'model' => $model
+        ]);
+    }
+
+    public function actionPublicRegistrationSettings()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+
+        $programs = Program::find()->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        if(Yii::$app->request->isPost){
+            $postPrograms = Yii::$app->request->post('Program', []);
+
+            foreach($programs as $program){
+                $program->public_reg_enabled = isset($postPrograms[$program->id]['public_reg_enabled']) ? (int)$postPrograms[$program->id]['public_reg_enabled'] : 0;
+                $program->save(false, ['public_reg_enabled']);
+            }
+
+            Yii::$app->session->addFlash('success', 'Public registration settings have been updated.');
+            return $this->refresh();
+        }
+
+        return $this->render('public_registration_settings', [
+            'programs' => $programs,
         ]);
     }
 
@@ -216,6 +246,258 @@ class ProgramController extends Controller
             'members' => [new Member()],
             'demo' => true,
             'edit' => false,
+        ]);
+    }
+
+    public function actionPublicRegisterForm($id, $reg = null, $edit = false)
+    {
+        $model = $this->findModel($id);
+        $defaultMember = new Member();
+        $members = [$defaultMember];
+
+        if($reg){
+            $register = $this->findRegistration($reg);
+            $this->ensurePublicRegistrationAccess($register, $id);
+            $members = $register->members;
+            if(empty($members)){
+                $members = [new Member()];
+            }
+        }else{
+            $this->ensurePublicRegistrationEnabled($model);
+            $register = new ProgramRegistration();
+            $register->program_id = $model->id;
+            $register->status = 0;
+        }
+
+        return $this->render('register', [
+            'model' => $model,
+            'register' => $register,
+            'err' => false,
+            'members' => $members,
+            'demo' => false,
+            'edit' => $edit,
+            'publicMode' => true,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+        ]);
+    }
+
+    public function actionPublicPrograms()
+    {
+        $programs = Program::listPublicPrograms();
+
+        return $this->render('public_programs', [
+            'programs' => $programs,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+        ]);
+    }
+
+    public function actionPublicRegister()
+    {
+        $id = Yii::$app->request->post('program_id');
+        $reg = Yii::$app->request->post('reg_id');
+        $edit = (bool)Yii::$app->request->post('edit');
+        $model = $this->findModel($id);
+        $defaultMember = new Member();
+
+        if($reg){
+            $register = $this->findRegistration($reg);
+            $this->ensurePublicRegistrationAccess($register, $id);
+            $members = $register->members;
+            if(empty($members)){
+                $members = [new Member()];
+            }
+        }else{
+            $this->ensurePublicRegistrationEnabled($model);
+            $register = new ProgramRegistration();
+            $register->program_id = $model->id;
+            $register->status = 0;
+            $members = [$defaultMember];
+        }
+
+        $isUpdate = !$register->isNewRecord;
+        $register->scenario = 'public_program' . $id . ($isUpdate ? '_update' : '_create');
+
+        if($register->load(Yii::$app->request->post())){
+            $register->status = 10;
+            if(!$isUpdate){
+                $register->submitted_at = new Expression('NOW()');
+                $register->created_at = time();
+            }
+            $register->updated_at = time();
+            $register->group_member = 1;
+            $register->project_name = $this->myTrim($register->project_name);
+
+            $register->abstract_instance = \yii\web\UploadedFile::getInstance($register, 'abstract_instance');
+            $register->poster_instance = \yii\web\UploadedFile::getInstance($register, 'poster_instance');
+            $register->payment_instance = \yii\web\UploadedFile::getInstance($register, 'payment_instance');
+
+            if(!$isUpdate && $register->edit_password){
+                $register->setEditPassword($register->edit_password);
+            }
+
+            if(!$isUpdate && empty($register->user_id) && $register->contact_email){
+                $publicUser = User::findByEmail($register->contact_email);
+
+                if(!$publicUser){
+                    $publicUser = new User();
+                    $publicUser->scenario = 'create';
+                    $publicUser->email = $register->contact_email;
+                    $publicUser->username = $register->contact_email;
+                    $publicUser->fullname = $register->contact_person ?: $register->contact_email;
+                    $publicUser->status = User::STATUS_ACTIVE;
+                    $publicUser->generateAuthKey();
+                    $publicUser->setPassword(Yii::$app->security->generateRandomString(16));
+
+                    if(!$publicUser->save()){
+                        Yii::$app->session->addFlash('error', 'Unable to prepare a public participant account for this email.');
+
+                        return $this->render('register', [
+                            'model' => $model,
+                            'register' => $register,
+                            'err' => true,
+                            'members' => (empty($members)) ? [$defaultMember] : $members,
+                            'demo' => false,
+                            'edit' => $edit,
+                            'publicMode' => true,
+                            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+                        ]);
+                    }
+                }
+
+                $register->user_id = $publicUser->id;
+            }
+
+            if($isUpdate){
+                $oldIDs = ArrayHelper::map($members, 'id', 'id');
+            }
+
+            $members = Model::createMultiple(Member::class);
+            Model::loadMultiple($members, Yii::$app->request->post());
+
+            if($isUpdate){
+                $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($members, 'id', 'id')));
+            }
+
+            $valid = $register->validate();
+            $valid = Model::validateMultiple($members) && $valid;
+
+            if($valid){
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    $register->uploadFile('payment');
+                    $register->uploadFile('poster');
+                    $register->uploadFile('abstract');
+
+                    if($flag = $register->save(false)) {
+                        if($isUpdate && !empty($deletedIDs)) {
+                            Member::deleteAll(['id' => $deletedIDs]);
+                        }
+
+                        foreach ($members as $i => $member) {
+                            if ($flag === false) {
+                                break;
+                            }
+
+                            $member->member_name = strtoupper($member->member_name);
+                            $member->program_reg_id = $register->id;
+
+                            if (!($flag = $member->save(false))) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if($flag){
+                        $transaction->commit();
+                        $this->grantPublicRegistrationAccess($register);
+                        Yii::$app->session->addFlash('success', $isUpdate ? 'The information has been successfully updated.' : 'Registration successful.');
+                        if(Yii::$app->request->post('storage_entry')){
+                            return $this->render('view_register', [
+                                'model' => $model,
+                                'register' => $register,
+                                'members' => $register->members,
+                                'edit' => false,
+                                'publicMode' => true,
+                                'storageEntry' => true,
+                            ]);
+                        }
+                        return $this->redirect(['public-view-register', 'id' => $register->program_id, 'reg' => $register->id]);
+                    }
+
+                    $transaction->rollBack();
+                } catch (\Exception $e) {
+                    Yii::$app->session->addFlash('error', $e->getMessage());
+                    $transaction->rollBack();
+                }
+            } else {
+                Yii::$app->session->addFlash('error', 'Please correct the highlighted fields and try again.');
+            }
+        }
+
+        return $this->render('register', [
+            'model' => $model,
+            'register' => $register,
+            'err' => true,
+            'members' => (empty($members)) ? [$defaultMember] : $members,
+            'demo' => false,
+            'edit' => $edit,
+            'publicMode' => true,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+        ]);
+    }
+
+    public function actionPublicEditLogin($id)
+    {
+        $model = $this->findModel($id);
+        $accessForm = new PublicRegistrationAccessForm();
+
+        return $this->render('public_edit_login', [
+            'model' => $model,
+            'accessForm' => $accessForm,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+        ]);
+    }
+
+    public function actionPublicEditAuth($id)
+    {
+        $model = $this->findModel($id);
+        $accessForm = new PublicRegistrationAccessForm();
+
+        if($accessForm->load(Yii::$app->request->post())){
+            $registration = $accessForm->loadRegistration($id);
+
+            if($accessForm->validate()){
+                $this->grantPublicRegistrationAccess($registration);
+                Yii::$app->session->addFlash('success', 'Edit access granted.');
+                if(Yii::$app->request->post('storage_entry')){
+                    return $this->actionPublicRegisterForm($id, $registration->id, true);
+                }
+                return $this->redirect(['public-register-form', 'id' => $id, 'reg' => $registration->id, 'edit' => 1]);
+            }
+
+            Yii::$app->session->addFlash('error', 'Incorrect email or password / PIN.');
+        }
+
+        return $this->render('public_edit_login', [
+            'model' => $model,
+            'accessForm' => $accessForm,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+        ]);
+    }
+
+    public function actionPublicViewRegister($id, $reg)
+    {
+        $model = $this->findModel($id);
+        $register = $this->findRegistration($reg);
+        $this->ensurePublicRegistrationAccess($register, $id);
+
+        return $this->render('view_register', [
+            'model' => $model,
+            'register' => $register,
+            'members' => $register->members,
+            'edit' => false,
+            'publicMode' => true,
+            'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
         ]);
     }
 
@@ -598,14 +880,7 @@ class ProgramController extends Controller
                                 Yii::$app->session->addFlash('success', "The information has been successfully updated.");
                             }
 
-                            return $this->render('_post_redirect', [
-                                'url' => Yii::$app->urlManager->createUrl(['storage/index']),
-                                'data' => [
-                                    'program_id' => $register->program_id,
-                                    'reg_id' => $register->id,
-                                    'edit' => $edit,
-                                ],
-                            ]);
+                            return $this->redirect(['view-register', 'id' => $register->program_id, 'reg' => $register->id]);
                             
     
                         } else {
@@ -792,10 +1067,11 @@ class ProgramController extends Controller
 
         }
         
-        return $this->render('register', [
+        return $this->render('view_register', [
             'model' => $model,
             'register' => $register,
-            'members' => (empty($members)) ? [new Member()] : $members
+            'members' => (empty($members)) ? [new Member()] : $members,
+            'edit' => false,
         ]);
     }
 
@@ -813,6 +1089,36 @@ class ProgramController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function publicRegistrationSessionKey($registrationId)
+    {
+        return 'public_reg_access_' . (int)$registrationId;
+    }
+
+    protected function grantPublicRegistrationAccess($registration)
+    {
+        Yii::$app->session->set($this->publicRegistrationSessionKey($registration->id), 1);
+    }
+
+    protected function hasPublicRegistrationAccess($registration)
+    {
+        return (bool)Yii::$app->session->get($this->publicRegistrationSessionKey($registration->id), false);
+    }
+
+    protected function ensurePublicRegistrationAccess($registration, $programId)
+    {
+        if((int)$registration->program_id !== (int)$programId || !$this->hasPublicRegistrationAccess($registration)){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+    }
+
+    protected function ensurePublicRegistrationEnabled($program)
+    {
+        if((int)$program->public_reg_enabled !== 1){
+            Yii::$app->session->addFlash('error', 'Public registration is currently closed for this program.');
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
     }
 
     protected function findRubric($id)
@@ -892,17 +1198,27 @@ class ProgramController extends Controller
 
     public function actionDownloadPosterFile($id){
         $model = $this->findRegistration($id);
+        $this->authorizeRegistrationDownload($model);
         Upload::download($model, 'poster', 'Poster_iCreate');
     }
 
     public function actionDownloadPaymentFile($id){
         $model = $this->findRegistration($id);
+        $this->authorizeRegistrationDownload($model);
         Upload::download($model, 'payment', 'Payment_iCreate');
     }
 
     public function actionDownloadAbstractFile($id){
         $model = $this->findRegistration($id);
+        $this->authorizeRegistrationDownload($model);
         Upload::download($model, 'abstract', 'Abstract_iCreate');
+    }
+
+    protected function authorizeRegistrationDownload($registration)
+    {
+        if(Yii::$app->user->isGuest){
+            $this->ensurePublicRegistrationAccess($registration, $registration->program_id);
+        }
     }
 
     private function meAsMentor($reg){

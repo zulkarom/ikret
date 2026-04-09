@@ -1,6 +1,7 @@
 <?php
 
 use app\models\Mentor;
+use app\models\ParticipantCatProgram;
 use app\models\User;
 use kartik\select2\Select2;
 use yii\helpers\Html;
@@ -12,7 +13,38 @@ use yii\web\JsExpression;
 
 $web = Yii::getAlias('@web');
 
+$edit = $edit ?? false;
+$err = $err ?? false;
+$demo = $demo ?? false;
+$publicMode = $publicMode ?? false;
+$storageEntry = $storageEntry ?? false;
+$participantCategoryFee = null;
+
+if(!empty($register->participant_cat_program)){
+    $participantCategory = ParticipantCatProgram::findOne((int)$register->participant_cat_program);
+    if($participantCategory && !empty($participantCategory->fee)){
+        $participantCategoryFee = $participantCategory->fee;
+    }
+}
+
 $this->title = 'Registration - ' . $model->program_name;
+
+$this->registerCss(<<<CSS
+.register-select-arrow {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #4154f1 50%), linear-gradient(135deg, #4154f1 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 2.5rem;
+}
+
+.register-select-arrow:focus {
+    background-image: linear-gradient(45deg, transparent 50%, #4154f1 50%), linear-gradient(135deg, #4154f1 50%, transparent 50%);
+}
+CSS);
 
 ?>
     <div class="d-flex justify-content-center py-4">
@@ -22,13 +54,25 @@ $this->title = 'Registration - ' . $model->program_name;
                 </a>
               </div><!-- End Logo -->
               <?php $arr_fields = $register->getProgramFields($register->program_id);?>
+              <?php $fieldLayouts = $register->getProgramFieldLayouts($register->program_id); ?>
+              <?php $fieldColClass = function($fieldName, $default = 'col-12') use ($fieldLayouts) {
+                  if(!array_key_exists($fieldName, $fieldLayouts)){
+                      return $default;
+                  }
 
+                  return (int)$fieldLayouts[$fieldName] === 6 ? 'col-md-6' : 'col-12';
+              }; ?>
+
+              <?php if(!$publicMode || !$register->isNewRecord){ ?>
               <?=$this->render('_view_register', [    
         'register' => $register,
         'arr_fields' => $arr_fields,
-        'edit' => $edit
+        'edit' => $edit,
+        'publicMode' => $publicMode,
+        'storageEntry' => $storageEntry,
     ]);
     ?>
+    <?php } ?>
 
       <?php if(!$edit){ //program information 
         ?>
@@ -40,7 +84,7 @@ $this->title = 'Registration - ' . $model->program_name;
         </div>
       <?php } ?>
 
-                  <?php if($register->status == 0 || $edit){?>
+                  <?php if($register->status == 0 || $edit || $err){?>
               <div class="card mb-3">
               <div class="card-header">Registration Form</div>
                 <div class="card-body">
@@ -50,9 +94,23 @@ $this->title = 'Registration - ' . $model->program_name;
                     <p class="small">Enter your project details to register in this program.</p>
                   </div>
 
-                  <?php $form = ActiveForm::begin(['class' => 'row g-3 needs-validation','id' => 'dynamic-form', 'action' => Url::to(['register']), 'options' => ['enctype' => 'multipart/form-data']]); ?>
+                  <?php $form = ActiveForm::begin([
+                      'id' => 'dynamic-form',
+                      'action' => Url::to([$publicMode ? '/storage/index' : 'register']),
+                      'options' => [
+                          'class' => 'row g-3 needs-validation',
+                          'enctype' => 'multipart/form-data',
+                      ],
+                      'enableClientValidation' => true,
+                  ]); ?>
+
+                  <?= $form->errorSummary($register, ['class' => 'alert alert-danger']) ?>
 
                   <input type="hidden" name="program_id" value="<?=$model->id?>" />
+                  <?php if($publicMode){ ?>
+                  <input type="hidden" name="storage_action" value="public-register" />
+                  <input type="hidden" name="storage_entry" value="1" />
+                  <?php } ?>
 
                   <?php 
                   if(!$register->isNewRecord && !$err){
@@ -65,89 +123,58 @@ $this->title = 'Registration - ' . $model->program_name;
 
                    
 
-                    <div class="col-12">
+                    <?php if(in_array('project_name',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('project_name')?>">
+                    <?= $form->field($register, 'project_name')->textarea(['rows' => 2]) ?>
+                    </div>
+                    <?php } ?>
 
-                    <?php 
-                    
-                    if(in_array('project_name',$arr_fields)){
-                      echo $form
-                      ->field($register, 'project_name')->textarea(['rows' => 2]);
-                    }
-                    
-            ?>
-            </div>
+                    <?php if(in_array('project_desc',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('project_desc')?>">
+                    <?= $form->field($register, 'project_desc')->textarea(['rows' => 4]) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
+                    <?php if(in_array('participant_cat_local',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('participant_cat_local')?>">
+                    <?= $form->field($register, 'participant_cat_local')->radioList($register->listParticipantLocal()) ?>
+                    </div>
+                    <?php } ?>
 
-                    <?php 
-                    if(in_array('project_desc',$arr_fields)){
-                    echo $form
-            ->field($register, 'project_desc')->textarea(['rows' => 4]);
-                    }
-                    ?>
-            </div>
+                    <?php if(in_array('participant_cat_group',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('participant_cat_group')?>">
+                    <?= $form->field($register, 'participant_cat_group')->radioList($register->listParticipantGroup()) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('participant_cat_local',$arr_fields)){
-                    echo $form
-            ->field($register, 'participant_cat_local')->radioList($register->listParticipantLocal());
-        }
-          ?>
-            </div>
-
-           
-
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('participant_cat_group',$arr_fields)){
-                    echo $form
-            ->field($register, 'participant_cat_group')->radioList($register->listParticipantGroup());
-        }
-          ?>
-            </div>
-
-            
-
-            <div class="col-12">
-
-            <?php 
-                    if(in_array('competition_type',$arr_fields)){
-                    echo $form
-            ->field($register, 'competition_type')->radioList([
+                    <?php if(in_array('competition_type',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('competition_type')?>">
+                    <?= $form->field($register, 'competition_type')->radioList([
               1 => 'Community Project Ideation', 
               2 => 'Community Project Implementation'
-          ]);
-        }
-          ?>
-            </div>
+          ]) ?>
+                    </div>
+                    <?php } ?>
 
-            <div class="col-12">
+                    <?php if(in_array('program_sub',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('program_sub')?>">
+                    <?= $form->field($register, 'program_sub')->dropDownList($register->program->listSubPrograms(),['prompt' => 'Select Category']) ?>
+                    </div>
+                    <?php } ?>
 
-            <?php 
-                    if(in_array('program_sub',$arr_fields)){
-                    echo $form
-            ->field($register, 'program_sub')->dropDownList($register->program->listSubPrograms(),['prompt' => 'Select Category']);
-        }
-          ?>
-            </div>
-
-
-
-            <?php 
-                    if(in_array('advisor_dropdown',$arr_fields)){
-                    echo $form
-            ->field($register, 'advisor_dropdown')->dropDownList($register->listNeweekAdvisor(), ['prompt' => 'Selct Lecturer']);
-        }
-          ?>
+                    <?php if(in_array('advisor_dropdown',$arr_fields)){ ?>
+                    <div class="<?=$fieldColClass('advisor_dropdown')?>">
+                    <?= $form->field($register, 'advisor_dropdown')->dropDownList($register->listNeweekAdvisor(), ['prompt' => 'Selct Lecturer']) ?>
+                    </div>
+                    <?php } ?>
 
 
 <?php 
         if(in_array('booth_number',$arr_fields)){
+        echo '<div class="' . $fieldColClass('booth_number') . '">';
         echo $form
 ->field($register, 'booth_number')->dropDownList($register->listNeweekBooth(), ['prompt' => 'Select Booth']);
+        echo '</div>';
 }
 ?>
 
@@ -157,7 +184,7 @@ $this->title = 'Registration - ' . $model->program_name;
 
 <?php 
                     if(in_array('nric',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('nric') . '">';
                     echo $form
 ->field($register, 'nric')->textInput();
 echo '</div>';
@@ -167,24 +194,30 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_mode',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_mode') . '">';
         echo $form
 ->field($register, 'participant_mode')->radioList($register->listParticipantMode());
+        echo '</div>';
 }
 ?>
 
 
 <?php 
         if(in_array('participant_cat_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_cat_program') . '">';
         echo $form
-->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category']);
+->field($register, 'participant_cat_program')->dropDownList($register->listParticipantCatProgram($register->program_id, $register->participant_mode), ['prompt' => 'Select Category', 'class' => 'form-select register-select-arrow']);
+        echo '</div>';
 }
 ?>
 
 
 <?php 
         if(in_array('competition_cat_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('competition_cat_program') . '">';
         echo $form
-->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category']);
+->field($register, 'competition_cat_program')->dropDownList($register->listCompetitionCatProgram($register->program_id), ['prompt' => 'Select Category', 'class' => 'form-select register-select-arrow']);
+        echo '</div>';
 }
 ?>
 
@@ -198,8 +231,10 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_cat_umk',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_cat_umk') . '">';
         echo $form
 ->field($register, 'participant_cat_umk')->radioList($register->listParticipantUMK());
+        echo '</div>';
 }
 ?>
 
@@ -208,9 +243,11 @@ echo '</div>';
 
 <?php 
         if(in_array('participant_program',$arr_fields)){
+        echo '<div class="' . $fieldColClass('participant_program') . '">';
         echo $form
 ->field($register, 'participant_program')->radioList($register->listParticipantProgram());
 echo '<input class="form-control" name="ProgramRegistration[other_program]" placeholder="Specify other program..." /><br />';
+echo '</div>';
 }
 ?>
 
@@ -218,15 +255,19 @@ echo '<input class="form-control" name="ProgramRegistration[other_program]" plac
 <?php 
                     if(in_array('advisor',$arr_fields)){
 
+                    echo '<div class="' . $fieldColClass('advisor') . '">';
+
                     echo $form
 ->field($register, 'advisor')->textInput();
+
+                    echo '</div>';
 
                     } ?>
 
 
 <?php 
                     if(in_array('institution',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('institution') . '">';
                     echo $form
 ->field($register, 'institution')->textInput();
 echo '</div>';
@@ -236,7 +277,7 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_person',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_person') . '">';
                     echo $form
 ->field($register, 'contact_person')->textInput();
 echo '</div>';
@@ -245,7 +286,7 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_no',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_no') . '">';
                     echo $form
 ->field($register, 'contact_no')->textInput();
 echo '</div>';
@@ -254,12 +295,24 @@ echo '</div>';
 
 <?php 
                     if(in_array('contact_email',$arr_fields)){
-                  echo '<div class="col-12">';
+                  echo '<div class="' . $fieldColClass('contact_email') . '">';
                     echo $form
 ->field($register, 'contact_email')->textInput();
 echo '</div>';
 
                     } ?>
+
+<?php if($publicMode && $register->isNewRecord){ ?>
+                    <div class="<?=$fieldColClass('edit_password')?>">
+                    <?= $form->field($register, 'edit_password')->passwordInput() ?>
+                    </div>
+                    <div class="<?=$fieldColClass('edit_password_confirm')?>">
+                    <?= $form->field($register, 'edit_password_confirm')->passwordInput() ?>
+                    </div>
+                    <div class="col-12">
+                    <i>Please keep this Password / PIN safe. You will need it later to edit your registration and for certificate-related access.</i>
+                    </div>
+<?php } ?>
 
 
 
@@ -510,16 +563,29 @@ if(in_array('group_member',$arr_fields)){
 <i>* Try to search your mentor, if not found, you need to ask your mentor to register to the system as a mentor.</i>
 <?php } ?>
 <?php if(in_array('abstract_file', $arr_fields)){?>
-    <br /><br />
+    <div class="mt-4 pt-2">
+    <hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Abstract</h5>
+    <i>Abstract must be submitted in Microsoft Word format (.doc or .docx only).</i>
+    <div class="mt-3">It should include the following key elements:</div>
+    <ul class="mb-3">
+        <li>Title</li>
+        <li>Problem Statement</li>
+        <li>Objective</li>
+        <li>Target User</li>
+        <li>Features/Impact</li>
+        <li>Conclusion</li>
+    </ul>
+    <div class="mb-3">Submitted abstracts will be included in the event’s e-proceedings publication.</div>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->abstract_file){
-echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['download-abstract-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::to(['/program/download-abstract-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
 <?= $form->field($register, 'abstract_instance')->fileInput() ?>
-<i>(Please upload abstract in MS Word format: .doc or .docx)</i>
+    </div>
 <?php } ?>
 
 <br /><br />
@@ -529,23 +595,54 @@ echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::
 
 
     <?php if(in_array('poster_file', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+    <hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Poster</h5>
+    <i>Poster must be in A2 size and submitted in PDF, PPTX, JPG, JPEG, or PNG format.</i>
+    <div class="mt-3">The poster must clearly include the following content elements:</div>
+    <ul class="mb-3">
+        <li>Background</li>
+        <li>Problem Statement</li>
+        <li>Objectives</li>
+        <li>Methodologies</li>
+        <li>Impacts</li>
+        <li>Project Visualisation / Potential Application/ Commercialisation/ Photo</li>
+        <li>Achievement/ Recognition/ Award</li>
+    </ul>
+    <div>The same approved design must be used for physical printing during the event.</div>
+    <div class="mt-2 mb-3">Participants are responsible for printing and bringing their poster unless otherwise stated by the organiser.</div>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->poster_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['download-poster-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(['/program/download-poster-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
 <?= $form->field($register, 'poster_instance')->fileInput() ?>
-<i>(Allowed formats: PDF, PPTX, JPG, JPEG, PNG)</i>
+    </div>
 <?php } ?>
 
 <br /><br />
 
 <?php if(in_array('video_link', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+<hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Video</h5>
+    <i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+    <div class="mt-3">Each submission must include a presentation video between 3 to 5 minutes in length.</div>
+    <div class="mt-3">The content of the video must clearly present the following:</div>
+    <ul class="mb-3">
+        <li>Background</li>
+        <li>Problem Statement</li>
+        <li>Objective</li>
+        <li>Methodology</li>
+        <li>Innovation Impact / Benefit</li>
+        <li>Conclusion</li>
+    </ul>
     <div class="form-group">
 <?= $form->field($register, 'video_link')->textInput(['placeholder' => 'Paste YouTube / Google Drive link here']) ?>
-<i>(Upload your video to YouTube/Google Drive and paste the link here)</i>
+    </div>
+    </div>
 <?php } ?>
 
 <br /><br />
@@ -553,30 +650,48 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 </div>
 
 <?php if(in_array('payment_file', $arr_fields)){?>
+    <div class="mt-4 pt-2">
+<hr class="mb-3"/>
+    <h5 class="fw-bold mb-3">Proof of Payment</h5>
+<?php if($model->payment_short){ ?>
+<i><?=$model->payment_short?></i>
+<div class="mb-3"></div>
+<?php 
+} 
+
+
+if($participantCategoryFee){
+echo '<div id="required-payment-amount" class="mb-3"><strong>Required Amount:</strong> ' . Html::encode($participantCategoryFee) . '</div>';
+}else{
+echo '<div id="required-payment-amount" class="mb-3" style="display:none;"></div>';
+}
+
+
+echo '<div><strong>Account Holder Name:</strong> Universiti Malaysia Kelantan</div>';
+echo '<div><strong>Account Number:</strong> 553038019271</div>';
+echo '<div><strong>Bank Name:</strong> Maybank Berhad</div>';
+echo '<div><strong>SWIFT Code:</strong> MBBEMYKL</div><br />';
+echo '<div><strong>Reference:</strong> IISEIC2026</div><br />';
+?>
     <div class="form-group">
 <?php 
 if(!$register->isNewRecord && $register->payment_file){
-echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['download-payment-file','id' => $register->id]), ['target' => '_blank']);
+echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' , Url::to(['/program/download-payment-file','id' => $register->id]), ['target' => '_blank']);
 }
 ?>
 </div>
 <?= $form->field($register, 'payment_instance')->fileInput() ?>
-<?php if($model->payment_short){ ?>
-<i><?=$model->payment_short?></i>
-<br /><br />
-<?php 
-} 
+    </div>
 
-}
+<?php } ?>
 
 
 
 
-?>
 
 
 
-      <?php if(!$demo && !$edit){?>
+      <?php if(!$demo && !$publicMode && (!$edit || (int)$register->status === 0)){?>
       <div class="col-12">
 
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
@@ -586,7 +701,11 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
       </div> 
       <?php } 
       
-      if($edit){
+      if($publicMode && !$edit){
+        echo Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']);
+      }
+
+      if($edit && ($publicMode || (int)$register->status !== 0)){
         //echo '<input type="hidden" name="edit" value="1" />';
         echo Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'update']);
       }
@@ -624,12 +743,9 @@ $js = <<<'EOD'
 
 
 jQuery(".dynamicform_wrapper").on("afterInsert", function(e, item) {
-    var first = $(item).find("input")[0];
-    first.setAttribute("value", "");
-    var second = $(item).find("input")[1];
-    second.setAttribute("value", "");
-    var third = $(item).find("input")[2];
-    third.setAttribute("value", "");
+    $(item).find("input, textarea").each(function() {
+        $(this).val("");
+    });
 });
 
 
@@ -641,12 +757,24 @@ $this->registerJs($js);
 
 
 if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode',$arr_fields)){
-  $catPhysical = $register->listParticipantCatProgram($register->program_id, 1);
-  $catOnline = $register->listParticipantCatProgram($register->program_id, 2);
+  $catPhysical = ParticipantCatProgram::find()
+    ->where(['program_id' => $register->program_id, 'mode' => 1, 'is_active' => 1])
+    ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+    ->all();
+  $catOnline = ParticipantCatProgram::find()
+    ->where(['program_id' => $register->program_id, 'mode' => 2, 'is_active' => 1])
+    ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC])
+    ->all();
 
   $catsByMode = [
-    1 => $catPhysical,
-    2 => $catOnline,
+    1 => array_reduce($catPhysical, function($carry, $item){
+      $carry[$item->id] = ['label' => $item->cat_name, 'fee' => $item->fee];
+      return $carry;
+    }, []),
+    2 => array_reduce($catOnline, function($carry, $item){
+      $carry[$item->id] = ['label' => $item->cat_name, 'fee' => $item->fee];
+      return $carry;
+    }, []),
   ];
 
   $jsonCatsByMode = json_encode($catsByMode);
@@ -657,6 +785,7 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
   var modeName = 'ProgramRegistration[participant_mode]';
   var catId = 'programregistration-participant_cat_program';
   var catEl = document.getElementById(catId);
+  var amountEl = document.getElementById('required-payment-amount');
 
   if(!catEl){
     return;
@@ -679,7 +808,7 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
 
     var hasCurrent = false;
     Object.keys(map).forEach(function(key){
-      var opt = new Option(map[key], key);
+      var opt = new Option(map[key].label, key);
       if(String(key) === String(currentValue)){
         opt.selected = true;
         hasCurrent = true;
@@ -690,11 +819,34 @@ if(in_array('participant_cat_program',$arr_fields) && in_array('participant_mode
     if(!hasCurrent){
       catEl.value = '';
     }
+
+    updateAmount();
+  }
+
+  function updateAmount(){
+    if(!amountEl){
+      return;
+    }
+
+    var mode = selectedMode();
+    var map = (mode && catsByMode[mode]) ? catsByMode[mode] : {};
+    var selected = catEl.value && map[catEl.value] ? map[catEl.value] : null;
+
+    if(selected && selected.fee){
+      amountEl.innerHTML = '<strong>Required Amount:</strong> ' + selected.fee;
+      amountEl.style.display = '';
+    }else{
+      amountEl.innerHTML = '';
+      amountEl.style.display = 'none';
+    }
   }
 
   document.addEventListener('change', function(e){
     if(e.target && e.target.name === modeName){
       rebuildOptions(selectedMode());
+    }
+    if(e.target && e.target.id === catId){
+      updateAmount();
     }
   });
 
