@@ -2,6 +2,7 @@
 
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
@@ -11,11 +12,225 @@ $this->title = $title;
 $rubric = $assign->rubric;
 $register = $assign->registration;
 $formName =  $model->formName();
+$edit = $edit ?? false;
 ?>
 
 <div class="pagetitle">
 <h1><?=$this->title?></h1></div>
     <section class="section dashboard">
+
+    <?php if($plain && !$edit){ ?>
+        <div class="mb-3">
+            <?= Html::a('Edit Rubric', ['program/view-rubric', 'id' => $rubric->id, 'edit' => 1], ['class' => 'btn btn-warning btn-sm']) ?>
+        </div>
+    <?php } ?>
+
+    <?php if($plain && $edit){ ?>
+        <div class="card">
+            <div class="card-body pt-4">
+
+                <div class="mb-4">
+                    <h5>Rubric Builder</h5>
+                    <div class="mb-2">
+                        <?= Html::a('Exit Edit Mode', ['program/view-rubric', 'id' => $rubric->id], ['class' => 'btn btn-secondary btn-sm']) ?>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6>Rubric Name</h6>
+                    <form method="post" action="<?= Url::to(['program/rubric-update-name', 'id' => $rubric->id]) ?>">
+                        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-8">
+                                <input type="text" name="rubric_name" class="form-control" value="<?= Html::encode($rubric->rubric_name) ?>" />
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary btn-sm">Save Name</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="mb-4">
+                    <h6>Add Category</h6>
+                    <form method="post" action="<?= Url::to(['program/rubric-category-add', 'id' => $rubric->id]) ?>">
+                        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input type="text" name="category_name" class="form-control" placeholder="Category name" />
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" name="cat_order" class="form-control" placeholder="Order" />
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="is_recommend_new" />
+                                    <label class="form-check-label" for="is_recommend_new">Recommend</label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success btn-sm">Add</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <?php if($rubric && $rubric->categories){ ?>
+                    <?php foreach($rubric->categories as $cat){ ?>
+                        <div class="card mb-3">
+                            <div class="card-body pt-3">
+                                <div class="mb-2">
+                                    <b><?= Html::encode($cat->category_name) ?></b>
+                                    <?php if((int)$cat->is_recommend === 1){ echo ' <span class="badge bg-info">Recommend</span>'; } ?>
+                                </div>
+
+                                <div class="mb-3">
+                                    <form method="post" action="<?= Url::to(['program/rubric-category-edit', 'id' => $rubric->id, 'cat' => $cat->id]) ?>" class="mb-2">
+                                        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                        <div class="row g-2 align-items-center">
+                                            <div class="col-md-6">
+                                                <input type="text" name="category_name" class="form-control" value="<?= Html::encode($cat->category_name) ?>" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="number" name="cat_order" class="form-control" value="<?= Html::encode($cat->cat_order) ?>" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="is_recommend_<?= (int)$cat->id ?>" <?= ((int)$cat->is_recommend === 1 ? 'checked' : '') ?> />
+                                                    <label class="form-check-label" for="is_recommend_<?= (int)$cat->id ?>">Recommend</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                <?= Html::a('Delete', ['program/rubric-category-delete', 'id' => $rubric->id, 'cat' => $cat->id], [
+                                                    'class' => 'btn btn-danger btn-sm',
+                                                    'data' => [
+                                                        'method' => 'post',
+                                                        'confirm' => 'Delete this category and all items inside it?',
+                                                    ],
+                                                ]) ?>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="mb-3">
+                                    <h6 class="mb-2">Add Item</h6>
+                                    <form method="post" action="<?= Url::to(['program/rubric-item-add', 'id' => $rubric->id, 'cat' => $cat->id]) ?>">
+                                        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <input type="text" name="item_text" class="form-control" placeholder="Item text" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select name="item_type" class="form-select">
+                                                    <option value="1">likert</option>
+                                                    <option value="2">yesno</option>
+                                                    <option value="3">shorttext</option>
+                                                    <option value="4">longtext</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="number" name="option_number" class="form-control" placeholder="Options" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="number" name="item_order" class="form-control" placeholder="Order" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" name="colum_ans" class="form-control" placeholder="colum_ans (e.g. item_no1)" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" name="item_short" class="form-control" placeholder="Short label" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" name="item_description" class="form-control" placeholder="Description" />
+                                            </div>
+                                            <div class="col-md-12">
+                                                <button type="submit" class="btn btn-success btn-sm">Add Item</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <?php if($cat->items){ ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Type</th>
+                                                    <th>Options</th>
+                                                    <th>Order</th>
+                                                    <th>colum_ans</th>
+                                                    <th></th>
+                                                </tr>
+                                                <?php foreach($cat->items as $item){ ?>
+                                                    <tr>
+                                                        <td><?= Html::encode($item->item_text) ?></td>
+                                                        <td><?= Html::encode($item->item_type) ?></td>
+                                                        <td><?= Html::encode($item->option_number) ?></td>
+                                                        <td><?= Html::encode($item->item_order) ?></td>
+                                                        <td><?= Html::encode($item->colum_ans) ?></td>
+                                                        <td>
+                                                            <details>
+                                                                <summary>Edit</summary>
+                                                                <form method="post" action="<?= Url::to(['program/rubric-item-edit', 'id' => $rubric->id, 'item' => $item->id]) ?>" class="mt-2">
+                                                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                                                    <div class="row g-2">
+                                                                        <div class="col-md-6">
+                                                                            <input type="text" name="item_text" class="form-control" value="<?= Html::encode($item->item_text) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <select name="item_type" class="form-select">
+                                                                                <option value="1" <?= ((int)$item->item_type === 1 ? 'selected' : '') ?>>likert</option>
+                                                                                <option value="2" <?= ((int)$item->item_type === 2 ? 'selected' : '') ?>>yesno</option>
+                                                                                <option value="3" <?= ((int)$item->item_type === 3 ? 'selected' : '') ?>>shorttext</option>
+                                                                                <option value="4" <?= ((int)$item->item_type === 4 ? 'selected' : '') ?>>longtext</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <input type="number" name="option_number" class="form-control" value="<?= Html::encode($item->option_number) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <input type="number" name="item_order" class="form-control" value="<?= Html::encode($item->item_order) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <input type="text" name="colum_ans" class="form-control" value="<?= Html::encode($item->colum_ans) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <input type="text" name="item_short" class="form-control" value="<?= Html::encode($item->item_short) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <input type="text" name="item_description" class="form-control" value="<?= Html::encode($item->item_description) ?>" />
+                                                                        </div>
+                                                                        <div class="col-md-12">
+                                                                            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                                            <?= Html::a('Delete', ['program/rubric-item-delete', 'id' => $rubric->id, 'item' => $item->id], [
+                                                                                'class' => 'btn btn-danger btn-sm',
+                                                                                'data' => [
+                                                                                    'method' => 'post',
+                                                                                    'confirm' => 'Delete this item?',
+                                                                                ],
+                                                                            ]) ?>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </details>
+                                                        </td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    <?php } ?>
+                <?php } ?>
+
+            </div>
+        </div>
+    <?php } ?>
 
     <?php 
     if(!$plain){

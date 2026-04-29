@@ -26,6 +26,8 @@ use app\models\QuestionnaireAnswer;
 use app\models\QuestionnaireAnswerPost;
 use app\models\Rubric;
 use app\models\RubricAnswer;
+use app\models\RubricCategory;
+use app\models\RubricItem;
 use app\models\Session;
 use app\models\Setting;
 use app\models\Upload;
@@ -250,10 +252,68 @@ class ProgramController extends Controller
         return $this->redirect(['admin-program-subs']);
     }
 
-    public function actionViewRubric($id){
+    public function actionAdminProgramUpdateName($id)
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->request->isPost) return false;
+
+        $model = Program::findOne((int)$id);
+        if(!$model){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $name = trim((string)Yii::$app->request->post('program_name'));
+        if($name === ''){
+            Yii::$app->session->addFlash('error', 'Program name cannot be blank.');
+            return $this->redirect(['admin-program-subs']);
+        }
+
+        $model->program_name = $name;
+        if(!$model->save(false, ['program_name'])){
+            Yii::$app->session->addFlash('error', 'Failed to update program name.');
+            return $this->redirect(['admin-program-subs']);
+        }
+
+        Yii::$app->session->addFlash('success', 'Program name updated.');
+        return $this->redirect(['admin-program-subs']);
+    }
+
+    public function actionAdminProgramSubUpdate($id)
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->request->isPost) return false;
+
+        $model = ProgramSub::findOne((int)$id);
+        if(!$model){
+            throw new NotFoundHttpException('Sub program not found.');
+        }
+
+        $subName = trim((string)Yii::$app->request->post('sub_name'));
+        $advisor = trim((string)Yii::$app->request->post('advisor'));
+
+        if($subName === ''){
+            Yii::$app->session->addFlash('error', 'Sub program name cannot be blank.');
+            return $this->redirect(['admin-program-subs']);
+        }
+
+        $model->sub_name = $subName;
+        $model->advisor = ($advisor !== '') ? $advisor : null;
+
+        if(!$model->save(false, ['sub_name', 'advisor'])){
+            Yii::$app->session->addFlash('error', 'Failed to update sub program.');
+            return $this->redirect(['admin-program-subs']);
+        }
+
+        Yii::$app->session->addFlash('success', 'Sub program updated.');
+        return $this->redirect(['admin-program-subs']);
+    }
+
+    public function actionViewRubric($id, $edit = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
         $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
         $assign = new JuryAssign();
         $assign->rubric_id = $rubric->id;
 
@@ -265,7 +325,250 @@ class ProgramController extends Controller
             'plain' => true,
             'title' => 'View Rubric',
             'write' => false,
+            'edit' => ((int)$edit === 1),
         ]);
+    }
+
+    public function actionRubricUpdateName($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $rubric->rubric_name = Yii::$app->request->post('rubric_name');
+        if($rubric->rubric_name === null || trim($rubric->rubric_name) === ''){
+            Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if(!$rubric->save()){
+            Yii::$app->session->addFlash('error', 'Failed to update rubric name.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Rubric name updated.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricCategoryAdd($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $cat = new RubricCategory();
+        $cat->rubric_id = $rubric->id;
+        $cat->category_name = Yii::$app->request->post('category_name');
+        $cat->cat_order = Yii::$app->request->post('cat_order');
+        $cat->is_recommend = (int)Yii::$app->request->post('is_recommend', 0) === 1 ? 1 : 0;
+
+        if($cat->category_name === null || trim($cat->category_name) === ''){
+            Yii::$app->session->addFlash('error', 'Category name cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if(!$cat->save()){
+            Yii::$app->session->addFlash('error', 'Failed to add category.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Category added.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricCategoryEdit($id, $cat)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $category = RubricCategory::findOne(['id' => $cat, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Category not found.');
+        }
+
+        $category->category_name = Yii::$app->request->post('category_name', $category->category_name);
+        $category->cat_order = Yii::$app->request->post('cat_order', $category->cat_order);
+        $category->is_recommend = (int)Yii::$app->request->post('is_recommend', $category->is_recommend) === 1 ? 1 : 0;
+
+        if($category->category_name === null || trim($category->category_name) === ''){
+            Yii::$app->session->addFlash('error', 'Category name cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if(!$category->save()){
+            Yii::$app->session->addFlash('error', 'Failed to update category.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Category updated.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricCategoryDelete($id, $cat)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $category = RubricCategory::findOne(['id' => $cat, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Category not found.');
+        }
+
+        RubricItem::deleteAll(['category_id' => $category->id]);
+        $category->delete();
+
+        Yii::$app->session->addFlash('success', 'Category deleted.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricItemAdd($id, $cat)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $category = RubricCategory::findOne(['id' => $cat, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Category not found.');
+        }
+
+        $item = new RubricItem();
+        $item->category_id = $category->id;
+        $item->item_text = Yii::$app->request->post('item_text');
+        $item->item_description = Yii::$app->request->post('item_description');
+        $item->item_short = Yii::$app->request->post('item_short');
+        $item->item_type = (int)Yii::$app->request->post('item_type', 1);
+        $item->option_number = Yii::$app->request->post('option_number');
+        $item->item_order = Yii::$app->request->post('item_order');
+        $item->colum_ans = Yii::$app->request->post('colum_ans');
+
+        if($item->item_text === null || trim($item->item_text) === ''){
+            Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if($item->colum_ans === null || trim($item->colum_ans) === ''){
+            Yii::$app->session->addFlash('error', 'Answer column (colum_ans) cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if($item->item_type == 1){
+            $opt = (int)$item->option_number;
+            if($opt <= 0){
+                Yii::$app->session->addFlash('error', 'Likert item must have option_number > 0.');
+                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            }
+        }
+
+        if(!$item->save()){
+            Yii::$app->session->addFlash('error', 'Failed to add item.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Item added.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricItemEdit($id, $item)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $it = RubricItem::findOne(['id' => $item]);
+        if(!$it){
+            throw new NotFoundHttpException('Item not found.');
+        }
+
+        $category = RubricCategory::findOne(['id' => $it->category_id, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Item does not belong to this rubric.');
+        }
+
+        $it->item_text = Yii::$app->request->post('item_text', $it->item_text);
+        $it->item_description = Yii::$app->request->post('item_description', $it->item_description);
+        $it->item_short = Yii::$app->request->post('item_short', $it->item_short);
+        $it->item_type = (int)Yii::$app->request->post('item_type', $it->item_type);
+        $it->option_number = Yii::$app->request->post('option_number', $it->option_number);
+        $it->item_order = Yii::$app->request->post('item_order', $it->item_order);
+        $it->colum_ans = Yii::$app->request->post('colum_ans', $it->colum_ans);
+
+        if($it->item_text === null || trim($it->item_text) === ''){
+            Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if($it->colum_ans === null || trim($it->colum_ans) === ''){
+            Yii::$app->session->addFlash('error', 'Answer column (colum_ans) cannot be blank.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        if($it->item_type == 1){
+            $opt = (int)$it->option_number;
+            if($opt <= 0){
+                Yii::$app->session->addFlash('error', 'Likert item must have option_number > 0.');
+                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            }
+        }
+
+        if(!$it->save()){
+            Yii::$app->session->addFlash('error', 'Failed to update item.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Item updated.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricItemDelete($id, $item)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $it = RubricItem::findOne(['id' => $item]);
+        if(!$it){
+            throw new NotFoundHttpException('Item not found.');
+        }
+
+        $category = RubricCategory::findOne(['id' => $it->category_id, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Item does not belong to this rubric.');
+        }
+
+        $it->delete();
+        Yii::$app->session->addFlash('success', 'Item deleted.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
     }
 
     public function actionRubrics($id, $sub = null){
@@ -299,6 +602,132 @@ class ProgramController extends Controller
             'rubrics' => $rubrics,
             'programSub' => $programSub
         ]);
+    }
+
+    public function actionRubricAdd($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $program = $role->program;
+        if($program->has_sub == 1 && !$sub){
+            throw new NotFoundHttpException('Please provide sub program.');
+        }
+
+        $rubric = new Rubric();
+        $rubric->rubric_name = Yii::$app->request->post('rubric_name');
+        if($rubric->rubric_name === null || trim($rubric->rubric_name) === ''){
+            Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        if(!$rubric->save()){
+            Yii::$app->session->addFlash('error', 'Failed to create rubric.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        $pr = new ProgramRubric();
+        $pr->program_id = $id;
+        $pr->rubric_id = $rubric->id;
+        $pr->program_sub = $sub;
+
+        if(!$pr->save()){
+            $rubric->delete();
+            Yii::$app->session->addFlash('error', 'Failed to assign rubric to program.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Rubric added.');
+        return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+    }
+
+    public function actionRubricEdit($id, $sub = null, $pr = null, $rubric = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        if(!$rubric){
+            throw new NotFoundHttpException('Rubric not found.');
+        }
+
+        $rubricModel = $this->findRubric($rubric);
+
+        if($pr){
+            $assign = ProgramRubric::findOne(['id' => $pr, 'program_id' => $id, 'program_sub' => $sub, 'rubric_id' => $rubricModel->id]);
+            if(!$assign){
+                throw new NotFoundHttpException('Rubric assignment not found.');
+            }
+        }
+
+        $rubricModel->rubric_name = Yii::$app->request->post('rubric_name', $rubricModel->rubric_name);
+        if($rubricModel->rubric_name === null || trim($rubricModel->rubric_name) === ''){
+            Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+        if(!$rubricModel->save()){
+            Yii::$app->session->addFlash('error', 'Failed to update rubric.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        Yii::$app->session->addFlash('success', 'Rubric updated.');
+        return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+    }
+
+    public function actionRubricDelete($id, $sub = null, $pr)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        }
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $assign = ProgramRubric::findOne(['id' => $pr, 'program_id' => $id, 'program_sub' => $sub]);
+        if(!$assign){
+            throw new NotFoundHttpException('Rubric assignment not found.');
+        }
+
+        $assign->delete();
+        Yii::$app->session->addFlash('success', 'Rubric removed.');
+        return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
     }
 
     public function actionAchievement($id, $sub = null){
@@ -1201,6 +1630,29 @@ class ProgramController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function ensureManagerRubricAccess($rubricId)
+    {
+        $prs = ProgramRubric::find()->where(['rubric_id' => $rubricId])->all();
+        if(!$prs){
+            throw new NotFoundHttpException('Rubric is not assigned to any program.');
+        }
+
+        foreach($prs as $pr){
+            $role = UserRole::findOne([
+                'program_id' => $pr->program_id,
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+                'program_sub' => $pr->program_sub
+            ]);
+
+            if($role){
+                return true;
+            }
+        }
+
+        throw new NotFoundHttpException('You do not have access to this rubric.');
     }
 
     protected function publicRegistrationSessionKey($registrationId)

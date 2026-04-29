@@ -38,7 +38,15 @@ $subHasIsActive = $subTable && $subTable->getColumn('is_active');
                         <tr>
                             <td><?=$i?>.</td>
                             <td>
-                                <?= Html::encode($program->program_name) ?>
+                                <?= Html::beginForm(Url::to(['program/admin-program-update-name', 'id' => $program->id]), 'post', ['class' => 'row g-2', 'style' => 'max-width: 560px; margin:0;']) ?>
+                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                <div class="col-9">
+                                    <input type="text" name="program_name" class="form-control form-control-sm" value="<?= Html::encode($program->program_name) ?>">
+                                </div>
+                                <div class="col-3">
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">Save</button>
+                                </div>
+                                <?= Html::endForm() ?>
                                 <?php if($program->program_abbr){ ?>
                                     <br /><span class="text-muted small"><?= Html::encode($program->program_abbr) ?></span>
                                 <?php } ?>
@@ -80,10 +88,18 @@ $subHasIsActive = $subTable && $subTable->getColumn('is_active');
                                         <?php foreach($subs as $sub){ ?>
                                             <div class="d-flex align-items-center justify-content-between" style="max-width: 560px;">
                                                 <div>
-                                                    <?= Html::encode($sub->sub_name) ?>
-                                                    <?php if($sub->advisor){ ?>
-                                                        <span class="text-muted small">/ <?= Html::encode($sub->advisor) ?></span>
-                                                    <?php } ?>
+                                                    <?= Html::beginForm(Url::to(['program/admin-program-sub-update', 'id' => $sub->id]), 'post', ['class' => 'row g-2', 'style' => 'margin:0;']) ?>
+                                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                                    <div class="col-6">
+                                                        <input type="text" name="sub_name" class="form-control form-control-sm" value="<?= Html::encode($sub->sub_name) ?>">
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <input type="text" name="advisor" class="form-control form-control-sm" value="<?= Html::encode($sub->advisor) ?>" placeholder="PIC">
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <button type="submit" class="btn btn-sm btn-primary w-100">Save</button>
+                                                    </div>
+                                                    <?= Html::endForm() ?>
                                                 </div>
                                                 <div>
                                                     <?php if($subHasIsActive){ ?>

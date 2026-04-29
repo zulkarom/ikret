@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property int $rubric_id
  * @property int $program_id
+ * @property int|null $program_sub
  *
  * @property Program $program
  * @property Rubric $rubric
@@ -31,7 +32,7 @@ class ProgramRubric extends \yii\db\ActiveRecord
     {
         return [
             [['rubric_id', 'program_id'], 'required'],
-            [['rubric_id', 'program_id'], 'integer'],
+            [['rubric_id', 'program_id', 'program_sub'], 'integer'],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
             [['rubric_id'], 'exist', 'skipOnError' => true, 'targetClass' => Rubric::class, 'targetAttribute' => ['rubric_id' => 'id']],
         ];
