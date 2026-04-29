@@ -93,6 +93,8 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             [['edit_password_confirm'], 'compare', 'compareAttribute' => 'edit_password', 'message' => 'Password / PIN confirmation does not match.', 'on' => ['public_create', 'public_update', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
             [['contact_email'], 'validateUniquePublicEmail', 'on' => ['public_create', 'public_update', 'public_program1_create', 'public_program2_create', 'public_program3_create', 'public_program4_create', 'public_program5_create', 'public_program6_create', 'public_program7_create', 'public_program1_update', 'public_program2_update', 'public_program3_update', 'public_program4_update', 'public_program5_update', 'public_program6_update', 'public_program7_update']],
 
+            [['program_sub'], 'validateProgramSubActive'],
+
             [['user_id', 'program_id', 'participant_cat_local', 'competition_type', 'advisor_dropdown', 'status', 'participant_cat_umk', 'mentor_main', 'mentor_co', 'participant_cat_group', 'program_sub', 'award', 'participant_mode', 'participant_program'], 'integer'],
 
             [['participant_cat_program'], 'integer'],
@@ -201,6 +203,31 @@ class ProgramRegistration extends \yii\db\ActiveRecord
         if((int)$cat->is_active !== 1){
             $this->addError($attribute, 'Selected category is not active.');
             return;
+        }
+    }
+
+    public function validateProgramSubActive($attribute, $params)
+    {
+        if(!$this->$attribute){
+            return;
+        }
+
+        if(!$this->program_id){
+            return;
+        }
+
+        $sub = ProgramSub::findOne((int)$this->$attribute);
+        if(!$sub || (int)$sub->program_id !== (int)$this->program_id){
+            $this->addError($attribute, 'Invalid category.');
+            return;
+        }
+
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            if((int)$sub->is_active !== 1){
+                $this->addError($attribute, 'Selected category is not active.');
+                return;
+            }
         }
     }
 

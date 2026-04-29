@@ -100,7 +100,14 @@ class Program extends \yii\db\ActiveRecord
 
 
     public function listSubPrograms(){
-        $list = $this->getProgramSubs()->all();
+        $query = $this->getProgramSubs();
+
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $query->andWhere(['is_active' => 1]);
+        }
+
+        $list = $query->all();
         return ArrayHelper::map($list, 'id', 'subProgramText');
     }
 
