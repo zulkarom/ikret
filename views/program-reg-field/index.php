@@ -41,7 +41,9 @@ $this->title = 'Registration Fields';
                             <th width="32%">Field</th>
                             <th width="12%">Enabled</th>
                             <th width="12%">Required</th>
+                            <?php if($hasLayoutWidth){ ?>
                             <th width="16%">Layout</th>
+                            <?php } ?>
                             <th width="12%">Show Matric</th>
                             <th width="16%">Sort</th>
                         </tr>
@@ -51,7 +53,7 @@ $this->title = 'Registration Fields';
                             $row = array_key_exists($fieldName, $existing) ? $existing[$fieldName] : null;
                             $enabled = $row ? (int)$row->is_enabled === 1 : 0;
                             $required = $row ? (int)$row->is_required === 1 : 0;
-                            $layoutWidth = $row ? (int)$row->layout_width : ProgramRegField::LAYOUT_FULL;
+                            $layoutWidth = ($hasLayoutWidth && $row) ? (int)$row->layout_width : ProgramRegField::LAYOUT_FULL;
                             $showMatric = $row ? (int)$row->show_matric === 1 : 1;
                             $sort = $row ? (int)$row->sort_order : 0;
                         ?>
@@ -66,6 +68,7 @@ $this->title = 'Registration Fields';
                             <td class="text-center">
                                 <input type="checkbox" name="Field[required][<?=$fieldName?>]" value="1" <?=$required ? 'checked' : ''?> />
                             </td>
+                            <?php if($hasLayoutWidth){ ?>
                             <td>
                                 <select class="form-select" name="Field[layout_width][<?=$fieldName?>]">
                                     <?php foreach(ProgramRegField::layoutWidthOptions() as $value => $text){ ?>
@@ -73,6 +76,7 @@ $this->title = 'Registration Fields';
                                     <?php } ?>
                                 </select>
                             </td>
+                            <?php } ?>
                             <td class="text-center">
                                 <?php if($fieldName === 'group_member'){ ?>
                                 <input type="checkbox" name="Field[show_matric][<?=$fieldName?>]" value="1" <?=$showMatric ? 'checked' : ''?> />

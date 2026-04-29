@@ -165,7 +165,7 @@ use yii\helpers\Url;
 
           $menu[] = ['name' => 'Registration Fields Config', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
 
-          $menu[] = ['name' => 'Public Registration Settings', 'url' => ['/program/public-registration-settings'], 'icon' => 'bi bi-toggle-on'];
+          $menu[] = ['name' => 'Program Sub Programs', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
 
           $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
 

@@ -16,6 +16,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
 use app\models\Program;
+use app\models\ProgramSub;
 use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
 use app\models\ProgramRubric;
@@ -82,7 +83,15 @@ class ProgramController extends Controller
 
         $arr = ArrayHelper::map($registered, 'program_id', 'program_id');
 
-        $programs = Program::find()
+        $programQuery = Program::find();
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programQuery->andWhere(['is_active' => 1]);
+        }else if($programTable && $programTable->getColumn('status')){
+            $programQuery->andWhere(['status' => 10]);
+        }
+
+        $programs = $programQuery
         //->where(['NOT IN', 'id', $arr])
         ->all();
 
@@ -126,27 +135,119 @@ class ProgramController extends Controller
         ]);
     }
 
-    public function actionPublicRegistrationSettings()
+    public function actionAdminProgramSubs()
     {
         if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
 
         $programs = Program::find()->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
 
         if(Yii::$app->request->isPost){
-            $postPrograms = Yii::$app->request->post('Program', []);
+            if((int)Yii::$app->request->post('toggle_active', 0) === 1){
+                $programId = (int)Yii::$app->request->post('program_id');
+                $program = Program::findOne($programId);
 
-            foreach($programs as $program){
-                $program->public_reg_enabled = isset($postPrograms[$program->id]['public_reg_enabled']) ? (int)$postPrograms[$program->id]['public_reg_enabled'] : 0;
-                $program->save(false, ['public_reg_enabled']);
+                if($program){
+                    $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+
+                    if($programTable && $programTable->getColumn('is_active')){
+                        $val = (int)Yii::$app->request->post('is_active', 0) === 1 ? 1 : 0;
+                        $program->setAttribute('is_active', $val);
+                        $program->save(false, ['is_active']);
+                        Yii::$app->session->addFlash('success', 'Program updated.');
+                    }else if($programTable && $programTable->getColumn('status')){
+                        $val = (int)Yii::$app->request->post('status', 0) === 10 ? 10 : 0;
+                        $program->setAttribute('status', $val);
+                        $program->save(false, ['status']);
+                        Yii::$app->session->addFlash('success', 'Program updated.');
+                    }
+                }
+
+                return $this->redirect(['admin-program-subs']);
             }
 
-            Yii::$app->session->addFlash('success', 'Public registration settings have been updated.');
-            return $this->refresh();
+            $programId = (int)Yii::$app->request->post('program_id');
+            $subName = trim((string)Yii::$app->request->post('sub_name'));
+            $advisor = trim((string)Yii::$app->request->post('advisor'));
+
+            if($programId > 0 && $subName !== ''){
+                $exists = ProgramSub::find()
+                    ->where(['program_id' => $programId, 'sub_name' => $subName])
+                    ->one();
+
+                if(!$exists){
+                    $model = new ProgramSub();
+                    $model->program_id = $programId;
+                    $model->sub_name = $subName;
+                    $model->advisor = ($advisor !== '') ? $advisor : null;
+
+                    if($model->save()){
+                        Yii::$app->session->addFlash('success', 'Sub program added.');
+                        return $this->redirect(['admin-program-subs']);
+                    }
+
+                    if($model->getErrors()){
+                        foreach($model->getErrors() as $errors){
+                            foreach($errors as $e){
+                                Yii::$app->session->addFlash('error', $e);
+                            }
+                        }
+                    }else{
+                        Yii::$app->session->addFlash('error', 'Unable to add sub program.');
+                    }
+                }else{
+                    Yii::$app->session->addFlash('info', 'Sub program already exists for this program.');
+                }
+            }else{
+                Yii::$app->session->addFlash('error', 'Please provide a sub program name.');
+            }
         }
 
-        return $this->render('public_registration_settings', [
+        $subs = ProgramSub::find()
+            ->orderBy(['program_id' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        $subsByProgram = [];
+        foreach($subs as $sub){
+            $subsByProgram[(int)$sub->program_id][] = $sub;
+        }
+
+        return $this->render('admin_competition_categories', [
             'programs' => $programs,
+            'subsByProgram' => $subsByProgram,
         ]);
+    }
+
+    public function actionAdminProgramSubDelete($id)
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->request->isPost) return false;
+
+        $model = ProgramSub::findOne((int)$id);
+        if($model){
+            $model->delete();
+            Yii::$app->session->addFlash('success', 'Sub program removed.');
+        }
+
+        return $this->redirect(['admin-program-subs']);
+    }
+
+    public function actionAdminProgramSubToggle($id)
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->request->isPost) return false;
+
+        $model = ProgramSub::findOne((int)$id);
+        if($model){
+            $table = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+            if($table && $table->getColumn('is_active')){
+                $val = (int)Yii::$app->request->post('is_active', 0) === 1 ? 1 : 0;
+                $model->setAttribute('is_active', $val);
+                $model->save(false, ['is_active']);
+                Yii::$app->session->addFlash('success', 'Sub program updated.');
+            }
+        }
+
+        return $this->redirect(['admin-program-subs']);
     }
 
     public function actionViewRubric($id){
@@ -283,7 +384,18 @@ class ProgramController extends Controller
 
     public function actionPublicPrograms()
     {
-        $programs = Program::listPublicPrograms();
+        $programs = Program::find();
+
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programs->andWhere(['is_active' => 1]);
+        }else if($programTable && $programTable->getColumn('status')){
+            $programs->andWhere(['status' => 10]);
+        }
+
+        $programs = $programs
+            ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
 
         return $this->render('public_programs', [
             'programs' => $programs,
@@ -1115,7 +1227,16 @@ class ProgramController extends Controller
 
     protected function ensurePublicRegistrationEnabled($program)
     {
-        if((int)$program->public_reg_enabled !== 1){
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        $isEnabled = true;
+
+        if($programTable && $programTable->getColumn('is_active')){
+            $isEnabled = ((int)$program->getAttribute('is_active') === 1);
+        }else if($programTable && $programTable->getColumn('status')){
+            $isEnabled = ((int)$program->getAttribute('status') === 10);
+        }
+
+        if(!$isEnabled){
             Yii::$app->session->addFlash('error', 'Public registration is currently closed for this program.');
             throw new NotFoundHttpException('The requested page does not exist.');
         }

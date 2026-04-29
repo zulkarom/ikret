@@ -34,6 +34,9 @@ class ProgramRegFieldController extends Controller
     {
         $programs = Program::find()->orderBy(['id' => SORT_ASC])->all();
 
+        $table = Yii::$app->db->schema->getTableSchema(ProgramRegField::tableName());
+        $hasLayoutWidth = $table && $table->getColumn('layout_width');
+
         if($program_id === null){
             $first = $programs ? $programs[0] : null;
             if(!$first){
@@ -73,7 +76,9 @@ class ProgramRegFieldController extends Controller
 
                 $model->is_enabled = $enabled;
                 $model->is_required = $enabled ? $required : 0;
-                $model->layout_width = $layoutWidth;
+                if($hasLayoutWidth){
+                    $model->layout_width = $layoutWidth;
+                }
                 if($fieldName === 'group_member'){
                     $model->show_matric = $showMatric;
                 }
@@ -90,6 +95,7 @@ class ProgramRegFieldController extends Controller
             'program' => $program,
             'available' => $available,
             'existing' => $existing,
+            'hasLayoutWidth' => (bool)$hasLayoutWidth,
         ]);
     }
 }

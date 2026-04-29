@@ -1,8 +1,15 @@
 <?php
 
+throw new \yii\web\NotFoundHttpException('Page not found.');
+
 use yii\helpers\Html;
 
 $this->title = 'Public Registration Settings';
+
+$programTable = Yii::$app->db->schema->getTableSchema(app\models\Program::tableName());
+$publicRegCol = ($programTable && $programTable->getColumn('public_reg_enabled'))
+    ? 'public_reg_enabled'
+    : (($programTable && $programTable->getColumn('public_registration_enabled')) ? 'public_registration_enabled' : null);
 ?>
 <div class="pagetitle">
 <h1><?=$this->title?></h1></div>
@@ -20,6 +27,7 @@ $this->title = 'Public Registration Settings';
                     <tbody>
                         <tr><th>No.</th><th>Program</th><th>Status</th><th>Enable Public Registration</th></tr>
                         <?php $i = 1; foreach($programs as $program){ ?>
+                            <?php $enabled = $publicRegCol ? (int)$program->getAttribute($publicRegCol) : 0; ?>
                             <tr>
                                 <td><?=$i?>.</td>
                                 <td>
@@ -28,11 +36,13 @@ $this->title = 'Public Registration Settings';
                                         <br /><span class="text-muted small"><?= Html::encode($program->program_abbr) ?></span>
                                     <?php } ?>
                                 </td>
-                                <td><?=$program->publicRegistrationLabel?></td>
+                                <td>
+                                    <?= ((int)$enabled === 1) ? 'Enabled' : 'Disabled' ?>
+                                </td>
                                 <td>
                                     <input type="hidden" name="Program[<?=$program->id?>][public_reg_enabled]" value="0">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="Program[<?=$program->id?>][public_reg_enabled]" value="1" <?=$program->public_reg_enabled ? 'checked' : ''?>>
+                                        <input class="form-check-input" type="checkbox" name="Program[<?=$program->id?>][public_reg_enabled]" value="1" <?=((int)$enabled === 1) ? 'checked' : ''?>>
                                     </div>
                                 </td>
                             </tr>
