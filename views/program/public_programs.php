@@ -22,6 +22,7 @@ $this->title = 'Available Programs';
         <?php }else{ ?>
             <div class="row g-3">
                 <?php foreach($programs as $program){ ?>
+                    <?php $isClosed = (int)$program->getAttribute('reg_closed') === 1; ?>
                     <div class="col-12">
                         <div class="border rounded p-3 h-100">
                             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
@@ -45,9 +46,13 @@ $this->title = 'Available Programs';
                                     </div>
                                 </div>
                                 <div class="text-md-end">
-                                    <?= Html::a('Register', ['public-register-form', 'id' => $program->id], ['class' => 'btn btn-primary']) ?>
+                                    <?php if($isClosed){ ?>
+                                        <button type="button" class="btn btn-secondary" disabled>Closed</button>
+                                    <?php }else{ ?>
+                                        <?= Html::a('Register', ['public-register-form', 'id' => $program->id], ['class' => 'btn btn-primary']) ?>
+                                    <?php } ?>
                                     <div class="mt-2">
-                                        <?= Html::a('Edit Registration', ['public-edit-login', 'id' => $program->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                                        <?= Html::a('Edit', ['public-edit-login', 'id' => $program->id], ['class' => '']) ?>
                                     </div>
                                 </div>
                             </div>

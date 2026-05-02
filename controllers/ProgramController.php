@@ -874,14 +874,6 @@ class ProgramController extends Controller
             $programs->andWhere(['status' => 10]);
         }
 
-        if($programTable && $programTable->getColumn('public_reg_enabled')){
-            $programs->andWhere(['public_reg_enabled' => 1]);
-        }
-
-        if($programTable && $programTable->getColumn('reg_closed')){
-            $programs->andWhere(['reg_closed' => 0]);
-        }
-
         $programs = $programs
             ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
@@ -1780,10 +1772,6 @@ class ProgramController extends Controller
             $isEnabled = ((int)$program->getAttribute('is_active') === 1);
         }else if($programTable && $programTable->getColumn('status')){
             $isEnabled = ((int)$program->getAttribute('status') === 10);
-        }
-
-        if($isEnabled && $programTable && $programTable->getColumn('public_reg_enabled')){
-            $isEnabled = ((int)$program->getAttribute('public_reg_enabled') === 1);
         }
 
         if(!$isEnabled){
