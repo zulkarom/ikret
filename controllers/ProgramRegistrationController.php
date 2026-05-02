@@ -730,6 +730,39 @@ class ProgramRegistrationController extends Controller
         
     }
 
+    public function actionManagerDashboard($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $program = $role->program;
+        $programSub = null;
+
+        if($program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        return $this->render('manager-dashboard', [
+            'role' => $role,
+            'program' => $program,
+            'programSub' => $programSub,
+        ]);
+    }
+
     public function actionManagerSession($id, $sub = null){
         $session = Yii::$app->session;
         //print_r($session->get('keep-data'));die();

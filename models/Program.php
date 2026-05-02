@@ -34,9 +34,13 @@ class Program extends \yii\db\ActiveRecord
 
             [['public_reg_enabled'], 'integer'],
 
+            [['reg_closed'], 'integer'],
+
             [['is_active'], 'integer'],
 
             [['public_reg_enabled'], 'default', 'value' => 1],
+
+            [['reg_closed'], 'default', 'value' => 0],
 
             [['is_active'], 'default', 'value' => 1],
 
@@ -55,6 +59,7 @@ class Program extends \yii\db\ActiveRecord
             'program_name' => 'Program Name',
             'reg_info' => 'Registration Information',
             'public_reg_enabled' => 'Enable Public Registration',
+            'reg_closed' => 'Close Registration',
             'is_active' => 'Active'
         ];
     }

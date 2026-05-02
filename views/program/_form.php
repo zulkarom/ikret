@@ -18,6 +18,8 @@ use yii\helpers\Html;
     <?= $form->field($model, 'program_name')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'program_abbr')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'reg_closed')->checkbox() ?>
+
     <?= $form->field($model, 'reg_info')->widget(TinyMce::className(), [
     'options' => ['rows' => 14],
     'language' => 'en',

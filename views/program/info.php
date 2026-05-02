@@ -6,6 +6,14 @@ use yii\helpers\Html;
 /** @var app\models\ProgramRegistration $model */
 
 $this->title = 'Update Program Info';
+
+$programSub = $programSub ?? null;
+
+$this->params['breadcrumbs'][] = [
+    'label' => $model->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
+    'url' => ['/program-registration/manager-dashboard', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]
+];
+$this->params['breadcrumbs'][] = $this->title;
 ?>
 
 

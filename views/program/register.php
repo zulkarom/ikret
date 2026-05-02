@@ -20,6 +20,10 @@ $publicMode = $publicMode ?? false;
 $storageEntry = $storageEntry ?? false;
 $participantCategoryFee = null;
 
+$registrationClosed = $registrationClosed ?? false;
+
+$programSub = $programSub ?? null;
+
 if(!empty($register->participant_cat_program)){
     $participantCategory = ParticipantCatProgram::findOne((int)$register->participant_cat_program);
     if($participantCategory && !empty($participantCategory->fee)){
@@ -28,6 +32,14 @@ if(!empty($register->participant_cat_program)){
 }
 
 $this->title = 'Registration - ' . $model->program_name;
+
+if($demo && !Yii::$app->user->isGuest && Yii::$app->user->identity->isManager){
+    $this->params['breadcrumbs'][] = [
+        'label' => $model->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
+        'url' => ['/program-registration/manager-dashboard', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]
+    ];
+    $this->params['breadcrumbs'][] = $this->title;
+}
 
 $this->registerCss(<<<CSS
 .register-select-arrow {
@@ -53,6 +65,9 @@ CSS);
                   <span class="d-none d-lg-block"><?=$model->program_name?></span>
                 </a>
               </div><!-- End Logo -->
+              <?php if($publicMode && $registrationClosed){ ?>
+                  <div class="alert alert-warning">Registration is closed for this program.</div>
+              <?php } ?>
               <?php $arr_fields = $register->getProgramFields($register->program_id);?>
               <?php $fieldLayouts = $register->getProgramFieldLayouts($register->program_id); ?>
               <?php $fieldColClass = function($fieldName, $default = 'col-12') use ($fieldLayouts) {

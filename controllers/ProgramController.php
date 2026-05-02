@@ -121,19 +121,42 @@ class ProgramController extends Controller
         ]);
     }
 
-    public function actionInfo($id){
+    public function actionInfo($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $model = $this->findModel($id);
 
-        if ($model->load(Yii::$app->request->post())) {
-            if($model->save()){
-                Yii::$app->session->addFlash('success', "Data Updated");
-                return $this->refresh();
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
             }
         }
 
-        return $this->render('info',[
-            'model' => $model
+        $model = $this->findModel($id);
+
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                Yii::$app->session->addFlash('success', 'Program info updated.');
+                return $this->refresh();
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        return $this->render('info', [
+            'model' => $model,
+            'programSub' => $programSub,
         ]);
     }
 
@@ -732,7 +755,12 @@ class ProgramController extends Controller
 
     public function actionAchievement($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
 
         if(!$role){
             return;
@@ -765,8 +793,28 @@ class ProgramController extends Controller
 
     public function actionRegisterFields($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $programSub = null;
         $program = $role->program;
+
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
         $register = new ProgramRegistration();
         $register->program_id = $program->id;
 
@@ -776,6 +824,7 @@ class ProgramController extends Controller
             'members' => [new Member()],
             'demo' => true,
             'edit' => false,
+            'programSub' => $programSub,
         ]);
     }
 
@@ -784,6 +833,7 @@ class ProgramController extends Controller
         $model = $this->findModel($id);
         $defaultMember = new Member();
         $members = [$defaultMember];
+        $registrationClosed = false;
 
         if($reg){
             $register = $this->findRegistration($reg);
@@ -794,6 +844,7 @@ class ProgramController extends Controller
             }
         }else{
             $this->ensurePublicRegistrationEnabled($model);
+            $registrationClosed = $this->isPublicRegistrationClosed($model);
             $register = new ProgramRegistration();
             $register->program_id = $model->id;
             $register->status = 0;
@@ -808,6 +859,7 @@ class ProgramController extends Controller
             'edit' => $edit,
             'publicMode' => true,
             'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+            'registrationClosed' => $registrationClosed,
         ]);
     }
 
@@ -820,6 +872,14 @@ class ProgramController extends Controller
             $programs->andWhere(['is_active' => 1]);
         }else if($programTable && $programTable->getColumn('status')){
             $programs->andWhere(['status' => 10]);
+        }
+
+        if($programTable && $programTable->getColumn('public_reg_enabled')){
+            $programs->andWhere(['public_reg_enabled' => 1]);
+        }
+
+        if($programTable && $programTable->getColumn('reg_closed')){
+            $programs->andWhere(['reg_closed' => 0]);
         }
 
         $programs = $programs
@@ -839,6 +899,7 @@ class ProgramController extends Controller
         $edit = (bool)Yii::$app->request->post('edit');
         $model = $this->findModel($id);
         $defaultMember = new Member();
+        $registrationClosed = false;
 
         if($reg){
             $register = $this->findRegistration($reg);
@@ -849,6 +910,27 @@ class ProgramController extends Controller
             }
         }else{
             $this->ensurePublicRegistrationEnabled($model);
+            $registrationClosed = $this->isPublicRegistrationClosed($model);
+            if($registrationClosed){
+                Yii::$app->session->addFlash('error', 'Registration is closed for this program.');
+
+                $register = new ProgramRegistration();
+                $register->program_id = $model->id;
+                $register->status = 0;
+                $members = [$defaultMember];
+
+                return $this->render('register', [
+                    'model' => $model,
+                    'register' => $register,
+                    'err' => false,
+                    'members' => $members,
+                    'demo' => false,
+                    'edit' => false,
+                    'publicMode' => true,
+                    'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+                    'registrationClosed' => true,
+                ]);
+            }
             $register = new ProgramRegistration();
             $register->program_id = $model->id;
             $register->status = 0;
@@ -859,6 +941,21 @@ class ProgramController extends Controller
         $register->scenario = 'public_program' . $id . ($isUpdate ? '_update' : '_create');
 
         if($register->load(Yii::$app->request->post())){
+            if(!$reg && $registrationClosed){
+                Yii::$app->session->addFlash('error', 'Registration is closed for this program.');
+
+                return $this->render('register', [
+                    'model' => $model,
+                    'register' => $register,
+                    'err' => false,
+                    'members' => $members,
+                    'demo' => false,
+                    'edit' => false,
+                    'publicMode' => true,
+                    'storageEntry' => (bool)Yii::$app->request->post('storage_entry', false),
+                    'registrationClosed' => true,
+                ]);
+            }
             $register->status = 10;
             if(!$isUpdate){
                 $register->submitted_at = new Expression('NOW()');
@@ -908,6 +1005,8 @@ class ProgramController extends Controller
                 $register->user_id = $publicUser->id;
             }
 
+            $oldIDs = [];
+            $deletedIDs = [];
             if($isUpdate){
                 $oldIDs = ArrayHelper::map($members, 'id', 'id');
             }
@@ -1044,13 +1143,6 @@ class ProgramController extends Controller
 
     public function actionCertificate() //program
     {
-
-        $check = QuestionnaireAnswerPost::findOne(['user_id' => Yii::$app->user->identity->id]);
-        
-        if(!$check){
-            Yii::$app->session->addFlash('info', "Please be noted that you need to complete post-event questionnaire before getting the access to the certificate.");
-            return $this->render('empty');
-        }
         $setting = Setting::findOne(1);
         $allow_from = $setting->allow_cert_from;
         if(time() < strtotime($allow_from)){
@@ -1357,6 +1449,8 @@ class ProgramController extends Controller
                 
                 $register->updated_at = time();
     
+                $oldIDs = [];
+                $deletedIDs = [];
                 if(!$register->isNewRecord){
                     $oldIDs = ArrayHelper::map($members, 'id', 'id');
                 }
@@ -1688,10 +1782,24 @@ class ProgramController extends Controller
             $isEnabled = ((int)$program->getAttribute('status') === 10);
         }
 
+        if($isEnabled && $programTable && $programTable->getColumn('public_reg_enabled')){
+            $isEnabled = ((int)$program->getAttribute('public_reg_enabled') === 1);
+        }
+
         if(!$isEnabled){
             Yii::$app->session->addFlash('error', 'Public registration is currently closed for this program.');
             throw new NotFoundHttpException('The requested page does not exist.');
         }
+    }
+
+    protected function isPublicRegistrationClosed($program)
+    {
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if(!$programTable || !$programTable->getColumn('reg_closed')){
+            return false;
+        }
+
+        return ((int)$program->getAttribute('reg_closed') === 1);
     }
 
     protected function findRubric($id)

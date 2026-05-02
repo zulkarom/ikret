@@ -21,9 +21,9 @@ use yii\helpers\Url;
 
         if(Yii::$app->user->identity->isParticipant){
           $menu[] = ['name' => 'Participant Menu', 'heading' => true];
-          $menu[] = ['name' => 'List of Programs', 'url' => ['/program/index'], 'icon' => 'bi bi-easel'];
-          $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
-          $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
+          $menu[] = ['name' => 'Public Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
+          // $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
+          // $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
           $menu[] = ['name' => 'Certificates & Awards', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
         }
 
@@ -86,53 +86,61 @@ use yii\helpers\Url;
           $pro = UserRole::find()->where(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10])->all();
           if($pro){
             $menu[] = ['name' => 'Manager Menu', 'heading' => true];
-            foreach($pro as $p){
-              if($p->program){
-                $sub = '';
-                $url = ['/program-registration/manager','id' => $p->program_id];
-                $urls = ['/program-registration/manager-session','id' => $p->program_id];
-                $url7 = ['/program-registration/manager-analysis','id' => $p->program_id];
-                $url2 = ['/program-registration/jury-result','id' => $p->program_id];
-                $url3 = ['/program/register-fields','id' => $p->program_id];
-                $url4 = ['/program/rubrics','id' => $p->program_id];
-                $url5 = ['/program/achievement','id' => $p->program_id];
-                $url6 = ['/program/info','id' => $p->program_id];
-                $url8 = ['/program-registration/manager-view-certs','id' => $p->program_id];
-                
-
-                if($p->programSub){
-                  $sub = '/' . $p->programSub->sub_abbr;
-                  $url = ['/program-registration/manager','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $urls = ['/program-registration/manager-session','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url7 = ['/program-registration/manager-analysis','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url2 = ['/program-registration/jury-result','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url4 = ['/program/rubrics','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url3 = ['/program/register-fields','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url5 = ['/program/achievement','id' => $p->program_id, 'sub' => $p->program_sub];
-                  $url8 = ['/program-registration/manager-view-certs','id' => $p->program_id, 'sub' => $p->program_sub];
-                }
-                $sub_menu = [];
-
-                if($p->program->program_type == 1){
-
-                  $sub_menu[] = ['name' => 'Participants & Juries Assignment', 'url' => $url];
-                  $sub_menu[] = ['name' => 'Result By Assignments', 'url' => $url2];
-                  $sub_menu[] = ['name' => 'Analysis & Achievement', 'url' => $url7];
-                  $sub_menu[] = ['name' => 'Certificates', 'url' => $url8];
-                  $sub_menu[] = ['name' => 'Registration Fields', 'url' => $url3];
-                  $sub_menu[] = ['name' => 'Rubrics', 'url' => $url4];
-                  $sub_menu[] = ['name' => 'Achievements', 'url' => $url5];
-                }else{
-                  $sub_menu[] = ['name' => 'Participants & Certificates', 'url' => $urls];
-                }
-                
-
-                $sub_menu[] = ['name' => 'Program Info', 'url' => $url6];
-
-                $menu[] = ['name' => $p->program->program_abbr.$sub, 'url' => ['/'], 'icon' =>  'bi bi-list-stars', 'children' => $sub_menu];
-
+            $byProgram = [];
+            foreach($pro as $r){
+              $pid = (int)$r->program_id;
+              if(!array_key_exists($pid, $byProgram)){
+                $byProgram[$pid] = [];
               }
-              
+              $byProgram[$pid][] = $r;
+            }
+
+            foreach($byProgram as $pid => $roles){
+              $first = $roles ? $roles[0] : null;
+              if(!$first || !$first->program){
+                continue;
+              }
+
+              $program = $first->program;
+
+              if((int)$program->has_sub === 1){
+                $hasProgramLevel = false;
+                $allowedSubs = [];
+                foreach($roles as $r){
+                  if(empty($r->program_sub)){
+                    $hasProgramLevel = true;
+                    break;
+                  }
+                  $allowedSubs[(int)$r->program_sub] = true;
+                }
+
+                $subs = $program->programSubs;
+                $sub_menu = [];
+                if($subs){
+                  foreach($subs as $sp){
+                    if(!$hasProgramLevel && !array_key_exists((int)$sp->id, $allowedSubs)){
+                      continue;
+                    }
+                    $sub_menu[] = [
+                      'name' => $sp->sub_name,
+                      'url' => ['/program-registration/manager-dashboard', 'id' => $pid, 'sub' => $sp->id]
+                    ];
+                  }
+                }
+
+                $menu[] = [
+                  'name' => $program->program_abbr,
+                  'url' => ['/'],
+                  'icon' =>  'bi bi-list-stars',
+                  'children' => $sub_menu
+                ];
+              }else{
+                $menu[] = [
+                  'name' => $program->program_abbr,
+                  'url' => ['/program-registration/manager-dashboard', 'id' => $pid],
+                  'icon' =>  'bi bi-list-stars'
+                ];
+              }
             }
 
             $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];

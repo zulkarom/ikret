@@ -12,6 +12,12 @@ $this->title = 'Rubric: ' . $model->program_name;
 $programSub = $programSub ?? null;
 $rubrics = $rubrics ?? [];
 
+$this->params['breadcrumbs'][] = [
+    'label' => $model->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
+    'url' => ['/program-registration/manager-dashboard', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]
+];
+$this->params['breadcrumbs'][] = $this->title;
+
 ?>
 
 

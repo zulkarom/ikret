@@ -1,0 +1,2 @@
+ALTER TABLE `program`
+ADD COLUMN `reg_closed` TINYINT(1) NOT NULL DEFAULT 0;

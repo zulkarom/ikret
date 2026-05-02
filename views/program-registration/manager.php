@@ -12,6 +12,10 @@ use yii\grid\GridView;
 $program = $role->program;
 $sub_str = $programSub? ' / ' . $programSub->sub_abbr  : '';
 $this->title = 'Registration ('.$program->program_abbr . $sub_str.')';
+$this->params['breadcrumbs'][] = [
+    'label' => $program->program_abbr . $sub_str,
+    'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
+];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
   <div class="pagetitle">

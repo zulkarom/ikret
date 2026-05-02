@@ -3,6 +3,7 @@
 use app\assets\NiceAsset;
 use app\models\Alert;
 use yii\helpers\Html;
+use yii\widgets\Breadcrumbs;
 
 NiceAsset::register($this);
 $dirAssests = Yii::$app->assetManager->getPublishedUrl('@app/assets/nice');
@@ -47,6 +48,18 @@ $web = Yii::getAlias('@web');
     ?>
 
   <main id="main" class="main">
+  <?php if (!empty($this->params['breadcrumbs'])) { ?>
+  <nav>
+    <ol class="breadcrumb">
+      <?= Breadcrumbs::widget([
+          'links' => $this->params['breadcrumbs'],
+          'options' => ['class' => 'breadcrumb'],
+          'itemTemplate' => '<li class="breadcrumb-item">{link}</li>',
+          'activeItemTemplate' => '<li class="breadcrumb-item active">{link}</li>',
+      ]) ?>
+    </ol>
+  </nav>
+  <?php } ?>
   <?= Alert::widget() ?>
     <?=$content?>
 

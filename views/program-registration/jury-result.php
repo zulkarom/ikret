@@ -17,6 +17,10 @@ use yii\helpers\ArrayHelper;
 
 $sub_str = $programSub? ' / (' . $programSub->sub_abbr . ')' : '';
 $this->title = 'Result by Assignment - ' . $program->program_abbr . $sub_str;
+$this->params['breadcrumbs'][] = [
+    'label' => $program->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
+    'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
+];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
