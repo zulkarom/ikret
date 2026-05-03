@@ -14,34 +14,18 @@ use yii\helpers\Url;
 
 <div class="col-12">
 <?= $form
+->field($model, 'username', ['template' => '{label}{input}<i style="font-size:11px">Matric number / Staff No. or any unique username</i>{error}','addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])
+->textInput(['style' => 'text-transform: lowercase']) ?>
+</div>
+
+<div class="col-12">
+<?= $form
 ->field($model, 'email', ['addon' => ['append' => ['content'=>'<i class="bi bi-envelope"></i>']]])
 ->textInput(['style' => 'text-transform: lowercase']) ?>
 </div>
 
 <div class="col-12">
 <?= $form
-->field($model, 'phone', ['addon' => ['append' => ['content'=>'<i class="bi bi-phone"></i>']]])
-->textInput() ?>
-</div>
-
-<div class="col-12">
-
-<?php 
-echo $form
-->field($model, 'user_category')->dropDownList($model->listCategory(),['prompt' => 'Select Category']);
-?>
-</div>
-
-<div class="col-12" id="con-matric" style="display:none">
-
-<?=$form
-->field($model, 'matric')
-->textInput()->label('Student/Staff ID',['id' => 'label-matric']) ?>
-</div>
-
-<div class="col-12" id="con-institution" style="display:none">
-
-<?=$form
 ->field($model, 'institution')
 ->textInput() ?>
 </div>
@@ -86,27 +70,5 @@ echo $form
 <?php } ?>
 <?php ActiveForm::end(); ?>
 
-
-<?php 
-$this->registerJs('
-
-$("#registerform-user_category").change(function(){
-  var val = $(this).val();
-  if(val == 1 || val == 2 || val == 3){
-    $("#con-matric").show();
-    $("#con-institution").hide();
-    if(val == 1 || val == 2){
-      $("#label-matric").text("Matric No.");
-    }else if(val == 3){
-      $("#label-matric").text("Staff No.");
-    }
-  }else if(val == 4 || val == 5){
-    $("#con-matric").hide();
-    $("#con-institution").show();
-  }
-
-});
-
-');
 
 ?>

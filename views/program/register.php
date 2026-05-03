@@ -317,20 +317,6 @@ echo '</div>';
 
                     } ?>
 
-<?php if($publicMode && $register->isNewRecord){ ?>
-                    <div class="<?=$fieldColClass('edit_password')?>">
-                    <?= $form->field($register, 'edit_password')->passwordInput() ?>
-                    </div>
-                    <div class="<?=$fieldColClass('edit_password_confirm')?>">
-                    <?= $form->field($register, 'edit_password_confirm')->passwordInput() ?>
-                    </div>
-                    <div class="col-12">
-                    <i>Please keep this Password / PIN safe. You will need it later to edit your registration and for certificate-related access.</i>
-                    </div>
-<?php } ?>
-
-
-
 <?php 
 if(in_array('group_member',$arr_fields)){
   $register->group_member = 1;
@@ -603,8 +589,8 @@ echo Html::a('<i class="bi bi-file-earmark-text"></i> Uploaded Abstract' , Url::
     </div>
 <?php } ?>
 
+<?php if(in_array('poster_file', $arr_fields) || in_array('video_link', $arr_fields)){ ?>
 <br /><br />
-
 
 <div id="online-mode-only">
 
@@ -663,6 +649,7 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Poster' , Url::to(
 <br /><br />
 
 </div>
+<?php } ?>
 
 <?php if(in_array('payment_file', $arr_fields)){?>
     <div class="mt-4 pt-2">
@@ -706,14 +693,25 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
 
 
 
+      <?php if($publicMode && $register->isNewRecord){ ?>
+      <div class="col-12 mt-3">
+          <div class="row">
+              <div class="<?=$fieldColClass('edit_password')?>">
+              <?= $form->field($register, 'edit_password')->passwordInput() ?>
+              </div>
+              <div class="<?=$fieldColClass('edit_password_confirm')?>">
+              <?= $form->field($register, 'edit_password_confirm')->passwordInput() ?>
+              </div>
+          </div>
+          <i>Please keep this Password / PIN safe. You will need it later to edit your registration and for certificate-related access.</i>
+      </div>
+      <?php } ?>
+
+      <div class="col-12 mt-4">
+      <div class="d-flex flex-column flex-lg-row align-items-start gap-2">
       <?php if(!$demo && !$publicMode && (!$edit || (int)$register->status === 0)){?>
-      <div class="col-12">
-
       <?= Html::submitButton('Save as Draft', ['class' => 'btn btn-warning', 'name' => 'action', 'value' => 'draft']) ?>
-
-        <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
-
-      </div> 
+      <?= Html::submitButton('Submit Registration', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'submit']) ?>
       <?php } 
       
       if($publicMode && !$edit){
@@ -721,11 +719,11 @@ echo Html::a('<i class="bi bi-file-earmark-pdf"></i> Uploaded Proof of Payment' 
       }
 
       if($edit && ($publicMode || (int)$register->status !== 0)){
-        //echo '<input type="hidden" name="edit" value="1" />';
         echo Html::submitButton('Update', ['class' => 'btn btn-primary', 'name' => 'action', 'value' => 'update']);
       }
-      
       ?>
+      </div>
+      </div>
       <br />
 
 

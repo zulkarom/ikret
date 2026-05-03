@@ -8,10 +8,37 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 $this->title = 'HOME - I-CREATE - The International Convention on Resourceful Entrepreneurs Achieving Tomorrow\'s Excellence';
+
+$set = Setting::findOne(1);
+
+$programmeBookUrl = 'https://anyflip.com/nsaql/bhfa/';
+if ($set && !empty($set->programme_book_url)) {
+  $programmeBookUrl = $set->programme_book_url;
+}
+
+$programmeBookQr = Yii::getAlias('@web') . '/images/icreate-programme-book.png';
+if ($set && !empty($set->programme_book_qr)) {
+  $programmeBookQr = Yii::getAlias('@web') . '/' . ltrim($set->programme_book_qr, '/');
+}
+
+$programDescription = "The International Convention on Resourceful Entrepreneurs Achieving Tomorrow’s Excellence (I-CREATE) serves as an academic nexus, consolidating diverse entrepreneurial innovation initiatives involving six sub-programs. COMEI 3.0 cultivates entrepreneurial zeal among students via workshops and pitch sessions, while JFED nurtures franchise business expertise, facilitating dialogue with industry elites. AIFIF augments student understanding of finance through seminars and career expos, harmonizing educational and industrial demands. NEWeek instills practical entrepreneurship by enabling students to enact theoretical concepts. IMPACT fosters community engagement and problem-solving acumen, while RISE provides a platform for showcasing innovative business concepts. At I-CREATE, these programs converge, fostering interdisciplinary discourse, creativity, and advancing entrepreneurship scholarship for future leaders.";
+if ($set && !empty($set->program_description)) {
+  $programDescription = $set->program_description;
+}
+
+$current = $current ?? null;
+$next = $next ?? null;
+$previous = $previous ?? null;
 ?>
   <div class="pagetitle">
       <div align="center" style="text-align:center">
-      <img src="<?=Yii::getAlias('@web')?>/images/logo-icreate-subs.png" style="max-width:500px" width="100%" />
+      <?php
+      $heroImage = Yii::getAlias('@web') . '/images/logo-icreate-subs.png';
+      if ($set && !empty($set->banner_image)) {
+        $heroImage = Yii::getAlias('@web') . '/' . ltrim($set->banner_image, '/');
+      }
+      ?>
+      <img src="<?= Html::encode($heroImage) ?>" style="width:100%; max-width:80%; height:auto;" />
       </div>
 
     </div><!-- End Page Title -->
@@ -37,16 +64,14 @@ $this->title = 'HOME - I-CREATE - The International Convention on Resourceful En
 <br />
 <?php 
 //ketika masih berjalan
-$set = Setting::findOne(1);
-
-$start = strtotime($set->date_start);
-$end = strtotime($set->date_end);
+$start = $set ? strtotime($set->date_start) : 0;
+$end = $set ? strtotime($set->date_end) : 0;
 $running = time() >= $start && time() <= $end;
 $grid = 12;
 ?>
 
 <div class="row">
-  <?php if($running){
+  <?php if($running && $set && ($set->show_icreate_list_event === null || $set->show_icreate_list_event)){
     $grid = 6;
     ?>
     <div class="col-md-6">
@@ -111,12 +136,12 @@ if($next){?>
     <?php } ?>
     <div class="col-md-<?=$grid?>">
     <section style="text-align:justify;padding:15px">
-    The International Convention on Resourceful Entrepreneurs Achieving Tomorrow’s Excellence (I-CREATE) serves as an academic nexus, consolidating diverse entrepreneurial innovation initiatives involving six sub-programs. COMEI 3.0 cultivates entrepreneurial zeal among students via workshops and pitch sessions, while JFED nurtures franchise business expertise, facilitating dialogue with industry elites. AIFIF augments student understanding of finance through seminars and career expos, harmonizing educational and industrial demands. NEWeek instills practical entrepreneurship by enabling students to enact theoretical concepts. IMPACT fosters community engagement and problem-solving acumen, while RISE provides a platform for showcasing innovative business concepts. At I-CREATE, these programs converge, fostering interdisciplinary discourse, creativity, and advancing entrepreneurship scholarship for future leaders.
+    <?= nl2br(Html::encode($programDescription)) ?>
     </section>
 
     <div style="text-align: center; margin-top:5px" align="center">
-    <a href="https://anyflip.com/nsaql/bhfa/" target="_blank"><img src="<?=Yii::getAlias('@web')?>/images/icreate-programme-book.png" style="max-width:125px" width="90%" /></a> 
-    <div> <a href="https://anyflip.com/nsaql/bhfa/" target="_blank">Programme Book</a> </div>
+    <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank"><img src="<?= Html::encode($programmeBookQr) ?>" style="max-width:125px" width="90%" /></a> 
+    <div> <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">Programme Book</a> </div>
 
 
     </div>

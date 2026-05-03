@@ -1,6 +1,7 @@
 <?php
 
 use app\models\UserRole;
+use app\models\ProgramSub;
 use yii\helpers\Url;
 
 ?>
@@ -115,9 +116,19 @@ use yii\helpers\Url;
                 }
 
                 $subs = $program->programSubs;
+                $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+                $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
                 $sub_menu = [];
+
+                $sub_menu[] = [
+                  'name' => 'Parent',
+                  'url' => ['/program-registration/manager-parent', 'id' => $pid]
+                ];
                 if($subs){
                   foreach($subs as $sp){
+                    if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
+                      continue;
+                    }
                     if(!$hasProgramLevel && !array_key_exists((int)$sp->id, $allowedSubs)){
                       continue;
                     }

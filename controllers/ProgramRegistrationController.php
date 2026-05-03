@@ -768,6 +768,32 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
+    public function actionManagerParent($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::find()->where([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+        ])->andWhere(['not', ['status' => null]])->andWhere(['status' => 10])->one();
+
+        if(!$role){
+            return;
+        }
+
+        $program = $role->program;
+        if(!$program){
+            return;
+        }
+
+        return $this->render('manager-parent', [
+            'role' => $role,
+            'program' => $program,
+            'dashboardStats' => $this->buildDashboardStats($program, null),
+        ]);
+    }
+
     public function actionImportParticipants($id, $sub = null)
     {
         if(!Yii::$app->user->identity->isManager) return false;
@@ -784,19 +810,21 @@ class ProgramRegistrationController extends Controller
         }
 
         $program = $role->program;
-        $programSub = null;
+        $managerSub = null;
 
         if($program->has_sub == 1){
             if($sub){
-                $programSub = $role->programSub;
+                $managerSub = $role->programSub;
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
         }
 
         $enabledFields = ProgramRegistration::getProgramFields((int)$program->id);
+        $requiredFields = ProgramRegistration::getProgramRequiredFields((int)$program->id);
         $fieldLabels = ProgramRegistration::availableRegistrationFields();
         $fieldTypes = ProgramRegistration::availableRegistrationFieldTypes();
+        $showMemberMatric = ProgramRegistration::groupMemberShowMatric((int)$program->id);
 
         $importableFieldTypes = [
             'project_name' => 'Text',
@@ -827,35 +855,59 @@ class ProgramRegistrationController extends Controller
         $unsupportedFields = [];
         foreach($enabledFields as $fieldName){
             if(array_key_exists($fieldName, $importableFieldTypes)){
-                if($fieldName === 'program_sub' && $programSub){
-                    continue;
-                }
                 $importableFields[$fieldName] = [
                     'label' => array_key_exists($fieldName, $fieldLabels) ? $fieldLabels[$fieldName] : $fieldName,
                     'type' => $importableFieldTypes[$fieldName],
+                    'required' => in_array($fieldName, $requiredFields, true),
                 ];
             }else{
                 $unsupportedFields[$fieldName] = [
                     'label' => array_key_exists($fieldName, $fieldLabels) ? $fieldLabels[$fieldName] : $fieldName,
                     'type' => array_key_exists($fieldName, $fieldTypes) ? $fieldTypes[$fieldName] : 'Input',
+                    'required' => in_array($fieldName, $requiredFields, true),
                 ];
             }
         }
 
-        $extraColumns = [
-            'member_names' => ['label' => 'Additional Members', 'type' => 'Pipe-separated text'],
-            'member_matrics' => ['label' => 'Additional Member Matrics', 'type' => 'Pipe-separated text'],
-        ];
+        if($program->has_sub == 1 && !array_key_exists('program_sub', $importableFields)){
+            $importableFields = array_merge([
+                'program_sub' => [
+                    'label' => array_key_exists('program_sub', $fieldLabels) ? $fieldLabels['program_sub'] : 'program_sub',
+                    'type' => $importableFieldTypes['program_sub'],
+                    'required' => true,
+                ],
+            ], $importableFields);
+            unset($unsupportedFields['program_sub']);
+        }
+
+        $extraColumns = [];
+        if(in_array('group_member', $enabledFields, true)){
+            $extraColumns['member_names'] = [
+                'label' => 'Additional Members',
+                'type' => 'Text',
+                'required' => in_array('group_member', $requiredFields, true),
+            ];
+            if($showMemberMatric){
+                $extraColumns['member_matrics'] = [
+                    'label' => 'Additional Member Matrics',
+                    'type' => 'Text',
+                    'required' => false,
+                ];
+            }
+        }
 
         $sampleHeaders = array_merge(array_keys($importableFields), array_keys($extraColumns));
-        $sampleRow = [];
+        $sampleRows = [];
+
+        // Create sample data for a group with 3 members
+        $baseSampleRow = [];
         foreach(array_keys($importableFields) as $fieldName){
             switch($fieldName){
                 case 'project_name':
-                    $sampleRow[] = 'Sample Project';
+                    $baseSampleRow[] = 'Sample Project';
                     break;
                 case 'project_desc':
-                    $sampleRow[] = 'Short project description';
+                    $baseSampleRow[] = 'Short project description';
                     break;
                 case 'participant_cat_group':
                 case 'participant_cat_local':
@@ -866,43 +918,59 @@ class ProgramRegistrationController extends Controller
                 case 'participant_cat_program':
                 case 'competition_cat_program':
                 case 'advisor_dropdown':
-                    $sampleRow[] = '1';
+                    $baseSampleRow[] = '1';
                     break;
                 case 'program_sub':
-                    $sampleRow[] = $programSub ? (string)$programSub->id : '1';
+                    $baseSampleRow[] = $managerSub ? (string)$managerSub->id : '1';
                     break;
                 case 'booth_number':
                 case 'group_code':
-                    $sampleRow[] = 'G01';
+                    $baseSampleRow[] = 'G01';
                     break;
                 case 'group_name':
-                    $sampleRow[] = 'Team Alpha';
+                    $baseSampleRow[] = 'Team Alpha';
                     break;
                 case 'institution':
-                    $sampleRow[] = 'UMK';
+                    $baseSampleRow[] = 'UMK';
                     break;
                 case 'contact_person':
-                    $sampleRow[] = 'Aisyah';
+                    $baseSampleRow[] = 'Aisyah';
                     break;
                 case 'contact_no':
-                    $sampleRow[] = '0123456789';
+                    $baseSampleRow[] = '0123456789';
                     break;
                 case 'contact_email':
-                    $sampleRow[] = 'team@example.com';
+                    $baseSampleRow[] = 'team@example.com';
                     break;
                 case 'advisor':
-                    $sampleRow[] = 'Dr. Advisor';
+                    $baseSampleRow[] = 'Dr. Advisor';
                     break;
                 case 'nric':
-                    $sampleRow[] = '900101101010';
+                    $baseSampleRow[] = '900101101010';
                     break;
                 default:
-                    $sampleRow[] = 'Sample';
+                    $baseSampleRow[] = 'Sample';
                     break;
             }
         }
-        $sampleRow[] = 'Member Two|Member Three';
-        $sampleRow[] = 'A22AA1111|A22AA1112';
+
+        // Create sample rows for team members
+        $teamMembers = [
+            ['name' => 'John Doe', 'matric' => 'A25A1001'],
+            ['name' => 'Jane Smith', 'matric' => 'A25A1002'],
+            ['name' => 'Bob Johnson', 'matric' => 'A25A1003'],
+        ];
+
+        foreach($teamMembers as $member){
+            $sampleRow = $baseSampleRow;
+            if(array_key_exists('member_names', $extraColumns)){
+                $sampleRow[] = $member['name'];
+            }
+            if(array_key_exists('member_matrics', $extraColumns)){
+                $sampleRow[] = $member['matric'];
+            }
+            $sampleRows[] = $sampleRow;
+        }
 
         if(Yii::$app->request->isPost){
             $csvFile = UploadedFile::getInstanceByName('csv_file');
@@ -937,93 +1005,154 @@ class ProgramRegistrationController extends Controller
                 return $this->refresh();
             }
 
+            // Read all rows and group by group_name
+            $groupedData = [];
+            $rowNo = 1;
+            while(($row = fgetcsv($handle)) !== false){
+                $rowNo++;
+                $rowAssoc = [];
+                foreach($headers as $index => $header){
+                    $rowAssoc[$header] = array_key_exists($index, $row) ? trim((string)$row[$index]) : '';
+                }
+
+                $hasContent = false;
+                foreach($rowAssoc as $value){
+                    if($value !== ''){
+                        $hasContent = true;
+                        break;
+                    }
+                }
+                if(!$hasContent){
+                    continue;
+                }
+
+                $groupName = isset($rowAssoc['group_name']) ? trim((string)$rowAssoc['group_name']) : '';
+                if($groupName === ''){
+                    continue; // Skip rows without group_name
+                }
+
+                if(!isset($groupedData[$groupName])){
+                    $groupedData[$groupName] = [];
+                }
+                $groupedData[$groupName][] = $rowAssoc;
+            }
+            fclose($handle);
+
+            if(empty($groupedData)){
+                Yii::$app->session->addFlash('error', 'No valid data found in CSV file.');
+                return $this->refresh();
+            }
+
             $transaction = Yii::$app->db->beginTransaction();
             $created = 0;
-            $rowNo = 1;
 
             try{
-                while(($row = fgetcsv($handle)) !== false){
-                    $rowNo++;
-                    $rowAssoc = [];
-                    foreach($headers as $index => $header){
-                        $rowAssoc[$header] = array_key_exists($index, $row) ? trim((string)$row[$index]) : '';
+                foreach($groupedData as $groupName => $groupRows){
+                    // Use the first row for registration data
+                    $firstRow = $groupRows[0];
+
+                    // Create user account for the first member
+                    $firstMemberMatric = isset($firstRow['member_matrics']) ? trim((string)$firstRow['member_matrics']) : '';
+                    $firstMemberName = isset($firstRow['member_names']) ? trim((string)$firstRow['member_names']) : '';
+
+                    if($firstMemberMatric === '' || $firstMemberName === ''){
+                        throw new \RuntimeException('First member must have matric and name for group: ' . $groupName);
                     }
 
-                    $hasContent = false;
-                    foreach($rowAssoc as $value){
-                        if($value !== ''){
-                            $hasContent = true;
-                            break;
+                    // Check if user already exists
+                    $existingUser = User::findByUsername($firstMemberMatric);
+                    if($existingUser){
+                        $user = $existingUser;
+                    }else{
+                        // Create new user
+                        $user = new User();
+                        $user->username = $firstMemberMatric;
+                        $user->fullname = $firstMemberName;
+                        $user->matric = $firstMemberMatric;
+                        // Use matric@dummy.com as email
+                        $user->email = strtolower($firstMemberMatric) . '@dummy.com';
+                        $user->is_student = 1;
+                        $user->is_internal = 1;
+                        $user->status = User::STATUS_ACTIVE;
+                        $user->setPassword($firstMemberMatric); // Use matric as password
+                        $user->generateAuthKey();
+
+                        if(!$user->save(false)){
+                            throw new \RuntimeException('Failed to create user account for matric: ' . $firstMemberMatric . '. Database error.');
                         }
                     }
-                    if(!$hasContent){
-                        continue;
-                    }
 
+                    // Create program registration
                     $registration = new ProgramRegistration();
+                    $registration->user_id = $user->id;
                     $registration->program_id = (int)$program->id;
-                    $registration->program_sub = $programSub ? (int)$programSub->id : (isset($rowAssoc['program_sub']) && $rowAssoc['program_sub'] !== '' ? (int)$rowAssoc['program_sub'] : null);
+                    $registration->program_sub = isset($firstRow['program_sub']) && $firstRow['program_sub'] !== '' ? (int)$firstRow['program_sub'] : null;
                     $registration->status = ProgramRegistration::STATUS_REGISTERED;
                     $registration->created_at = time();
                     $registration->updated_at = time();
                     $registration->submitted_at = new Expression('NOW()');
 
+                    // Set registration fields from the first row
                     foreach(array_keys($importableFields) as $fieldName){
-                        if(!array_key_exists($fieldName, $rowAssoc)){
+                        if(!array_key_exists($fieldName, $firstRow)){
                             continue;
                         }
 
-                        $value = $rowAssoc[$fieldName];
+                        $value = $firstRow[$fieldName];
                         $registration->$fieldName = ($value === '') ? null : $value;
                     }
 
+                    // Set group_name from the group
+                    $registration->group_name = $groupName;
+
                     if(!$registration->save(false)){
-                        throw new \RuntimeException('Failed to save registration on CSV row ' . $rowNo . '.');
+                        throw new \RuntimeException('Failed to save registration for group: ' . $groupName);
                     }
 
-                    $memberNames = isset($rowAssoc['member_names']) ? trim((string)$rowAssoc['member_names']) : '';
-                    $memberMatrics = isset($rowAssoc['member_matrics']) ? trim((string)$rowAssoc['member_matrics']) : '';
+                    // Create member records for all members in the group
+                    foreach($groupRows as $memberRow){
+                        $memberMatric = isset($memberRow['member_matrics']) ? trim((string)$memberRow['member_matrics']) : '';
+                        $memberName = isset($memberRow['member_names']) ? trim((string)$memberRow['member_names']) : '';
 
-                    if($memberNames !== ''){
-                        $names = array_map('trim', explode('|', $memberNames));
-                        $matrics = $memberMatrics !== '' ? array_map('trim', explode('|', $memberMatrics)) : [];
-
-                        foreach($names as $index => $memberName){
-                            if($memberName === ''){
-                                continue;
-                            }
-
-                            $member = new Member();
-                            $member->program_reg_id = $registration->id;
-                            $member->member_name = $memberName;
-                            $member->member_matric = array_key_exists($index, $matrics) ? $matrics[$index] : null;
-                            $member->save(false);
+                        if($memberName === ''){
+                            continue; // Skip empty member names
                         }
+
+                        $member = new Member();
+                        $member->program_reg_id = $registration->id;
+                        $member->member_name = $memberName;
+                        $member->member_matric = $memberMatric;
+                        $member->save(false);
                     }
 
                     $created++;
                 }
 
-                fclose($handle);
                 $transaction->commit();
-                Yii::$app->session->addFlash('success', $created . ' participant record(s) imported successfully.');
+                Yii::$app->session->addFlash('success', $created . ' group registration(s) imported successfully.');
                 return $this->refresh();
             }catch(\Throwable $e){
-                fclose($handle);
                 $transaction->rollBack();
                 Yii::$app->session->addFlash('error', $e->getMessage());
             }
         }
 
+        // Get available program subs for reference
+        $availableProgramSubs = ProgramSub::find()
+            ->where(['program_id' => $program->id, 'is_active' => 1])
+            ->orderBy('id')
+            ->all();
+
         return $this->render('import-participants', [
             'role' => $role,
             'program' => $program,
-            'programSub' => $programSub,
+            'managerSub' => $managerSub,
             'importableFields' => $importableFields,
             'unsupportedFields' => $unsupportedFields,
             'extraColumns' => $extraColumns,
             'sampleHeaders' => $sampleHeaders,
-            'sampleRow' => $sampleRow,
+            'sampleRows' => $sampleRows,
+            'availableProgramSubs' => $availableProgramSubs,
         ]);
     }
 

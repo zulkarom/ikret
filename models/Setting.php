@@ -12,6 +12,9 @@ use Yii;
  */
 class Setting extends \yii\db\ActiveRecord
 {
+    public $banner_file;
+    public $programme_book_qr_file;
+
     /**
      * {@inheritdoc}
      */
@@ -28,6 +31,8 @@ class Setting extends \yii\db\ActiveRecord
         $columns = static::getTableSchema()->getColumnNames();
         return [
             [$columns, 'safe'],
+            [['banner_file', 'programme_book_qr_file'], 'file', 'skipOnEmpty' => true, 'extensions' => ['png', 'jpg', 'jpeg', 'webp']],
+            [['show_icreate_list_event'], 'boolean'],
         ];
     }
 
@@ -39,6 +44,16 @@ class Setting extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'allow_cert_from' => 'Allow Cert From',
+            'allow_edit_reg_until' => 'Allow Edit Registration Until',
+            'date_start' => 'Event Start Date',
+            'date_end' => 'Event End Date',
+            'banner_image' => 'Banner Image',
+            'banner_file' => 'Banner Image',
+            'show_icreate_list_event' => 'Show I-CREATE List Event',
+            'programme_book_url' => 'Programme Book URL',
+            'programme_book_qr' => 'Programme Book QR',
+            'programme_book_qr_file' => 'Programme Book QR',
+            'program_description' => 'Program Description',
         ];
     }
 }
