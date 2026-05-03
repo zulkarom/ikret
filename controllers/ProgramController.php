@@ -815,17 +815,7 @@ class ProgramController extends Controller
             }
         }
 
-        $register = new ProgramRegistration();
-        $register->program_id = $program->id;
-
-        return $this->render('register',[
-            'model' => $program,
-            'register' => $register,
-            'members' => [new Member()],
-            'demo' => true,
-            'edit' => false,
-            'programSub' => $programSub,
-        ]);
+        return $this->redirect(['/program-reg-field/index', 'id' => $program->id, 'sub' => $sub]);
     }
 
     public function actionPublicRegisterForm($id, $reg = null, $edit = false)

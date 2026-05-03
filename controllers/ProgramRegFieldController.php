@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\models\Program;
 use app\models\ProgramRegField;
 use app\models\ProgramRegistration;
+use app\models\UserRole;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -22,7 +23,8 @@ class ProgramRegFieldController extends Controller
                         'allow' => true,
                         'roles' => ['@'],
                         'matchCallback' => function () {
-                            return !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin;
+                            return !Yii::$app->user->isGuest
+                                && (Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isManager);
                         },
                     ],
                 ],
@@ -30,14 +32,14 @@ class ProgramRegFieldController extends Controller
         ];
     }
 
-    public function actionIndex($program_id = null)
+    public function actionIndex($program_id = null, $id = null, $sub = null)
     {
-        $programs = Program::find()->orderBy(['id' => SORT_ASC])->all();
-
-        $table = Yii::$app->db->schema->getTableSchema(ProgramRegField::tableName());
-        $hasLayoutWidth = $table && $table->getColumn('layout_width');
+        if($program_id === null && $id !== null){
+            $program_id = $id;
+        }
 
         if($program_id === null){
+            $programs = Program::find()->orderBy(['id' => SORT_ASC])->all();
             $first = $programs ? $programs[0] : null;
             if(!$first){
                 throw new NotFoundHttpException('No program found.');
@@ -48,6 +50,28 @@ class ProgramRegFieldController extends Controller
         $program = Program::findOne((int)$program_id);
         if(!$program){
             throw new NotFoundHttpException('Program not found.');
+        }
+
+        $programSub = null;
+        $programs = [];
+
+        if(!Yii::$app->user->isGuest && Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdmin){
+            $role = UserRole::findOne([
+                'program_id' => (int)$program_id,
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+                'program_sub' => $sub,
+            ]);
+
+            if(!$role){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+
+            if((int)$program->has_sub === 1 && $sub){
+                $programSub = $role->programSub;
+            }
+        }else{
+            $programs = Program::find()->orderBy(['id' => SORT_ASC])->all();
         }
 
         $available = ProgramRegistration::availableRegistrationFields();
@@ -61,10 +85,6 @@ class ProgramRegFieldController extends Controller
 
             foreach($available as $fieldName => $label){
                 $enabled = array_key_exists('enabled', $post) && array_key_exists($fieldName, $post['enabled']) ? 1 : 0;
-                $required = array_key_exists('required', $post) && array_key_exists($fieldName, $post['required']) ? 1 : 0;
-                $sort = array_key_exists('sort', $post) && array_key_exists($fieldName, $post['sort']) ? (int)$post['sort'][$fieldName] : 0;
-                $layoutWidth = array_key_exists('layout_width', $post) && array_key_exists($fieldName, $post['layout_width']) ? (int)$post['layout_width'][$fieldName] : ProgramRegField::LAYOUT_FULL;
-                $showMatric = array_key_exists('show_matric', $post) && array_key_exists($fieldName, $post['show_matric']) ? 1 : 0;
 
                 if(array_key_exists($fieldName, $existing)){
                     $model = $existing[$fieldName];
@@ -75,27 +95,21 @@ class ProgramRegFieldController extends Controller
                 }
 
                 $model->is_enabled = $enabled;
-                $model->is_required = $enabled ? $required : 0;
-                if($hasLayoutWidth){
-                    $model->layout_width = $layoutWidth;
-                }
-                if($fieldName === 'group_member'){
-                    $model->show_matric = $showMatric;
-                }
-                $model->sort_order = $sort;
+                $model->is_required = 0;
                 $model->save(false);
             }
 
             Yii::$app->session->addFlash('success', 'Registration fields updated');
-            return $this->redirect(['index', 'program_id' => $program_id]);
+            return $this->redirect(['index', 'program_id' => $program_id, 'sub' => $sub]);
         }
 
         return $this->render('index', [
             'programs' => $programs,
             'program' => $program,
+            'programSub' => $programSub,
+            'sub' => $sub,
             'available' => $available,
             'existing' => $existing,
-            'hasLayoutWidth' => (bool)$hasLayoutWidth,
         ]);
     }
 }

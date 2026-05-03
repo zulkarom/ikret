@@ -13,10 +13,13 @@ use app\models\Member;
 use app\models\Mentor;
 use app\models\MentorMenteesSearch;
 use app\models\ParticipantAchieve;
+use app\models\Program;
 use app\models\ProgramAchievement;
+use app\models\ProgramRegField;
 use app\models\ProgramRegistration;
 use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
+use app\models\ProgramRubric;
 use app\models\ProgramSub;
 use app\models\Rubric;
 use app\models\RubricAnswer;
@@ -28,6 +31,7 @@ use yii\db\Expression;
 use yii\db\Query;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 
@@ -760,7 +764,331 @@ class ProgramRegistrationController extends Controller
             'role' => $role,
             'program' => $program,
             'programSub' => $programSub,
+            'dashboardStats' => $this->buildDashboardStats($program, $programSub),
         ]);
+    }
+
+    public function actionImportParticipants($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub
+        ]);
+
+        if(!$role){
+            return;
+        }
+
+        $program = $role->program;
+        $programSub = null;
+
+        if($program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        $enabledFields = ProgramRegistration::getProgramFields((int)$program->id);
+        $fieldLabels = ProgramRegistration::availableRegistrationFields();
+        $fieldTypes = ProgramRegistration::availableRegistrationFieldTypes();
+
+        $importableFieldTypes = [
+            'project_name' => 'Text',
+            'project_desc' => 'Textarea',
+            'participant_cat_local' => 'Integer option',
+            'participant_cat_group' => 'Integer option',
+            'participant_mode' => 'Integer option',
+            'participant_cat_umk' => 'Integer option',
+            'participant_program' => 'Integer option',
+            'other_program' => 'Text',
+            'program_sub' => 'Integer ID',
+            'advisor_dropdown' => 'Integer option',
+            'booth_number' => 'Text',
+            'advisor' => 'Text',
+            'institution' => 'Text',
+            'contact_person' => 'Text',
+            'contact_no' => 'Text',
+            'contact_email' => 'Email',
+            'group_code' => 'Text',
+            'group_name' => 'Text',
+            'nric' => 'Text',
+            'competition_type' => 'Integer option',
+            'participant_cat_program' => 'Integer option',
+            'competition_cat_program' => 'Integer option',
+        ];
+
+        $importableFields = [];
+        $unsupportedFields = [];
+        foreach($enabledFields as $fieldName){
+            if(array_key_exists($fieldName, $importableFieldTypes)){
+                if($fieldName === 'program_sub' && $programSub){
+                    continue;
+                }
+                $importableFields[$fieldName] = [
+                    'label' => array_key_exists($fieldName, $fieldLabels) ? $fieldLabels[$fieldName] : $fieldName,
+                    'type' => $importableFieldTypes[$fieldName],
+                ];
+            }else{
+                $unsupportedFields[$fieldName] = [
+                    'label' => array_key_exists($fieldName, $fieldLabels) ? $fieldLabels[$fieldName] : $fieldName,
+                    'type' => array_key_exists($fieldName, $fieldTypes) ? $fieldTypes[$fieldName] : 'Input',
+                ];
+            }
+        }
+
+        $extraColumns = [
+            'member_names' => ['label' => 'Additional Members', 'type' => 'Pipe-separated text'],
+            'member_matrics' => ['label' => 'Additional Member Matrics', 'type' => 'Pipe-separated text'],
+        ];
+
+        $sampleHeaders = array_merge(array_keys($importableFields), array_keys($extraColumns));
+        $sampleRow = [];
+        foreach(array_keys($importableFields) as $fieldName){
+            switch($fieldName){
+                case 'project_name':
+                    $sampleRow[] = 'Sample Project';
+                    break;
+                case 'project_desc':
+                    $sampleRow[] = 'Short project description';
+                    break;
+                case 'participant_cat_group':
+                case 'participant_cat_local':
+                case 'participant_cat_umk':
+                case 'participant_mode':
+                case 'participant_program':
+                case 'competition_type':
+                case 'participant_cat_program':
+                case 'competition_cat_program':
+                case 'advisor_dropdown':
+                    $sampleRow[] = '1';
+                    break;
+                case 'program_sub':
+                    $sampleRow[] = $programSub ? (string)$programSub->id : '1';
+                    break;
+                case 'booth_number':
+                case 'group_code':
+                    $sampleRow[] = 'G01';
+                    break;
+                case 'group_name':
+                    $sampleRow[] = 'Team Alpha';
+                    break;
+                case 'institution':
+                    $sampleRow[] = 'UMK';
+                    break;
+                case 'contact_person':
+                    $sampleRow[] = 'Aisyah';
+                    break;
+                case 'contact_no':
+                    $sampleRow[] = '0123456789';
+                    break;
+                case 'contact_email':
+                    $sampleRow[] = 'team@example.com';
+                    break;
+                case 'advisor':
+                    $sampleRow[] = 'Dr. Advisor';
+                    break;
+                case 'nric':
+                    $sampleRow[] = '900101101010';
+                    break;
+                default:
+                    $sampleRow[] = 'Sample';
+                    break;
+            }
+        }
+        $sampleRow[] = 'Member Two|Member Three';
+        $sampleRow[] = 'A22AA1111|A22AA1112';
+
+        if(Yii::$app->request->isPost){
+            $csvFile = UploadedFile::getInstanceByName('csv_file');
+
+            if(!$csvFile){
+                Yii::$app->session->addFlash('error', 'Please upload a CSV file.');
+                return $this->refresh();
+            }
+
+            $handle = fopen($csvFile->tempName, 'r');
+            if($handle === false){
+                Yii::$app->session->addFlash('error', 'Unable to read the uploaded CSV file.');
+                return $this->refresh();
+            }
+
+            $headers = fgetcsv($handle);
+            if(!$headers){
+                fclose($handle);
+                Yii::$app->session->addFlash('error', 'The CSV file is empty.');
+                return $this->refresh();
+            }
+
+            $headers = array_map(function($header){
+                return trim((string)$header);
+            }, $headers);
+
+            $validColumns = array_merge(array_keys($importableFields), array_keys($extraColumns));
+            $unknownHeaders = array_diff($headers, $validColumns);
+            if($unknownHeaders){
+                fclose($handle);
+                Yii::$app->session->addFlash('error', 'Unknown CSV column(s): ' . implode(', ', $unknownHeaders));
+                return $this->refresh();
+            }
+
+            $transaction = Yii::$app->db->beginTransaction();
+            $created = 0;
+            $rowNo = 1;
+
+            try{
+                while(($row = fgetcsv($handle)) !== false){
+                    $rowNo++;
+                    $rowAssoc = [];
+                    foreach($headers as $index => $header){
+                        $rowAssoc[$header] = array_key_exists($index, $row) ? trim((string)$row[$index]) : '';
+                    }
+
+                    $hasContent = false;
+                    foreach($rowAssoc as $value){
+                        if($value !== ''){
+                            $hasContent = true;
+                            break;
+                        }
+                    }
+                    if(!$hasContent){
+                        continue;
+                    }
+
+                    $registration = new ProgramRegistration();
+                    $registration->program_id = (int)$program->id;
+                    $registration->program_sub = $programSub ? (int)$programSub->id : (isset($rowAssoc['program_sub']) && $rowAssoc['program_sub'] !== '' ? (int)$rowAssoc['program_sub'] : null);
+                    $registration->status = ProgramRegistration::STATUS_REGISTERED;
+                    $registration->created_at = time();
+                    $registration->updated_at = time();
+                    $registration->submitted_at = new Expression('NOW()');
+
+                    foreach(array_keys($importableFields) as $fieldName){
+                        if(!array_key_exists($fieldName, $rowAssoc)){
+                            continue;
+                        }
+
+                        $value = $rowAssoc[$fieldName];
+                        $registration->$fieldName = ($value === '') ? null : $value;
+                    }
+
+                    if(!$registration->save(false)){
+                        throw new \RuntimeException('Failed to save registration on CSV row ' . $rowNo . '.');
+                    }
+
+                    $memberNames = isset($rowAssoc['member_names']) ? trim((string)$rowAssoc['member_names']) : '';
+                    $memberMatrics = isset($rowAssoc['member_matrics']) ? trim((string)$rowAssoc['member_matrics']) : '';
+
+                    if($memberNames !== ''){
+                        $names = array_map('trim', explode('|', $memberNames));
+                        $matrics = $memberMatrics !== '' ? array_map('trim', explode('|', $memberMatrics)) : [];
+
+                        foreach($names as $index => $memberName){
+                            if($memberName === ''){
+                                continue;
+                            }
+
+                            $member = new Member();
+                            $member->program_reg_id = $registration->id;
+                            $member->member_name = $memberName;
+                            $member->member_matric = array_key_exists($index, $matrics) ? $matrics[$index] : null;
+                            $member->save(false);
+                        }
+                    }
+
+                    $created++;
+                }
+
+                fclose($handle);
+                $transaction->commit();
+                Yii::$app->session->addFlash('success', $created . ' participant record(s) imported successfully.');
+                return $this->refresh();
+            }catch(\Throwable $e){
+                fclose($handle);
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('import-participants', [
+            'role' => $role,
+            'program' => $program,
+            'programSub' => $programSub,
+            'importableFields' => $importableFields,
+            'unsupportedFields' => $unsupportedFields,
+            'extraColumns' => $extraColumns,
+            'sampleHeaders' => $sampleHeaders,
+            'sampleRow' => $sampleRow,
+        ]);
+    }
+
+    protected function buildDashboardStats($program, $programSub = null)
+    {
+        $programId = (int)$program->id;
+        $subId = $programSub ? (int)$programSub->id : null;
+
+        $registrationQuery = ProgramRegistration::find()->where(['program_id' => $programId]);
+        if($subId){
+            $registrationQuery->andWhere(['program_sub' => $subId]);
+        }
+
+        $registrationTotal = (clone $registrationQuery)->count();
+        $registeredTotal = (clone $registrationQuery)->andWhere(['status' => ProgramRegistration::STATUS_REGISTERED])->count();
+        $completeTotal = (clone $registrationQuery)->andWhere(['status' => ProgramRegistration::STATUS_COMPLETE])->count();
+
+        $assignmentQuery = JuryAssign::find()->alias('j')
+            ->innerJoin('program_reg r', 'r.id = j.reg_id')
+            ->where(['r.program_id' => $programId]);
+        if($subId){
+            $assignmentQuery->andWhere(['r.program_sub' => $subId]);
+        }
+
+        $assignmentTotal = (clone $assignmentQuery)->count();
+        $assignmentComplete = (clone $assignmentQuery)->andWhere(['j.status' => 20])->count();
+
+        $rubricQuery = ProgramRubric::find()->where(['program_id' => $programId]);
+        if($subId){
+            $rubricQuery->andWhere(['program_sub' => $subId]);
+        }
+        $rubricCount = (clone $rubricQuery)->count();
+
+        $achievementCount = ProgramAchievement::find()->where(['program_id' => $programId])->count();
+
+        $awardedQuery = ParticipantAchieve::find()->alias('pa')
+            ->innerJoin('program_reg r', 'r.id = pa.program_reg_id')
+            ->where(['r.program_id' => $programId]);
+        if($subId){
+            $awardedQuery->andWhere(['r.program_sub' => $subId]);
+        }
+        $awardedCount = (clone $awardedQuery)->count();
+
+        $fieldEnabledCount = ProgramRegField::find()
+            ->where(['program_id' => $programId, 'is_enabled' => 1])
+            ->count();
+        $fieldRequiredCount = ProgramRegField::find()
+            ->where(['program_id' => $programId, 'is_required' => 1])
+            ->count();
+
+        return [
+            'registrations_total' => (int)$registrationTotal,
+            'registrations_registered' => (int)$registeredTotal,
+            'registrations_complete' => (int)$completeTotal,
+            'assignments_total' => (int)$assignmentTotal,
+            'assignments_complete' => (int)$assignmentComplete,
+            'rubrics_count' => (int)$rubricCount,
+            'achievements_count' => (int)$achievementCount,
+            'awarded_count' => (int)$awardedCount,
+            'fields_enabled_count' => (int)$fieldEnabledCount,
+            'fields_required_count' => (int)$fieldRequiredCount,
+            'registration_status' => ((int)$program->getAttribute('reg_closed') === 1) ? 'Closed' : 'Open',
+            'date_start' => $program->date_start,
+            'date_end' => $program->date_end,
+        ];
     }
 
     public function actionManagerSession($id, $sub = null){

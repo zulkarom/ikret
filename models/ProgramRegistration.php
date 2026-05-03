@@ -457,6 +457,14 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             return null;
         }
 
+        $hasConfig = ProgramRegField::find()
+            ->where(['program_id' => (int)$programId])
+            ->exists();
+
+        if(!$hasConfig){
+            return null;
+        }
+
         $query = ProgramRegField::find()
             ->where(['program_id' => (int)$programId, 'is_enabled' => 1]);
 
@@ -469,7 +477,7 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             ->all();
 
         if(!$rows){
-            return null;
+            return [];
         }
 
         return ArrayHelper::getColumn($rows, 'field_name');
@@ -517,6 +525,41 @@ class ProgramRegistration extends \yii\db\ActiveRecord
             $out[$f] = array_key_exists($f, $labels) ? $labels[$f] : $f;
         }
         return $out;
+    }
+
+    public static function availableRegistrationFieldTypes()
+    {
+        return [
+            'project_name' => 'Text',
+            'project_desc' => 'Textarea',
+            'participant_cat_local' => 'Radio',
+            'participant_cat_group' => 'Radio',
+            'participant_mode' => 'Radio',
+            'participant_cat_umk' => 'Radio',
+            'participant_program' => 'Radio',
+            'other_program' => 'Text',
+            'program_sub' => 'Select',
+            'advisor_dropdown' => 'Select',
+            'booth_number' => 'Select',
+            'advisor' => 'Text',
+            'institution' => 'Text',
+            'contact_person' => 'Text',
+            'contact_no' => 'Text',
+            'contact_email' => 'Email',
+            'group_member' => 'Member List',
+            'group_code' => 'Text',
+            'group_name' => 'Text',
+            'mentor_main' => 'Select',
+            'mentor_co' => 'Select',
+            'poster_file' => 'File Upload',
+            'abstract_file' => 'File Upload',
+            'video_link' => 'URL',
+            'payment_file' => 'File Upload',
+            'nric' => 'Text',
+            'competition_type' => 'Radio',
+            'participant_cat_program' => 'Select',
+            'competition_cat_program' => 'Select',
+        ];
     }
 
     public static function groupMemberShowMatric($programId)
