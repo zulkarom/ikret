@@ -8,9 +8,14 @@ $programSub = $programSub ?? null;
 $sub = $sub ?? null;
 $fieldTypes = \app\models\ProgramRegistration::availableRegistrationFieldTypes();
 
+$breadcrumbUrl = ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null];
+if((int)$program->has_sub === 1 && !$programSub){
+    $breadcrumbUrl = ['/program-registration/manager-parent', 'id' => $program->id];
+}
+
 $this->params['breadcrumbs'][] = [
     'label' => $program->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
-    'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
+    'url' => $breadcrumbUrl
 ];
 $this->params['breadcrumbs'][] = $this->title;
 

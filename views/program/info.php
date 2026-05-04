@@ -13,9 +13,14 @@ $this->title = 'Update Program Info';
 $programSub = $programSub ?? null;
 $program = $program ?? ($programSub ? $programSub->program : null);
 
+$breadcrumbUrl = ['/program-registration/manager-dashboard', 'id' => $program ? $program->id : null, 'sub' => $programSub ? $programSub->id : null];
+if($program && (int)$program->has_sub === 1 && !$programSub){
+    $breadcrumbUrl = ['/program-registration/manager-parent', 'id' => $program->id];
+}
+
 $this->params['breadcrumbs'][] = [
     'label' => ($program ? $program->program_abbr : '') . ($programSub ? ' / ' . $programSub->sub_name : ''),
-    'url' => ['/program-registration/manager-dashboard', 'id' => $program ? $program->id : null, 'sub' => $programSub ? $programSub->id : null]
+    'url' => $breadcrumbUrl
 ];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

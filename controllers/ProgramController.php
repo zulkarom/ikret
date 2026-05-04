@@ -129,10 +129,6 @@ class ProgramController extends Controller
             throw new NotFoundHttpException('Program not found.');
         }
 
-        if($program->has_sub == 1 && !$sub){
-            return $this->redirect(['/program-registration/manager-parent', 'id' => $program->id]);
-        }
-
         $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
@@ -152,15 +148,52 @@ class ProgramController extends Controller
         $model = null;
 
         if((int)$program->has_sub === 1){
-            if(!$sub){
-                throw new NotFoundHttpException('Please provide sub program.');
-            }
+            if($sub){
+                $programSub = ProgramSub::findOne(['id' => (int)$sub, 'program_id' => (int)$id]);
+                if(!$programSub){
+                    throw new NotFoundHttpException('Sub program not found.');
+                }
+                $model = $programSub;
+            }else{
+                $roles = UserRole::find()->where([
+                    'program_id' => $id,
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'status' => 10,
+                ])->all();
 
-            $programSub = ProgramSub::findOne(['id' => (int)$sub, 'program_id' => (int)$id]);
-            if(!$programSub){
-                throw new NotFoundHttpException('Sub program not found.');
+                $hasProgramLevel = false;
+                $allowedSubs = [];
+                if($roles){
+                    foreach($roles as $r){
+                        if(empty($r->program_sub)){
+                            $hasProgramLevel = true;
+                            break;
+                        }
+                        $allowedSubs[(int)$r->program_sub] = true;
+                    }
+                }
+
+                if(!$hasProgramLevel){
+                    $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+                    $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+                    $activeSubIds = [];
+                    foreach($program->programSubs as $sp){
+                        if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
+                            continue;
+                        }
+                        $activeSubIds[(int)$sp->id] = true;
+                    }
+
+                    foreach(array_keys($activeSubIds) as $sid){
+                        if(!array_key_exists((int)$sid, $allowedSubs)){
+                            throw new ForbiddenHttpException('You do not have access to update this program.');
+                        }
+                    }
+                }
+
+                $model = $this->findModel($id);
             }
-            $model = $programSub;
         }else{
             $model = $this->findModel($id);
         }
@@ -169,6 +202,16 @@ class ProgramController extends Controller
             if ($model->load($this->request->post()) && $model->save()) {
                 Yii::$app->session->addFlash('success', 'Program info updated.');
                 return $this->refresh();
+            }
+
+            if($model->getErrors()){
+                foreach($model->getErrors() as $errors){
+                    foreach($errors as $e){
+                        Yii::$app->session->addFlash('error', $e);
+                    }
+                }
+            }else{
+                Yii::$app->session->addFlash('error', 'Failed to update program info.');
             }
         } else {
             $model->loadDefaultValues();

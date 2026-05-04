@@ -15,9 +15,15 @@ use yii\helpers\Html;
 
 $subText = $managerSub ? ' / ' . $managerSub->sub_abbr : '';
 $this->title = 'Import Participant (' . $program->program_abbr . ')';
+
+$breadcrumbUrl = ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $managerSub ? $managerSub->id : null];
+if((int)$program->has_sub === 1 && !$managerSub){
+    $breadcrumbUrl = ['/program-registration/manager-parent', 'id' => $program->id];
+}
+
 $this->params['breadcrumbs'][] = [
     'label' => $program->program_abbr . $subText,
-    'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $managerSub ? $managerSub->id : null],
+    'url' => $breadcrumbUrl,
 ];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -76,7 +82,7 @@ foreach($extraColumns as $column){
                     <input type="file" class="form-control mb-3" id="csv_file" name="csv_file" accept=".csv,text/csv">
                     <div class="d-flex gap-2">
                         <?= Html::submitButton('Upload CSV', ['class' => 'btn btn-primary']) ?>
-                        <?= Html::a('Back', ['program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $managerSub ? $managerSub->id : null], ['class' => 'btn btn-outline-secondary']) ?>
+                        <?= Html::a('Back', $breadcrumbUrl, ['class' => 'btn btn-outline-secondary']) ?>
                     </div>
                     <?= Html::endForm() ?>
                 </div>

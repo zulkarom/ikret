@@ -30,7 +30,8 @@ $formatDate = static function($value){
 $programLevelCards = [
     [
         'title' => 'Program Info',
-        'url' => Url::to(['program/info', 'id' => $id]),
+        'url' => Url::to(['/program/info', 'id' => $id]),
+        'actionLabel' => 'Update',
         'icon' => 'bi bi-sliders2',
         'accent' => 'navy',
         'description' => 'Control schedule, description, and registration availability.',
@@ -42,7 +43,7 @@ $programLevelCards = [
     ],
     [
         'title' => 'Registration Fields',
-        'url' => Url::to(['program/register-fields', 'id' => $id]),
+        'url' => Url::to(['/program/register-fields', 'id' => $id]),
         'icon' => 'bi bi-ui-checks-grid',
         'accent' => 'teal',
         'description' => 'Manage which fields appear in the registration form.',
@@ -54,7 +55,7 @@ $programLevelCards = [
     ],
     [
         'title' => 'Import Participant',
-        'url' => Url::to(['program-registration/import-participants', 'id' => $id]),
+        'url' => Url::to(['/program-registration/import-participants', 'id' => $id]),
         'icon' => 'bi bi-file-earmark-arrow-up',
         'accent' => 'amber',
         'description' => 'Upload participant records by CSV using the current enabled field setup.',
@@ -76,7 +77,7 @@ $programLevelCards = [
          $stats = $subStats[$sid] ?? [];
          $subCards[] = [
              'title' => $sub->sub_name,
-             'url' => Url::to(['program-registration/manager-dashboard', 'id' => $id, 'sub' => $sid]),
+             'url' => Url::to(['/program-registration/manager-dashboard', 'id' => $id, 'sub' => $sid]),
              'icon' => 'bi bi-diagram-3',
              'accent' => 'teal',
              'description' => 'Manage participants, assignments, rubrics, and awards for this sub program.',
@@ -85,7 +86,7 @@ $programLevelCards = [
                  ['label' => 'Registered (Groups)', 'value' => (string)($stats['registrations_registered'] ?? 0)],
                  ['label' => 'Completed', 'value' => (string)($stats['registrations_complete'] ?? 0)],
              ],
-             'secondaryUrl' => Url::to(['program/info', 'id' => $id, 'sub' => $sid]),
+             'secondaryUrl' => Url::to(['/program/info', 'id' => $id, 'sub' => $sid]),
          ];
      }
  }
@@ -243,6 +244,7 @@ CSS);
 $renderCards = static function($cards){
     foreach($cards as $card){
         $accentClass = 'accent-' . $card['accent'];
+        $actionLabel = array_key_exists('actionLabel', $card) && $card['actionLabel'] ? $card['actionLabel'] : 'Dashboard';
         echo '<div class="col-12 col-md-6 col-xl-4 mb-3">';
         echo '<div class="card dashboard-card ' . Html::encode($accentClass) . '">';
         echo '<div class="dashboard-card__inner">';
@@ -258,7 +260,7 @@ $renderCards = static function($cards){
         }
         echo '</div>';
         echo '<div class="d-flex flex-wrap gap-2">';
-        echo Html::a('Dashboard <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
+        echo Html::a(Html::encode($actionLabel) . ' <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
         if(array_key_exists('secondaryUrl', $card) && $card['secondaryUrl']){
             echo Html::a('Info', $card['secondaryUrl'], ['class' => 'btn btn-outline-secondary']);
         }

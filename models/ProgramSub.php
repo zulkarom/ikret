@@ -29,12 +29,20 @@ class ProgramSub extends \yii\db\ActiveRecord
      */
     public function rules()
     {
-        return [
+        $rules = [
             [['sub_name', 'program_id'], 'required'],
             [['program_id'], 'integer'],
-            [['sub_name', 'advisor'], 'string', 'max' => 255],
+            [['sub_name', 'sub_abbr', 'advisor'], 'string', 'max' => 255],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
         ];
+
+        $table = Yii::$app->db->schema->getTableSchema(self::tableName());
+        if($table && $table->getColumn('is_active')){
+            $rules[] = [['is_active'], 'integer'];
+            $rules[] = [['is_active'], 'default', 'value' => 1];
+        }
+
+        return $rules;
     }
 
     /**
@@ -45,8 +53,10 @@ class ProgramSub extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'sub_name' => 'Sub Name',
+            'sub_abbr' => 'Sub Abbr',
             'advisor' => 'Advisor',
             'program_id' => 'Program ID',
+            'is_active' => 'Active',
         ];
     }
 
