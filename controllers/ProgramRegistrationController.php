@@ -1109,6 +1109,20 @@ class ProgramRegistrationController extends Controller
                         throw new \RuntimeException('Failed to save registration for group: ' . $groupName);
                     }
 
+                    // Create participant role if not already present
+                    $existingRole = UserRole::find()->where(['user_id' => $user->id, 'role_name' => 'participant'])->one();
+                    if(!$existingRole){
+                        $participantRole = new UserRole();
+                        $participantRole->user_id = $user->id;
+                        $participantRole->role_name = 'participant';
+                        $participantRole->status = 10;
+                        $participantRole->request_at = new Expression('NOW()');
+                        $participantRole->approve_at = new Expression('NOW()');
+                        if(!$participantRole->save(false)){
+                            throw new \RuntimeException('Failed to create participant role for user: ' . $firstMemberMatric);
+                        }
+                    }
+
                     // Create member records for all members in the group
                     foreach($groupRows as $memberRow){
                         $memberMatric = isset($memberRow['member_matrics']) ? trim((string)$memberRow['member_matrics']) : '';

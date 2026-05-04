@@ -124,6 +124,15 @@ class ProgramController extends Controller
     public function actionInfo($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        if($program->has_sub == 1 && !$sub){
+            return $this->redirect(['/program-registration/manager-parent', 'id' => $program->id]);
+        }
+
         $role = UserRole::findOne([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
@@ -132,7 +141,7 @@ class ProgramController extends Controller
         ]);
 
         if(!$role){
-            return;
+            throw new NotFoundHttpException('Manager role not found for this program.');
         }
 
         $programSub = null;

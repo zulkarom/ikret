@@ -306,56 +306,39 @@ use yii\helpers\Url;
       $count = 0;
       if(is_array($url)){
         $count = count($url);
-        if($count == 1 && array_key_exists(0,$url) && $url[0] == '/'){
-          if(Yii::$app->controller->id == 'site' && Yii::$app->controller->action->id == 'index'){
-            //echo 'masuk';
-            //die();
-          return true;
+
+        if($count === 1 && array_key_exists(0,$url) && $url[0] === '/'){
+          if(Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'index'){
+            return true;
           }
         }
-        //die(); 
-        $url_str = $url[0];
-        $arr = explode('/', $url_str);
-        //assuming tak de module
-        // url kena start dengan /
-        //kita nak cari ada ?
-        $id = null;
-        $sub = null;
+
+        if(!array_key_exists(0, $url) || !is_string($url[0])){
+          return false;
+        }
+
+        $route = ltrim($url[0], '/');
+        $currentRoute = Yii::$app->controller->id . '/' . Yii::$app->controller->action->id;
+
+        if($route !== $currentRoute){
+          return false;
+        }
+
         if(array_key_exists('id', $url)){
-          $id = $url['id'];
+          $id_get  = Yii::$app->request->get('id');
+          if((string)$url['id'] !== (string)$id_get){
+            return false;
+          }
         }
+
         if(array_key_exists('sub', $url)){
-          $sub = $url['sub'];
-        }
-  
-      
-        //klu ada explode
-        //cari ada = ke
-        //klu ada explode
-  
-        $id_get  = Yii::$app->request->get('id');
-        $sub_get  = Yii::$app->request->get('sub');
-  
-        //echo $sub_get;
-        
-        if($id && $sub){
-          if($arr[1] == Yii::$app->controller->id && 
-          $arr[2] == Yii::$app->controller->action->id && $id == $id_get && $sub == $sub_get){
-           // echo 'id=' .$id, 'sub='.$sub;
-            return true;
-          }
-        }else if($id){
-          if($arr[1] == Yii::$app->controller->id && 
-          $arr[2] == Yii::$app->controller->action->id && $id == $id_get && $sub == null){
-           // echo 'id=' .$id, 'sub='.$sub;
-            return true;
-          }
-        }else{
-          if($arr[1] == Yii::$app->controller->id && 
-          $arr[2] == Yii::$app->controller->action->id){
-            return true;
+          $sub_get  = Yii::$app->request->get('sub');
+          if((string)$url['sub'] !== (string)$sub_get){
+            return false;
           }
         }
+
+        return true;
       }
 			
       
