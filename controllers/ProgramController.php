@@ -263,6 +263,47 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionAdminProgramAdd()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->request->isPost) return false;
+
+        $name = trim((string)Yii::$app->request->post('program_name'));
+        $abbr = trim((string)Yii::$app->request->post('program_abbr'));
+
+        if($name === ''){
+            Yii::$app->session->addFlash('error', 'Program name cannot be blank.');
+            return $this->redirect(['admin-program-subs']);
+        }
+
+        $today = date('Y-m-d');
+
+        $model = new Program();
+        $model->program_name = $name;
+        if($abbr !== ''){
+            $model->program_abbr = $abbr;
+        }
+        $model->date_start = $today;
+        $model->date_end = $today;
+        $model->reg_info = '-';
+
+        if($model->save()){
+            Yii::$app->session->addFlash('success', 'Program added.');
+        }else{
+            if($model->getErrors()){
+                foreach($model->getErrors() as $errors){
+                    foreach($errors as $e){
+                        Yii::$app->session->addFlash('error', $e);
+                    }
+                }
+            }else{
+                Yii::$app->session->addFlash('error', 'Failed to add program.');
+            }
+        }
+
+        return $this->redirect(['admin-program-subs']);
+    }
+
     public function actionAdminProgramSubDelete($id)
     {
         if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;

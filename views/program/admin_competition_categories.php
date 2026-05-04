@@ -21,6 +21,24 @@ $subHasIsActive = $subTable && $subTable->getColumn('is_active');
 
 <section class="section dashboard">
 
+<div class="card mb-3">
+    <div class="card-header">Add Program</div>
+    <div class="card-body pt-3">
+        <?= Html::beginForm(Url::to(['program/admin-program-add']), 'post', ['class' => 'row g-2', 'style' => 'max-width: 720px;']) ?>
+        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+        <div class="col-12 col-md-7">
+            <input type="text" name="program_name" class="form-control" placeholder="Program name" required>
+        </div>
+        <div class="col-12 col-md-3">
+            <input type="text" name="program_abbr" class="form-control" placeholder="Abbreviation (optional)">
+        </div>
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Add</button>
+        </div>
+        <?= Html::endForm() ?>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-body pt-4">
         <div class="table-responsive">
