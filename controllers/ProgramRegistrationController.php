@@ -853,12 +853,16 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne([
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'status' => 10,
         ]);
+        if($sub !== null){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
             return;
@@ -867,12 +871,8 @@ class ProgramRegistrationController extends Controller
         $program = $role->program;
         $managerSub = null;
 
-        if($program->has_sub == 1){
-            if($sub){
-                $managerSub = $role->programSub;
-            }else{
-                throw new NotFoundHttpException('Please provide sub program.');
-            }
+        if($program->has_sub == 1 && $sub){
+            $managerSub = $role->programSub;
         }
 
         $enabledFields = ProgramRegistration::getProgramFields((int)$program->id);
@@ -1207,10 +1207,12 @@ class ProgramRegistrationController extends Controller
         }
 
         // Get available program subs for reference
-        $availableProgramSubs = ProgramSub::find()
-            ->where(['program_id' => $program->id, 'is_active' => 1])
-            ->orderBy('id')
-            ->all();
+        $subQuery = ProgramSub::find()->where(['program_id' => $program->id]);
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $subQuery->andWhere(['is_active' => 1]);
+        }
+        $availableProgramSubs = $subQuery->orderBy('id')->all();
 
         return $this->render('import-participants', [
             'role' => $role,

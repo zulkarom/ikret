@@ -10,6 +10,8 @@ use wbraganca\dynamicform\DynamicFormWidget;
 use yii\helpers\Url;
 $web = Yii::getAlias('@web');
 
+ $subProgramOptionsUrl = Url::to(['/user/sub-program-options', 'program' => '']);
+
 $this->title = 'Request for Additional User Role';
 
 ?>
@@ -79,12 +81,11 @@ foreach($sb as $s){
 }
 $str_sub .= ']';
 
-$this->registerJs('
+$js = <<<JS
 $("#userrole-role_name").change(function(){
   var val = $(this).val();
   if(val == "manager"){
       $("#con-program").show();
-      //kena check lg sub
   }else{
     $("#con-program-sub").hide();
       $("#con-program").hide();
@@ -94,39 +95,40 @@ $("#userrole-role_name").change(function(){
   }else{
       $("#con-committee").hide();
   }
-
 });
 
 $("#userrole-program_id").change(function(){
-  //console.log("chnage");
-  const arr_sb = '.$str_sub.';
-var comm = $(this).val();
-//console.log(comm);
-//console.log(arr_sb.includes(comm));
-if(arr_sb.includes(parseInt(comm))){
- // console.log("show");
-  $("#con-program-sub").show();
-}else{
-  $("#con-program-sub").hide();
-}
-});
+  var comm = $(this).val();
+  if(!comm){
+    $("#con-program-sub").hide();
+    $("select#userrole-program_sub").html("<option value=\"-1\">N/A</option>");
+    return;
+  }
 
+  $.get("{$subProgramOptionsUrl}" + comm, function(data){
+    $("select#userrole-program_sub").html(data);
+
+    var hasChoices = data && data.indexOf('option value="') !== -1 && data.indexOf('value="-1"') === -1;
+    if(hasChoices){
+      $("#con-program-sub").show();
+    }else{
+      $("#con-program-sub").hide();
+    }
+  });
+});
 
 $("#userrole-committee_id").change(function(){
-  //console.log("chnage");
-  const arr_jw = '.$str_arr.';
-var comm = $(this).val();
-//console.log(comm);
-//console.log(arr_jw.includes(comm));
-if(arr_jw.includes(parseInt(comm))){
- // console.log("show");
-  $("#con-leader").show();
-}else{
-  $("#con-leader").hide();
-}
+  const arr_jw = {$str_arr};
+  var comm = $(this).val();
+  if(arr_jw.includes(parseInt(comm))){
+    $("#con-leader").show();
+  }else{
+    $("#con-leader").hide();
+  }
 });
+JS;
 
-');
+$this->registerJs($js);
 
 
 ?>
