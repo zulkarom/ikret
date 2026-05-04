@@ -63,6 +63,11 @@ use yii\helpers\Html;
 
     <br>
 
+    <?= $form->field($model, 'program_type')->dropDownList([
+        1 => 'Has competition',
+        2 => 'Sharing event',
+    ], ['prompt' => 'Select']) ?>
+
     <?= $form->field($model, 'reg_closed')->checkbox() ?>
 
     <?= $form->field($model, 'has_sub')->checkbox() ?>
