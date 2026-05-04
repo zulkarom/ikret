@@ -1,14 +1,14 @@
-category_name,item_text,item_description,item_short,item_type,option_number,is_recommend
-Main Evaluation,Video ini memaparkan idea yang kreatif menarik dan relevan sebagai kandungan pemasaran,Menilai tahap kreativiti dan kesesuaian idea video sebagai kandungan pemasaran,Creative Idea,likert,10,0
-,Video ini mempunyai jalan cerita yang jelas tersusun dan mudah diikuti dalam tempoh 60 saat,Menilai kejelasan dan aliran penceritaan video,Storytelling,likert,10,0
-,Video ini berfungsi dengan baik sebagai alat pemasaran yang mampu menarik minat dan mempengaruhi audiens,Menilai keberkesanan video dalam menarik dan mempengaruhi audiens,Marketing Effectiveness,likert,10,0
-,Produk atau perkhidmatan dipersembahkan dengan jelas menarik dan meyakinkan,Menilai kejelasan dan daya tarikan persembahan produk atau perkhidmatan,Product Presentation,likert,10,0
-,Penggunaan AI dalam penghasilan video adalah jelas relevan dan menyumbang kepada kualiti kandungan,Menilai kesesuaian dan sumbangan penggunaan AI dalam video,AI Usage,likert,10,0
-,AI digunakan secara kreatif dan inovatif,Menilai tahap kreativiti dan inovasi penggunaan AI,AI Creativity,likert,10,0
-,Video mempunyai kualiti visual dan audio yang baik jelas tersusun dan profesional,Menilai kualiti visual dan audio video,Visual Audio Quality,likert,10,0
-,Video ini sesuai dengan platform media sosial sasaran dari segi format dan gaya,Menilai kesesuaian video dengan platform sasaran,Platform Suitability,likert,10,0
-,Video ini mempunyai potensi tinggi untuk menarik perhatian interaksi dan perkongsian,Menilai potensi video untuk engagement dan viral value,Engagement,likert,10,0
-,Video dihasilkan dengan kemas tersusun dan menunjukkan tahap profesionalisme yang baik,Menilai tahap kekemasan dan profesionalisme penghasilan video,Execution,likert,10,0
-PENILAIAN AKHIR JURI,Adakah pasukan ini layak menerima Best AI Video Marketing Award,Keputusan akhir juri sama ada layak menerima anugerah,Final Decision,yesno,,1
-KOMEN JURI,Kekuatan,Ruang untuk juri nyatakan kekuatan video,Strengths,textarea,,
-,Penambahbaikan,Ruang untuk cadangan penambahbaikan,Improvements,textarea,,
+category_name,item_text,item_description,item_type,option_number,item_short,is_recommend,is_required
+Digital Storefront Evaluation,Innovation & Originality,Projek ini menunjukkan tahap inovasi dan keaslian idea yang tinggi dalam pembangunan digital storefront e-commerce.,scale,10,Innovation,0,1
+,Business Innovation & Value Proposition,"Projek ini memaparkan idea inovatif, dan relevan dengan trend semasa (AI/commerce).",scale,10,Business Innovation,0,1
+,Value Creation,Projek ini berjaya mencipta nilai kepada pengguna dan menyelesaikan masalah sebenar dalam pasaran e-commerce.,scale,10,Value Creation,0,1
+,AI & Technology Use,"Penggunaan AI dan teknologi digital dalam projek ini adalah relevan, berkesan, dan meningkatkan fungsi serta pengalaman pengguna.",scale,10,AI Tech,0,1
+,User Experience (UX),"Digital storefront ini menyediakan pengalaman pengguna yang mudah, interaktif, dan menarik.",scale,10,UX,0,1
+,Digital Storefront Experience (UI/UX & Branding),"Rekabentuk Digital storefront antaramuka / halaman adalah sangat profesional, branding konsisten, pengalaman pengguna lancar & engaging",scale,10,UIUX Branding,0,1
+,E-Commerce Functionality & User Journey,"User journey lengkap (browse → cart → checkout simulation), dan fungsi berjalan lancer serta jelas.",scale,10,User Journey,0,1
+,Product Strategy & Content Quality,"Produk dipaparkan dengan jelas, deskripsi produk adalah berkualiti tinggi, dan ada strategi positioning",scale,10,Product Strategy,0,1
+,Scalability,Projek ini mempunyai potensi yang tinggi untuk berkembang dan dikomersialkan dalam pasaran sebenar.,scale,10,Scalability,0,1
+,Execution,"Projek ini dilaksanakan dengan baik dari segi kualiti, kefungsian, dan tahap kesiapsiagaan sebagai produk e-commerce.",scale,10,Execution,0,1
+,Adakah pasukan ini layak menerima: Best Digital Storefront Award?,,boolean,2,Final Decision,1,1
+KOMEN JURI,Kekuatan Projek:,,textarea,,Strengths,0,0
+,Cadangan Penambahbaikan:,,textarea,,Improvements,0,0

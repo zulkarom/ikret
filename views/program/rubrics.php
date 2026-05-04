@@ -138,6 +138,40 @@ if($programSub){
                                 echo '</form>';
                             }else{
                                 echo Html::encode($r->rubric->rubric_name);
+
+                                $desc = (string)$r->rubric->rubric_description;
+                                if(trim($desc) !== ''){
+                                    $descHtml = html_entity_decode($desc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                    echo '<div class="mt-2 small text-muted border-start ps-2">'
+                                        . \yii\helpers\HtmlPurifier::process($descHtml)
+                                        . '</div>';
+                                }
+
+                                $sessions = $r->rubric->judgingSessions;
+                                if($sessions){
+                                    $modeList = \app\models\RubricJudgingSession::listMode();
+                                    echo '<div class="mt-2">';
+                                    echo '<div class="text-muted" style="font-size: 0.9em;"><b>Sessions</b></div>';
+                                    echo '<ul class="mb-0" style="font-size: 0.9em;">';
+                                    foreach($sessions as $s){
+                                        $modeText = $modeList[(int)$s->mode] ?? $s->mode;
+                                        $range = '';
+                                        if($s->datetime_start){
+                                            $range .= date('d M Y H:i', strtotime($s->datetime_start));
+                                        }
+                                        if($s->datetime_end){
+                                            $range .= ($range ? ' - ' : '') . date('d M Y H:i', strtotime($s->datetime_end));
+                                        }
+                                        $meta = [];
+                                        if($range){ $meta[] = $range; }
+                                        if($s->location){ $meta[] = $s->location; }
+                                        if($modeText){ $meta[] = $modeText; }
+                                        $metaText = $meta ? (' (' . Html::encode(implode(' | ', $meta)) . ')') : '';
+                                        echo '<li>' . Html::encode($s->session_name) . $metaText . '</li>';
+                                    }
+                                    echo '</ul>';
+                                    echo '</div>';
+                                }
                             }
 
                             echo '</td>';
