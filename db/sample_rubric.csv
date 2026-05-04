@@ -1,0 +1,14 @@
+category_name,item_text,item_description,item_short,item_type,option_number,is_recommend
+Main Evaluation,Video ini memaparkan idea yang kreatif menarik dan relevan sebagai kandungan pemasaran,Menilai tahap kreativiti dan kesesuaian idea video sebagai kandungan pemasaran,Creative Idea,likert,10,0
+,Video ini mempunyai jalan cerita yang jelas tersusun dan mudah diikuti dalam tempoh 60 saat,Menilai kejelasan dan aliran penceritaan video,Storytelling,likert,10,0
+,Video ini berfungsi dengan baik sebagai alat pemasaran yang mampu menarik minat dan mempengaruhi audiens,Menilai keberkesanan video dalam menarik dan mempengaruhi audiens,Marketing Effectiveness,likert,10,0
+,Produk atau perkhidmatan dipersembahkan dengan jelas menarik dan meyakinkan,Menilai kejelasan dan daya tarikan persembahan produk atau perkhidmatan,Product Presentation,likert,10,0
+,Penggunaan AI dalam penghasilan video adalah jelas relevan dan menyumbang kepada kualiti kandungan,Menilai kesesuaian dan sumbangan penggunaan AI dalam video,AI Usage,likert,10,0
+,AI digunakan secara kreatif dan inovatif,Menilai tahap kreativiti dan inovasi penggunaan AI,AI Creativity,likert,10,0
+,Video mempunyai kualiti visual dan audio yang baik jelas tersusun dan profesional,Menilai kualiti visual dan audio video,Visual Audio Quality,likert,10,0
+,Video ini sesuai dengan platform media sosial sasaran dari segi format dan gaya,Menilai kesesuaian video dengan platform sasaran,Platform Suitability,likert,10,0
+,Video ini mempunyai potensi tinggi untuk menarik perhatian interaksi dan perkongsian,Menilai potensi video untuk engagement dan viral value,Engagement,likert,10,0
+,Video dihasilkan dengan kemas tersusun dan menunjukkan tahap profesionalisme yang baik,Menilai tahap kekemasan dan profesionalisme penghasilan video,Execution,likert,10,0
+PENILAIAN AKHIR JURI,Adakah pasukan ini layak menerima Best AI Video Marketing Award,Keputusan akhir juri sama ada layak menerima anugerah,Final Decision,yesno,,1
+KOMEN JURI,Kekuatan,Ruang untuk juri nyatakan kekuatan video,Strengths,textarea,,
+,Penambahbaikan,Ruang untuk cadangan penambahbaikan,Improvements,textarea,,

@@ -28,6 +28,7 @@ use app\models\Rubric;
 use app\models\RubricAnswer;
 use app\models\RubricCategory;
 use app\models\RubricItem;
+use app\models\RubricJudgingSession;
 use app\models\Session;
 use app\models\Setting;
 use app\models\Upload;
@@ -37,7 +38,9 @@ use yii\db\Expression;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\UploadedFile;
 
 class ProgramController extends Controller
 {
@@ -436,11 +439,32 @@ class ProgramController extends Controller
         return $this->redirect(['admin-program-subs']);
     }
 
-    public function actionViewRubric($id, $edit = null){
+    public function actionViewRubric($id, $edit = null, $cat = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
         $rubric = $this->findRubric($id);
         $this->ensureManagerRubricAccess($rubric->id);
+
+        $program = null;
+        $programSub = null;
+        $prs = ProgramRubric::find()->where(['rubric_id' => $rubric->id])->all();
+        if($prs){
+            foreach($prs as $pr){
+                $role = UserRole::findOne([
+                    'program_id' => $pr->program_id,
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'program_sub' => $pr->program_sub,
+                ]);
+                if($role){
+                    $program = Program::findOne($pr->program_id);
+                    if($pr->program_sub){
+                        $programSub = ProgramSub::findOne($pr->program_sub);
+                    }
+                    break;
+                }
+            }
+        }
 
         $assign = new JuryAssign();
         $assign->rubric_id = $rubric->id;
@@ -454,6 +478,9 @@ class ProgramController extends Controller
             'title' => 'View Rubric',
             'write' => false,
             'edit' => ((int)$edit === 1),
+            'cat' => $cat,
+            'program' => $program,
+            'programSub' => $programSub,
         ]);
     }
 
@@ -468,6 +495,7 @@ class ProgramController extends Controller
         $this->ensureManagerRubricAccess($rubric->id);
 
         $rubric->rubric_name = Yii::$app->request->post('rubric_name');
+        $rubric->rubric_description = Yii::$app->request->post('rubric_description', $rubric->rubric_description);
         if($rubric->rubric_name === null || trim($rubric->rubric_name) === ''){
             Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
             return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
@@ -478,8 +506,101 @@ class ProgramController extends Controller
             return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
         }
 
+        $this->saveRubricJudgingSessions($rubric);
+
         Yii::$app->session->addFlash('success', 'Rubric name updated.');
         return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    protected function saveRubricJudgingSessions($rubric)
+    {
+        $sessionIds = Yii::$app->request->post('session_id', []);
+        $sessionNames = Yii::$app->request->post('session_name', []);
+        $sessionStarts = Yii::$app->request->post('datetime_start', []);
+        $sessionEnds = Yii::$app->request->post('datetime_end', []);
+        $sessionLocations = Yii::$app->request->post('location', []);
+        $sessionModes = Yii::$app->request->post('mode', []);
+        $deleteIds = Yii::$app->request->post('delete_session', []);
+
+        if(!$sessionIds && !$sessionNames && !$sessionStarts && !$sessionEnds && !$sessionLocations && !$sessionModes && !$deleteIds){
+            return;
+        }
+
+        $deleteLookup = [];
+        if(is_array($deleteIds)){
+            foreach($deleteIds as $did){
+                $did = (int)$did;
+                if($did > 0){
+                    $deleteLookup[$did] = true;
+                }
+            }
+        }
+
+        $existing = RubricJudgingSession::find()->where(['rubric_id' => $rubric->id])->indexBy('id')->all();
+        $nextOrder = (int)RubricJudgingSession::find()->where(['rubric_id' => $rubric->id])->max('sort_order');
+        $sortOrder = 0;
+
+        $count = max(
+            is_array($sessionIds) ? count($sessionIds) : 0,
+            is_array($sessionNames) ? count($sessionNames) : 0
+        );
+
+        for($i = 0; $i < $count; $i++){
+            $id = isset($sessionIds[$i]) ? (int)$sessionIds[$i] : 0;
+            $name = isset($sessionNames[$i]) ? trim((string)$sessionNames[$i]) : '';
+            $start = isset($sessionStarts[$i]) ? trim((string)$sessionStarts[$i]) : '';
+            $end = isset($sessionEnds[$i]) ? trim((string)$sessionEnds[$i]) : '';
+            $loc = isset($sessionLocations[$i]) ? trim((string)$sessionLocations[$i]) : '';
+            $mode = isset($sessionModes[$i]) ? (int)$sessionModes[$i] : 1;
+
+            $allEmpty = ($name === '' && $start === '' && $end === '' && $loc === '');
+            if($id === 0 && $allEmpty){
+                continue;
+            }
+
+            if($id > 0){
+                if(!isset($existing[$id])){
+                    continue;
+                }
+                $model = $existing[$id];
+                if(isset($deleteLookup[$id])){
+                    $model->delete();
+                    continue;
+                }
+            }else{
+                $model = new RubricJudgingSession();
+                $model->rubric_id = $rubric->id;
+                $nextOrder++;
+            }
+
+            if($name !== ''){
+                $model->session_name = $name;
+            }else if($id === 0){
+                $model->session_name = 'Session ' . ($nextOrder);
+            }
+
+            if($start !== ''){
+                $start = str_replace('T', ' ', $start);
+                if(strlen($start) === 16){
+                    $start .= ':00';
+                }
+            }
+            if($end !== ''){
+                $end = str_replace('T', ' ', $end);
+                if(strlen($end) === 16){
+                    $end .= ':00';
+                }
+            }
+
+            $model->datetime_start = $start !== '' ? $start : null;
+            $model->datetime_end = $end !== '' ? $end : null;
+            $model->location = $loc !== '' ? $loc : null;
+            $model->mode = in_array($mode, [1,2], true) ? $mode : 1;
+            $model->sort_order = $sortOrder;
+            $model->save();
+
+            $sortOrder++;
+        }
     }
 
     public function actionRubricCategoryAdd($id)
@@ -496,6 +617,10 @@ class ProgramController extends Controller
         $cat->rubric_id = $rubric->id;
         $cat->category_name = Yii::$app->request->post('category_name');
         $cat->cat_order = Yii::$app->request->post('cat_order');
+        if($cat->cat_order === null || $cat->cat_order === '' ){
+            $max = (int)RubricCategory::find()->where(['rubric_id' => $rubric->id])->max('cat_order');
+            $cat->cat_order = $max + 1;
+        }
         $cat->is_recommend = (int)Yii::$app->request->post('is_recommend', 0) === 1 ? 1 : 0;
 
         if($cat->category_name === null || trim($cat->category_name) === ''){
@@ -590,15 +715,14 @@ class ProgramController extends Controller
         $item->item_type = (int)Yii::$app->request->post('item_type', 1);
         $item->option_number = Yii::$app->request->post('option_number');
         $item->item_order = Yii::$app->request->post('item_order');
-        $item->colum_ans = Yii::$app->request->post('colum_ans');
+        if($item->item_order === null || $item->item_order === ''){
+            $max = (int)RubricItem::find()->where(['category_id' => $category->id])->max('item_order');
+            $item->item_order = $max + 1;
+        }
+        $item->colum_ans = $this->generateRubricAnswerColumn($rubric->id, (int)$item->item_type);
 
         if($item->item_text === null || trim($item->item_text) === ''){
             Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
-        }
-
-        if($item->colum_ans === null || trim($item->colum_ans) === ''){
-            Yii::$app->session->addFlash('error', 'Answer column (colum_ans) cannot be blank.');
             return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
         }
 
@@ -645,15 +769,9 @@ class ProgramController extends Controller
         $it->item_type = (int)Yii::$app->request->post('item_type', $it->item_type);
         $it->option_number = Yii::$app->request->post('option_number', $it->option_number);
         $it->item_order = Yii::$app->request->post('item_order', $it->item_order);
-        $it->colum_ans = Yii::$app->request->post('colum_ans', $it->colum_ans);
 
         if($it->item_text === null || trim($it->item_text) === ''){
             Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
-        }
-
-        if($it->colum_ans === null || trim($it->colum_ans) === ''){
-            Yii::$app->session->addFlash('error', 'Answer column (colum_ans) cannot be blank.');
             return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
         }
 
@@ -697,6 +815,322 @@ class ProgramController extends Controller
         $it->delete();
         Yii::$app->session->addFlash('success', 'Item deleted.');
         return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricCategorySort($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if(!Yii::$app->request->isPost){
+            throw new BadRequestHttpException('Invalid request.');
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $order = Yii::$app->request->post('order', []);
+        if(!is_array($order) || empty($order)){
+            return ['success' => false];
+        }
+
+        $cats = RubricCategory::find()->where(['rubric_id' => $rubric->id])->indexBy('id')->all();
+        $pos = 1;
+        foreach($order as $catId){
+            $catId = (int)$catId;
+            if(isset($cats[$catId])){
+                $cats[$catId]->cat_order = $pos;
+                $cats[$catId]->save(false, ['cat_order']);
+                $pos++;
+            }
+        }
+
+        return ['success' => true];
+    }
+
+    public function actionRubricRearrangeColumns($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $items = RubricItem::find()
+            ->alias('i')
+            ->innerJoin(RubricCategory::tableName() . ' c', 'c.id = i.category_id')
+            ->where(['c.rubric_id' => $rubric->id])
+            ->orderBy(['c.cat_order' => SORT_ASC, 'i.item_order' => SORT_ASC, 'i.id' => SORT_ASC])
+            ->all();
+
+        $numIdx = 1;
+        $textIdx = 1;
+        foreach($items as $it){
+            $type = (int)$it->item_type;
+            if($type === 1 || $type === 2){
+                if($numIdx > 30){
+                    Yii::$app->session->addFlash('error', 'Cannot rearrange: exceeded available numeric columns (item_no1..item_no30).');
+                    return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+                }
+                $it->colum_ans = 'item_no' . $numIdx;
+                $numIdx++;
+            }else{
+                if($textIdx > 10){
+                    Yii::$app->session->addFlash('error', 'Cannot rearrange: exceeded available text columns (item_text1..item_text10).');
+                    return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+                }
+                $it->colum_ans = 'item_text' . $textIdx;
+                $textIdx++;
+            }
+
+            $it->save(false, ['colum_ans']);
+        }
+
+        Yii::$app->session->addFlash('success', 'colum_ans rearranged according to current sorting.');
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+    }
+
+    public function actionRubricImportCsv($id)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->request->isPost){
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $file = UploadedFile::getInstanceByName('csv_file');
+        if(!$file){
+            Yii::$app->session->addFlash('error', 'Please choose a CSV file.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $handle = @fopen($file->tempName, 'r');
+        if(!$handle){
+            Yii::$app->session->addFlash('error', 'Unable to read the uploaded CSV file.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $header = fgetcsv($handle);
+            if(!$header){
+                throw new BadRequestHttpException('CSV is empty.');
+            }
+
+            $header = array_map(function($h){
+                return strtolower(trim((string)$h));
+            }, $header);
+
+            $idx = array_flip($header);
+            if(!isset($idx['category_name']) || !isset($idx['item_text'])){
+                throw new BadRequestHttpException('CSV header must contain at least: category_name, item_text');
+            }
+
+            $existingCats = RubricCategory::find()->where(['rubric_id' => $rubric->id])->all();
+            $catsByName = [];
+            foreach($existingCats as $c){
+                $key = mb_strtolower(trim((string)$c->category_name));
+                if($key !== ''){
+                    $catsByName[$key] = $c;
+                }
+            }
+
+            $catOrder = (int)RubricCategory::find()->where(['rubric_id' => $rubric->id])->max('cat_order');
+            $itemOrderCache = [];
+
+            $lastCategoryName = '';
+
+            $createdCats = 0;
+            $createdItems = 0;
+            $rowNo = 1;
+            while(($row = fgetcsv($handle)) !== false){
+                $rowNo++;
+                if(!is_array($row)){
+                    continue;
+                }
+
+                $categoryName = trim((string)($row[$idx['category_name']] ?? ''));
+                $itemText = trim((string)($row[$idx['item_text']] ?? ''));
+                if($categoryName === '' && $itemText === ''){
+                    continue;
+                }
+
+                if($categoryName === ''){
+                    $categoryName = $lastCategoryName;
+                }
+                if($categoryName === ''){
+                    throw new BadRequestHttpException('Row ' . $rowNo . ': category_name is required (or leave blank only after a category has been set).');
+                }
+                if($itemText === ''){
+                    throw new BadRequestHttpException('Row ' . $rowNo . ': item_text is required.');
+                }
+
+                $lastCategoryName = $categoryName;
+
+                $catKey = mb_strtolower($categoryName);
+                $category = $catsByName[$catKey] ?? null;
+                if(!$category){
+                    $category = new RubricCategory();
+                    $category->rubric_id = $rubric->id;
+                    $category->category_name = $categoryName;
+                    $category->is_recommend = 0;
+                    $category->cat_order = ++$catOrder;
+
+                    if(isset($idx['is_recommend'])){
+                        $isRec = trim((string)($row[$idx['is_recommend']] ?? ''));
+                        $category->is_recommend = ((int)$isRec === 1) ? 1 : 0;
+                    }
+
+                    if(!$category->save()){
+                        throw new BadRequestHttpException('Row ' . $rowNo . ': failed to create category.');
+                    }
+                    $catsByName[$catKey] = $category;
+                    $createdCats++;
+                } else {
+                    if(isset($idx['is_recommend'])){
+                        $isRec = trim((string)($row[$idx['is_recommend']] ?? ''));
+                        $newIsRec = ((int)$isRec === 1) ? 1 : 0;
+                        if((int)$category->is_recommend !== $newIsRec){
+                            $category->is_recommend = $newIsRec;
+                            $category->save(false, ['is_recommend']);
+                        }
+                    }
+                }
+
+                if(!isset($itemOrderCache[$category->id])){
+                    $itemOrderCache[$category->id] = (int)RubricItem::find()->where(['category_id' => $category->id])->max('item_order');
+                }
+
+                $itemTypeRaw = isset($idx['item_type']) ? trim((string)($row[$idx['item_type']] ?? '')) : '';
+                $itemType = 1;
+                if($itemTypeRaw !== ''){
+                    if(is_numeric($itemTypeRaw)){
+                        $itemType = (int)$itemTypeRaw;
+                    }else{
+                        $t = strtolower($itemTypeRaw);
+                        if($t === 'likert') $itemType = 1;
+                        else if($t === 'scale') $itemType = 1;
+                        else if($t === 'yesno') $itemType = 2;
+                        else if($t === 'boolean') $itemType = 2;
+                        else if($t === 'shorttext') $itemType = 3;
+                        else if($t === 'longtext') $itemType = 4;
+                        else if($t === 'textarea') $itemType = 4;
+                    }
+                }
+
+                $optionNumber = isset($idx['option_number']) ? (int)trim((string)($row[$idx['option_number']] ?? '')) : 0;
+                if($itemType === 1 && $optionNumber <= 0){
+                    throw new BadRequestHttpException('Row ' . $rowNo . ': option_number is required for likert/scale items.');
+                }
+                if(($itemType === 2) && $optionNumber <= 0){
+                    $optionNumber = 1;
+                }
+                if($itemType === 3 || $itemType === 4){
+                    $optionNumber = null;
+                }
+
+                $item = new RubricItem();
+                $item->category_id = $category->id;
+                $item->item_text = $itemText;
+                $item->item_type = $itemType;
+                $item->option_number = $optionNumber;
+                $item->item_short = isset($idx['item_short']) ? trim((string)($row[$idx['item_short']] ?? '')) : null;
+                $item->item_description = isset($idx['item_description']) ? trim((string)($row[$idx['item_description']] ?? '')) : null;
+                $item->item_order = ++$itemOrderCache[$category->id];
+                $item->colum_ans = $this->generateRubricAnswerColumn($rubric->id, (int)$item->item_type);
+
+                if(!$item->save()){
+                    throw new BadRequestHttpException('Row ' . $rowNo . ': failed to create item.');
+                }
+                $createdItems++;
+            }
+
+            fclose($handle);
+            $transaction->commit();
+
+            Yii::$app->session->addFlash('success', 'CSV imported. Categories added: ' . $createdCats . ', Items added: ' . $createdItems . '.');
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        } catch (\Throwable $e) {
+            @fclose($handle);
+            $transaction->rollBack();
+            Yii::$app->session->addFlash('error', $e->getMessage());
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        }
+    }
+
+    public function actionRubricItemSort($id, $cat)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        if(!Yii::$app->request->isPost){
+            throw new BadRequestHttpException('Invalid request.');
+        }
+
+        $rubric = $this->findRubric($id);
+        $this->ensureManagerRubricAccess($rubric->id);
+
+        $category = RubricCategory::findOne(['id' => $cat, 'rubric_id' => $rubric->id]);
+        if(!$category){
+            throw new NotFoundHttpException('Category not found.');
+        }
+
+        $order = Yii::$app->request->post('order', []);
+        if(!is_array($order) || empty($order)){
+            return ['success' => false];
+        }
+
+        $items = RubricItem::find()->where(['category_id' => $category->id])->indexBy('id')->all();
+        $pos = 1;
+        foreach($order as $itemId){
+            $itemId = (int)$itemId;
+            if(isset($items[$itemId])){
+                $items[$itemId]->item_order = $pos;
+                $items[$itemId]->save(false, ['item_order']);
+                $pos++;
+            }
+        }
+
+        return ['success' => true];
+    }
+
+    protected function generateRubricAnswerColumn($rubricId, $itemType)
+    {
+        $rubricId = (int)$rubricId;
+        $itemType = (int)$itemType;
+
+        $used = RubricItem::find()
+            ->alias('i')
+            ->select(['i.colum_ans'])
+            ->innerJoin(RubricCategory::tableName() . ' c', 'c.id = i.category_id')
+            ->where(['c.rubric_id' => $rubricId])
+            ->andWhere(['not', ['i.colum_ans' => null]])
+            ->column();
+
+        $used = array_flip(array_filter(array_map('trim', $used)));
+
+        $pool = [];
+        if($itemType === 1 || $itemType === 2){
+            for($i = 1; $i <= 30; $i++){
+                $pool[] = 'item_no' . $i;
+            }
+        }else{
+            for($i = 1; $i <= 10; $i++){
+                $pool[] = 'item_text' . $i;
+            }
+        }
+
+        foreach($pool as $col){
+            if(!isset($used[$col])){
+                return $col;
+            }
+        }
+
+        throw new BadRequestHttpException('No available answer column slot for this rubric.');
     }
 
     public function actionRubrics($id, $sub = null){
@@ -816,6 +1250,7 @@ class ProgramController extends Controller
         }
 
         $rubricModel->rubric_name = Yii::$app->request->post('rubric_name', $rubricModel->rubric_name);
+        $rubricModel->rubric_description = Yii::$app->request->post('rubric_description', $rubricModel->rubric_description);
         if($rubricModel->rubric_name === null || trim($rubricModel->rubric_name) === ''){
             Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
             return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
@@ -824,6 +1259,8 @@ class ProgramController extends Controller
             Yii::$app->session->addFlash('error', 'Failed to update rubric.');
             return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
         }
+
+        $this->saveRubricJudgingSessions($rubricModel);
 
         Yii::$app->session->addFlash('success', 'Rubric updated.');
         return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);

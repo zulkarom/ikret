@@ -73,6 +73,62 @@ if($programSub){
                                 echo '<div class="row g-2 align-items-center">';
                                 echo '<div class="col-md-8">';
                                 echo '<input type="text" name="rubric_name" class="form-control" value="'.Html::encode($r->rubric->rubric_name).'" />';
+                                echo '<textarea name="rubric_description" class="form-control mt-2 rubric-richtext" rows="6" placeholder="Rubric description">'.Html::encode($r->rubric->rubric_description).'</textarea>';
+
+                                echo '<div class="mt-3">';
+                                echo '<div class="mb-2"><b>Judging Sessions</b></div>';
+                                echo '<div class="table-responsive">';
+                                echo '<table class="table table-sm" data-rubric-session-table="'.(int)$r->rubric_id.'">';
+                                echo '<thead><tr><th>Name</th><th>Start</th><th>End</th><th>Location</th><th>Mode</th><th>Del</th></tr></thead>';
+                                echo '<tbody>';
+
+                                $sessions = $r->rubric->judgingSessions;
+                                $modeList = \app\models\RubricJudgingSession::listMode();
+                                if($sessions){
+                                    foreach($sessions as $s){
+                                        $startVal = $s->datetime_start ? date('Y-m-d\TH:i', strtotime($s->datetime_start)) : '';
+                                        $endVal = $s->datetime_end ? date('Y-m-d\TH:i', strtotime($s->datetime_end)) : '';
+                                        echo '<tr>';
+                                        echo '<td>';
+                                        echo Html::hiddenInput('session_id[]', (int)$s->id);
+                                        echo '<input type="text" name="session_name[]" class="form-control form-control-sm" value="'.Html::encode($s->session_name).'" />';
+                                        echo '</td>';
+                                        echo '<td><input type="datetime-local" name="datetime_start[]" class="form-control form-control-sm" value="'.Html::encode($startVal).'" /></td>';
+                                        echo '<td><input type="datetime-local" name="datetime_end[]" class="form-control form-control-sm" value="'.Html::encode($endVal).'" /></td>';
+                                        echo '<td><input type="text" name="location[]" class="form-control form-control-sm" value="'.Html::encode($s->location).'" /></td>';
+                                        echo '<td><select name="mode[]" class="form-select form-select-sm">';
+                                        foreach($modeList as $k => $v){
+                                            $sel = ((int)$s->mode === (int)$k) ? 'selected' : '';
+                                            echo '<option value="'.(int)$k.'" '.$sel.'>'.Html::encode($v).'</option>';
+                                        }
+                                        echo '</select></td>';
+                                        echo '<td class="text-center"><input type="checkbox" name="delete_session[]" value="'.(int)$s->id.'" /></td>';
+                                        echo '</tr>';
+                                    }
+                                }
+
+                                echo '<tr data-new-session-row="1">';
+                                echo '<td>';
+                                echo Html::hiddenInput('session_id[]', '');
+                                echo '<input type="text" name="session_name[]" class="form-control form-control-sm" placeholder="Session 1" />';
+                                echo '</td>';
+                                echo '<td><input type="datetime-local" name="datetime_start[]" class="form-control form-control-sm" /></td>';
+                                echo '<td><input type="datetime-local" name="datetime_end[]" class="form-control form-control-sm" /></td>';
+                                echo '<td><input type="text" name="location[]" class="form-control form-control-sm" /></td>';
+                                echo '<td><select name="mode[]" class="form-select form-select-sm">';
+                                foreach($modeList as $k => $v){
+                                    echo '<option value="'.(int)$k.'">'.Html::encode($v).'</option>';
+                                }
+                                echo '</select></td>';
+                                echo '<td class="text-center"><input type="checkbox" name="delete_session[]" value="" /></td>';
+                                echo '</tr>';
+
+                                echo '</tbody>';
+                                echo '</table>';
+                                echo '</div>';
+                                echo '<button type="button" class="btn btn-outline-secondary btn-sm" data-add-session="'.(int)$r->rubric_id.'">Add Session</button>';
+                                echo '</div>';
+
                                 echo '</div>';
                                 echo '<div class="col-md-4">';
                                 echo '<button type="submit" class="btn btn-primary btn-sm">Save</button> ';
@@ -110,6 +166,56 @@ if($programSub){
 </div>
             </div>
         </div>
+
+<?php
+$this->registerJs(<<<JS
+if(window.tinymce){
+  tinymce.remove('.rubric-richtext');
+  tinymce.init({
+    selector: '.rubric-richtext',
+    menubar: false,
+    plugins: [
+      'advlist', 'autolink', 'lists', 'link', 'charmap',
+      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'paste'
+    ],
+    toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+    height: 200,
+    branding: false
+  });
+}
+
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-add-session]');
+  if(!btn){ return; }
+  var rubricId = btn.getAttribute('data-add-session');
+  var table = document.querySelector('table[data-rubric-session-table="' + rubricId + '"]');
+  if(!table){ return; }
+
+  var tbody = table.querySelector('tbody');
+  var index = tbody.querySelectorAll('tr').length + 1;
+
+  var row = document.createElement('tr');
+  row.setAttribute('data-new-session-row', '1');
+  row.innerHTML = ''
+    + '<td>'
+    +   '<input type="hidden" name="session_id[]" value="">'
+    +   '<input type="text" name="session_name[]" class="form-control form-control-sm" placeholder="Session ' + index + '">' 
+    + '</td>'
+    + '<td><input type="datetime-local" name="datetime_start[]" class="form-control form-control-sm"></td>'
+    + '<td><input type="datetime-local" name="datetime_end[]" class="form-control form-control-sm"></td>'
+    + '<td><input type="text" name="location[]" class="form-control form-control-sm"></td>'
+    + '<td>'
+    +   '<select name="mode[]" class="form-select form-select-sm">'
+    +     '<option value="1">Physical</option>'
+    +     '<option value="2">Online</option>'
+    +   '</select>'
+    + '</td>'
+    + '<td class="text-center"><input type="checkbox" name="delete_session[]" value=""></td>';
+  tbody.appendChild(row);
+});
+JS);
+?>
 
 
 

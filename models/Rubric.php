@@ -9,10 +9,12 @@ use Yii;
  *
  * @property int $id
  * @property string $rubric_name
+ * @property string|null $rubric_description
  * @property int|null $created_at
  * @property int|null $updated_at
  *
  * @property Jury[] $Juries
+ * @property RubricJudgingSession[] $rubricJudgingSessions
  */
 class Rubric extends \yii\db\ActiveRecord
 {
@@ -32,6 +34,7 @@ class Rubric extends \yii\db\ActiveRecord
         return [
             [['rubric_name'], 'required'],
             [['created_at', 'updated_at'], 'integer'],
+            [['rubric_description'], 'string'],
             [['rubric_name'], 'string', 'max' => 255],
         ];
     }
@@ -44,6 +47,7 @@ class Rubric extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'rubric_name' => 'Rubric Name',
+            'rubric_description' => 'Rubric Description',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
@@ -76,6 +80,11 @@ class Rubric extends \yii\db\ActiveRecord
         return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
         ->where(['is_recommend' => 1])
         ->orderBy('cat_order ASC');
+    }
+
+    public function getJudgingSessions()
+    {
+        return $this->hasMany(RubricJudgingSession::class, ['rubric_id' => 'id'])->orderBy('sort_order ASC');
     }
 
     /**

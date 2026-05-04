@@ -66,11 +66,11 @@ class RubricCategory extends \yii\db\ActiveRecord
      */
     public function getItems()
     {
-        return $this->hasMany(RubricItem::class, ['category_id' => 'id']);
+        return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->orderBy('item_order ASC');
     }
 
     public function getItemsYesno()
     {
-        return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->where(['item_type' => 2]);
+        return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->where(['item_type' => 2])->orderBy('item_order ASC');
     }
 }
