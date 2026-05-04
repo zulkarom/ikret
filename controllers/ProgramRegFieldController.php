@@ -61,6 +61,7 @@ class ProgramRegFieldController extends Controller
                 'user_id' => Yii::$app->user->identity->id,
                 'role_name' => 'manager',
                 'program_sub' => $sub,
+                'status' => 10,
             ]);
 
             if(!$role){

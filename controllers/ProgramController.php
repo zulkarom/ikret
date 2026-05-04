@@ -455,6 +455,7 @@ class ProgramController extends Controller
                     'user_id' => Yii::$app->user->identity->id,
                     'role_name' => 'manager',
                     'program_sub' => $pr->program_sub,
+                    'status' => 10,
                 ]);
                 if($role){
                     $program = Program::findOne($pr->program_id);
@@ -1147,7 +1148,7 @@ class ProgramController extends Controller
 
     public function actionRubrics($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
 
         if(!$role){
             return;
@@ -1190,7 +1191,8 @@ class ProgramController extends Controller
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'program_sub' => $sub,
+            'status' => 10,
         ]);
 
         if(!$role){
@@ -1241,7 +1243,8 @@ class ProgramController extends Controller
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'program_sub' => $sub,
+            'status' => 10,
         ]);
 
         if(!$role){
@@ -1290,7 +1293,8 @@ class ProgramController extends Controller
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'program_sub' => $sub,
+            'status' => 10,
         ]);
 
         if(!$role){
@@ -1313,7 +1317,8 @@ class ProgramController extends Controller
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'program_sub' => $sub,
+            'status' => 10,
         ]);
 
         if(!$role){
@@ -2268,7 +2273,8 @@ class ProgramController extends Controller
                 'program_id' => $pr->program_id,
                 'user_id' => Yii::$app->user->identity->id,
                 'role_name' => 'manager',
-                'program_sub' => $pr->program_sub
+                'program_sub' => $pr->program_sub,
+                'status' => 10,
             ]);
 
             if($role){

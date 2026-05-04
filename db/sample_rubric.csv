@@ -1,16 +1,26 @@
 category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
-SECTION A: THE MOST ATTRACTIVE BOOTH - SUSTAINABILITY THEME,Display Business Registration No. (SSU or SSM),boolean,2,Registration,,0,1
-,Preparation and set up of business,scale,5,Setup,,0,1
-,Arrangement of products or services in a business (including variety in product and service display),scale,5,Arrangement,,0,1
-,Do you recommend this booth to be the most attractive booth?,boolean,2,Recommendation,,1,1
-,State your reason(s) if any,textarea,,Reason,,0,0
-SECTION B: THE MOST INNOVATIVE PRODUCT,Product quality and packaging,scale,5,Quality,,0,1
-,Pricing Strategies,scale,5,Pricing,,0,1
-,"Knowledge - clear, through description of product or service",scale,5,Knowledge,,0,1
-,Do you recommend this product to be the most innovative product?,boolean,2,Recommendation,,1,1
-,State your reason(s) if any,textarea,,Reason,,0,0
-SECTION C: THE MOST INFLUENTIAL PROMOTIONAL STRATEGIES,Creative strategies in promotional activities,scale,5,Creativity,,0,1
-,Compelling pitch that successfully convinces customers that the product or service is beneficial and worth buying,scale,5,Pitch,,0,1
-,Teamwork among the peers,scale,5,Teamwork,,0,1
-,Do you recommend this group for the best marketing strategies?,boolean,2,Recommendation,,1,1
-,State your reason(s) if any,textarea,,Reason,,0,0
+Financial Analyst Evaluation,Accuracy of Financial Data,scale,10,Accuracy,"Ability to interpret financial data accurately (e.g., ratios, cash flow, trends)",0,1
+,Financial Ratio Analysis,scale,10,Ratio Analysis,Ability to analyse and interpret financial ratios with depth and logic,0,1
+,Cash Flow Analysis,scale,10,Cash Flow,Ability to explain and analyse cash flow trends and financial health,0,1
+,Critical Thinking & Insight,scale,10,Critical Thinking,Demonstrates analytical depth and meaningful insights,0,1
+,Business Strategy & Recommendation,scale,10,Strategy,"Provides practical, relevant, and impactful business recommendations",0,1
+,Link Between Analysis & Decision,scale,10,Linkage,Ability to connect financial analysis to business decisions and strategy,0,1
+,Clarity of Financial Explanation,scale,10,Clarity,Ability to explain financial information clearly and professionally,0,1
+,Professional Judgement (Analyst Mindset),scale,10,Judgement,Demonstrates strong professional judgement and analyst-level thinking,0,1
+,Best Financial Analyst Award,boolean,2,Best Analyst,,1,1
+,Strengths (Financial Analyst),textarea,,Strengths Analyst,,0,0
+,Areas for Improvement (Financial Analyst),textarea,,Improvements Analyst,,0,0
+Poster Presentation Evaluation,Clarity of Delivery,scale,10,Clarity,"Ability to deliver ideas clearly, confidently, and in a structured manner",0,1
+,Confidence in Delivery,scale,10,Confidence,Level of confidence shown during presentation,0,1
+,Effectiveness & Articulation,scale,10,Articulation,Ability to communicate message effectively and fluently,0,1
+,Use of Visual Aids,scale,10,Visuals,"Use of visuals (charts, graphs, layout) to enhance understanding",0,1
+,Creativity & Design,scale,10,Creativity,"Level of originality, innovation, and visual appeal",0,1
+,Coordination & Flow,scale,10,Coordination,Team coordination and smooth transitions during presentation,0,1
+,Participation & Role Distribution,scale,10,Participation,Balanced contribution and involvement of all team members,0,1
+,Professionalism (Attire & Conduct),scale,10,Professionalism,"Overall professionalism including attire, confidence, and engagement",0,1
+,Best Presenter Award,boolean,2,Best Presenter,,1,1
+,Strengths (Presentation),textarea,,Strengths Presentation,,0,0
+,Areas for Improvement (Presentation),textarea,,Improvements Presentation,,0,0
+,Most Creative Poster Award,boolean,2,Creative Poster,,1,1
+,Strengths (Poster),textarea,,Strengths Presentation,,0,0
+,Areas for Improvement (Poster),textarea,,Improvements Presentation,,0,0

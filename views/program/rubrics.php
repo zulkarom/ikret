@@ -185,6 +185,7 @@ if($programSub){
                             echo '<td>';
 
                             echo Html::a('View', ['view-rubric', 'id' => $r->rubric_id], ['class' => 'btn btn-primary btn-sm']);
+                            echo ' ' . Html::a('Edit Rubric', ['view-rubric', 'id' => $r->rubric_id, 'edit' => 1], ['class' => 'btn btn-secondary btn-sm']);
                             if(!$isEdit){
                                 echo ' ' . Html::a('Edit', ['rubrics', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null, $editKey => 1], ['class' => 'btn btn-warning btn-sm']);
                                 echo ' <form method="post" action="'.Url::to(['rubric-delete', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null, 'pr' => $r->id]).'" style="display:inline;">';

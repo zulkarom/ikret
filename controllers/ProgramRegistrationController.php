@@ -189,7 +189,11 @@ class ProgramRegistrationController extends Controller
     public function actionManagerViewCerts($id, $sub = null)
     {
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
 
         $programSub = null;
         $program = $role->program;
@@ -235,7 +239,7 @@ class ProgramRegistrationController extends Controller
         $assign = $this->findAssignment($id);
         $reg = $assign->registration;
 
-        $role = UserRole::findOne(['program_id' => $reg->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_id' => $p]);
+        $role = UserRole::findOne(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10]);
 
         if($role && $role->program){
             
@@ -405,7 +409,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerView($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
-        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
 
         if(!$role){
             return;
@@ -432,7 +436,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerAward($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
-        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager']);
+        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10]);
 
         if(!$role){
             return;
@@ -561,7 +565,10 @@ class ProgramRegistrationController extends Controller
     public function actionJuryResult($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
         $programSub = null;
         $program = $role->program;
         $rubrics = $program->programRubrics;
@@ -606,7 +613,10 @@ class ProgramRegistrationController extends Controller
         //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
         $programSub = null;
         $program = $role->program;
         if($program->program_type == 2){
@@ -1327,7 +1337,10 @@ class ProgramRegistrationController extends Controller
         //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
         $programSub = null;
         $program = $role->program;
 
@@ -1372,7 +1385,10 @@ class ProgramRegistrationController extends Controller
 
     public function actionManagerAnalysis($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub]);
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
         $programSub = null;
         $program = $role->program;
         $rubrics = $program->programRubrics;
