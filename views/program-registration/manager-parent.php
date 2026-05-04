@@ -83,6 +83,7 @@ $programLevelCards = [
              'description' => 'Manage participants, assignments, rubrics, and awards for this sub program.',
              'stats' => [
                  ['label' => 'Total Members', 'value' => (string)($stats['members_total'] ?? 0)],
+                 ['label' => 'Rubrics', 'value' => (string)($stats['rubrics_count'] ?? 0)],
                  ['label' => 'Registered (Groups)', 'value' => (string)($stats['registrations_registered'] ?? 0)],
                  ['label' => 'Completed', 'value' => (string)($stats['registrations_complete'] ?? 0)],
              ],

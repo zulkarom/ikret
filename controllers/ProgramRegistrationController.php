@@ -839,12 +839,26 @@ class ProgramRegistrationController extends Controller
         $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
         $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
         $subStats = [];
+
+        $rubricCounts = ProgramRubric::find()
+            ->select(['program_sub', 'COUNT(*) AS cnt'])
+            ->where(['program_id' => (int)$program->id])
+            ->andWhere(['not', ['program_sub' => null]])
+            ->groupBy(['program_sub'])
+            ->asArray()
+            ->all();
+        $rubricsBySub = [];
+        foreach($rubricCounts as $row){
+            $rubricsBySub[(int)$row['program_sub']] = (int)$row['cnt'];
+        }
+
         if($subs){
             foreach($subs as $sp){
                 if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
                     continue;
                 }
                 $subStats[(int)$sp->id] = $this->buildDashboardStats($program, $sp);
+                $subStats[(int)$sp->id]['rubrics_count'] = $rubricsBySub[(int)$sp->id] ?? 0;
             }
         }
 
