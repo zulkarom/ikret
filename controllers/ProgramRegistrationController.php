@@ -739,26 +739,34 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne([
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'status' => 10,
         ]);
+        if((int)$program->has_sub === 1){
+            if(!$sub){
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+
+        $role = $roleQuery->one();
 
         if(!$role){
             return;
         }
 
-        $program = $role->program;
         $programSub = null;
 
-        if($program->has_sub == 1){
-            if($sub){
-                $programSub = $role->programSub;
-            }else{
-                throw new NotFoundHttpException('Please provide sub program.');
-            }
+        if((int)$program->has_sub === 1 && $sub){
+            $programSub = $role->programSub;
         }
 
         return $this->render('manager-dashboard', [
