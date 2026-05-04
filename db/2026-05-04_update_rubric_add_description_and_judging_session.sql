@@ -21,3 +21,13 @@ CREATE TABLE `rubric_judging_session` (
   KEY `idx_rjs_rubric_id` (`rubric_id`),
   CONSTRAINT `fk_rjs_rubric_id` FOREIGN KEY (`rubric_id`) REFERENCES `rubric` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add per-item required flag
+ALTER TABLE `rubric_item`
+  ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 0 AFTER `colum_ans`;
+
+-- Backfill required defaults to preserve current behavior:
+-- - likert/yesno were previously always required
+-- - shorttext/longtext were previously optional
+UPDATE `rubric_item`
+  SET `is_required` = CASE WHEN `item_type` IN (1, 2) THEN 1 ELSE 0 END;

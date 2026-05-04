@@ -714,6 +714,8 @@ class ProgramController extends Controller
         $item->item_short = Yii::$app->request->post('item_short');
         $item->item_type = (int)Yii::$app->request->post('item_type', 1);
         $item->option_number = Yii::$app->request->post('option_number');
+        $postedRequired = Yii::$app->request->post('is_required', null);
+        $item->is_required = ((int)$postedRequired === 1) ? 1 : 0;
         $item->item_order = Yii::$app->request->post('item_order');
         if($item->item_order === null || $item->item_order === ''){
             $max = (int)RubricItem::find()->where(['category_id' => $category->id])->max('item_order');
@@ -768,6 +770,8 @@ class ProgramController extends Controller
         $it->item_short = Yii::$app->request->post('item_short', $it->item_short);
         $it->item_type = (int)Yii::$app->request->post('item_type', $it->item_type);
         $it->option_number = Yii::$app->request->post('option_number', $it->option_number);
+        $postedRequired = Yii::$app->request->post('is_required', null);
+        $it->is_required = ((int)$postedRequired === 1) ? 1 : 0;
         $it->item_order = Yii::$app->request->post('item_order', $it->item_order);
 
         if($it->item_text === null || trim($it->item_text) === ''){
@@ -1040,6 +1044,12 @@ class ProgramController extends Controller
                 $item->option_number = $optionNumber;
                 $item->item_short = isset($idx['item_short']) ? trim((string)($row[$idx['item_short']] ?? '')) : null;
                 $item->item_description = isset($idx['item_description']) ? trim((string)($row[$idx['item_description']] ?? '')) : null;
+                $defaultRequired = ($itemType === 1 || $itemType === 2) ? 1 : 0;
+                $item->is_required = $defaultRequired;
+                if(isset($idx['is_required'])){
+                    $req = trim((string)($row[$idx['is_required']] ?? ''));
+                    $item->is_required = ((int)$req === 1) ? 1 : 0;
+                }
                 $item->item_order = ++$itemOrderCache[$category->id];
                 $item->colum_ans = $this->generateRubricAnswerColumn($rubric->id, (int)$item->item_type);
 

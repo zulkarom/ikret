@@ -150,7 +150,7 @@ if($plain && $edit){
                                             <input type="text" name="item_text" class="form-control" placeholder="Item text" />
                                         </div>
                                         <div class="col-md-2">
-                                            <select name="item_type" class="form-select">
+                                            <select name="item_type" class="form-select" id="item_type_new">
                                                 <option value="1">likert</option>
                                                 <option value="2">yesno</option>
                                                 <option value="3">shorttext</option>
@@ -162,6 +162,12 @@ if($plain && $edit){
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" name="item_short" class="form-control" placeholder="Short label" />
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_required" value="1" id="is_required_new" checked />
+                                                <label class="form-check-label" for="is_required_new">Required</label>
+                                            </div>
                                         </div>
                                         <div class="col-md-12">
                                             <input type="text" name="item_description" class="form-control" placeholder="Description" />
@@ -222,6 +228,12 @@ if($plain && $edit){
                                                             <input type="text" name="item_short" class="form-control" value="<?= Html::encode($item->item_short) ?>" />
                                                         </div>
                                                         <div class="col-md-12">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="is_required" value="1" id="is_required_<?= (int)$item->id ?>" <?= ((int)$item->is_required === 1 ? 'checked' : '') ?> />
+                                                                <label class="form-check-label" for="is_required_<?= (int)$item->id ?>">Required</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-12">
                                                             <input type="text" name="item_description" class="form-control" value="<?= Html::encode($item->item_description) ?>" />
                                                         </div>
                                                         <div class="col-md-12">
@@ -263,6 +275,24 @@ function rubricPostOrder(url, ids){
     });
 }
 
+function rubricSyncRequiredForNewItem(){
+    var typeEl = document.getElementById('item_type_new');
+    var reqEl = document.getElementById('is_required_new');
+    if(!typeEl || !reqEl){ return; }
+    var t = String(typeEl.value || '');
+    if(t === '1' || t === '2'){
+        reqEl.checked = true;
+    }else if(t === '3' || t === '4'){
+        reqEl.checked = false;
+    }
+}
+
+rubricSyncRequiredForNewItem();
+var typeEl = document.getElementById('item_type_new');
+if(typeEl){
+    typeEl.addEventListener('change', rubricSyncRequiredForNewItem);
+}
+
 var catEl = document.getElementById('rubric-category-list');
 if(catEl && typeof Sortable !== 'undefined'){
     new Sortable(catEl, {
@@ -300,13 +330,13 @@ JS);
                     <h6>Import Categories & Items (CSV)</h6>
                     <div class="text-muted mb-2" style="font-size: 0.9em;">
                         CSV header must include: <b>category_name</b>, <b>item_text</b>.
-                        Optional columns: <b>item_description</b>, <b>item_short</b>, <b>item_type</b> (1-4 or likert/yesno/shorttext/longtext or scale/boolean/textarea), <b>option_number</b>, <b>is_recommend</b> (0/1).
+                        Optional columns: <b>item_description</b>, <b>item_short</b>, <b>item_type</b> (1-4 or likert/yesno/shorttext/longtext or scale/boolean/textarea), <b>option_number</b>, <b>is_required</b> (0/1), <b>is_recommend</b> (0/1).
                         <br />Notes: you may leave <b>category_name blank</b> to continue the previous category. For <b>likert/scale</b>, <b>option_number is mandatory</b>. Category will be created if not exists. Items will be appended. <b>colum_ans is auto-generated</b>.
                     </div>
-                    <div class="mb-2" style="font-family: monospace; font-size: 0.9em; white-space: pre;">category_name,item_text,item_description,item_short,item_type,option_number,is_recommend
-Main Evaluation,Video ini memaparkan idea yang kreatif...,Menilai tahap kreativiti...,Creative Idea,scale,10,0
-,Video ini mempunyai jalan cerita yang jelas...,Menilai kejelasan...,Storytelling,scale,10,0
-KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0</div>
+                    <div class="mb-2" style="font-family: monospace; font-size: 0.9em; white-space: pre;">category_name,item_text,item_description,item_short,item_type,option_number,is_required,is_recommend
+Main Evaluation,Video ini memaparkan idea yang kreatif...,Menilai tahap kreativiti...,Creative Idea,scale,10,1,0
+,Video ini mempunyai jalan cerita yang jelas...,Menilai kejelasan...,Storytelling,scale,10,1,0
+KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                     <form method="post" enctype="multipart/form-data" action="<?= Url::to(['program/rubric-import-csv', 'id' => $rubric->id]) ?>">
                         <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
                         <div class="row g-2 align-items-center">

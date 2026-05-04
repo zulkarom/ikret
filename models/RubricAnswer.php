@@ -207,10 +207,17 @@ class RubricAnswer extends \yii\db\ActiveRecord
                         $option = $item->option_number;
                         $colum = $item->colum_ans;
                         $val = $this->$colum;
-                        if($item->item_type== 1 || $item->item_type==2){
-                            if($val > 0){
-                                //
-                            }else{
+
+                        if((int)$item->is_required !== 1){
+                            continue;
+                        }
+
+                        if($item->item_type == 1 || $item->item_type == 2){
+                            if(!($val > 0)){
+                                return false;
+                            }
+                        }else if($item->item_type == 3 || $item->item_type == 4){
+                            if(trim((string)$val) === ''){
                                 return false;
                             }
                         }
