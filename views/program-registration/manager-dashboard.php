@@ -368,6 +368,7 @@ $renderCards = static function($cards){
         </div>
     </div>
 
+    <?php if(!$programSub){ ?>
     <div class="dashboard-section">
         <div class="dashboard-section__head">
             <h3 class="dashboard-section__title">Program Level</h3>
@@ -377,6 +378,7 @@ $renderCards = static function($cards){
             <?php $renderCards($programLevelCards); ?>
         </div>
     </div>
+    <?php } ?>
 
     <div class="dashboard-section">
         <div class="dashboard-section__head">

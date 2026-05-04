@@ -7,6 +7,8 @@ use yii\helpers\Url;
 /** @var app\models\UserRole $role */
 /** @var app\models\Program $program */
 /** @var array $dashboardStats */
+/** @var app\models\ProgramSub[] $subs */
+/** @var array $subStats */
 
 $title = $program->program_name;
 
@@ -14,6 +16,8 @@ $this->title = 'Manager Dashboard - ' . $title;
 
 $id = (int)$program->id;
 $dashboardStats = $dashboardStats ?? [];
+$subs = $subs ?? [];
+$subStats = $subStats ?? [];
 
 $formatDate = static function($value){
     if(empty($value)){
@@ -61,6 +65,30 @@ $programLevelCards = [
         ],
     ],
 ];
+
+ $subCards = [];
+ if($subs){
+     foreach($subs as $sub){
+         $sid = (int)$sub->id;
+         if(!array_key_exists($sid, $subStats)){
+             continue;
+         }
+         $stats = $subStats[$sid] ?? [];
+         $subCards[] = [
+             'title' => $sub->sub_name,
+             'url' => Url::to(['program-registration/manager-dashboard', 'id' => $id, 'sub' => $sid]),
+             'icon' => 'bi bi-diagram-3',
+             'accent' => 'teal',
+             'description' => 'Manage participants, assignments, rubrics, and awards for this sub program.',
+             'stats' => [
+                 ['label' => 'Total Members', 'value' => (string)($stats['members_total'] ?? 0)],
+                 ['label' => 'Registered (Groups)', 'value' => (string)($stats['registrations_registered'] ?? 0)],
+                 ['label' => 'Completed', 'value' => (string)($stats['registrations_complete'] ?? 0)],
+             ],
+             'secondaryUrl' => Url::to(['program/info', 'id' => $id, 'sub' => $sid]),
+         ];
+     }
+ }
 
 $this->registerCss(<<<CSS
 .dashboard-hero {
@@ -229,7 +257,12 @@ $renderCards = static function($cards){
             echo '</div>';
         }
         echo '</div>';
-        echo Html::a('View <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
+        echo '<div class="d-flex flex-wrap gap-2">';
+        echo Html::a('Dashboard <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
+        if(array_key_exists('secondaryUrl', $card) && $card['secondaryUrl']){
+            echo Html::a('Info', $card['secondaryUrl'], ['class' => 'btn btn-outline-secondary']);
+        }
+        echo '</div>';
         echo '</div>';
         echo '</div>';
         echo '</div>';
@@ -276,5 +309,19 @@ $renderCards = static function($cards){
         <div class="row">
             <?php $renderCards($programLevelCards); ?>
         </div>
+    </div>
+
+    <div class="dashboard-section">
+        <div class="dashboard-section__head">
+            <h3 class="dashboard-section__title">Sub Programs</h3>
+            <div class="dashboard-section__meta">Pick a sub program to manage participants and scoring</div>
+        </div>
+        <?php if($subCards){ ?>
+            <div class="row">
+                <?php $renderCards($subCards); ?>
+            </div>
+        <?php }else{ ?>
+            <div class="alert alert-info">No sub programs available for your manager role.</div>
+        <?php } ?>
     </div>
 </section>

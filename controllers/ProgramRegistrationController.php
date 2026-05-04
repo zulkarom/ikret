@@ -787,10 +787,47 @@ class ProgramRegistrationController extends Controller
             return;
         }
 
+        $roles = UserRole::find()->where([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'status' => 10,
+        ])->all();
+
+        $hasProgramLevel = false;
+        $allowedSubs = [];
+        if($roles){
+            foreach($roles as $r){
+                if(empty($r->program_sub)){
+                    $hasProgramLevel = true;
+                    break;
+                }
+                $allowedSubs[(int)$r->program_sub] = true;
+            }
+        }
+
+        $subs = $program->programSubs;
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+        $subStats = [];
+        if($subs){
+            foreach($subs as $sp){
+                if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
+                    continue;
+                }
+                if(!$hasProgramLevel && !array_key_exists((int)$sp->id, $allowedSubs)){
+                    continue;
+                }
+                $subStats[(int)$sp->id] = $this->buildDashboardStats($program, $sp);
+            }
+        }
+
         return $this->render('manager-parent', [
             'role' => $role,
             'program' => $program,
             'dashboardStats' => $this->buildDashboardStats($program, null),
+            'subs' => $subs,
+            'subStats' => $subStats,
         ]);
     }
 
@@ -1217,10 +1254,19 @@ class ProgramRegistrationController extends Controller
             ->where(['program_id' => $programId, 'is_required' => 1])
             ->count();
 
+        $memberQuery = Member::find()->alias('m')
+            ->innerJoin('program_reg r', 'r.id = m.program_reg_id')
+            ->where(['r.program_id' => $programId]);
+        if($subId){
+            $memberQuery->andWhere(['r.program_sub' => $subId]);
+        }
+        $memberTotal = (clone $memberQuery)->count();
+
         return [
             'registrations_total' => (int)$registrationTotal,
             'registrations_registered' => (int)$registeredTotal,
             'registrations_complete' => (int)$completeTotal,
+            'members_total' => (int)$memberTotal,
             'assignments_total' => (int)$assignmentTotal,
             'assignments_complete' => (int)$assignmentComplete,
             'rubrics_count' => (int)$rubricCount,

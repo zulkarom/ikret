@@ -1,17 +1,21 @@
 <?php
 
+use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\models\ProgramRegistration $model */
+/** @var yii\db\ActiveRecord $model */
+/** @var app\models\Program|null $program */
+/** @var app\models\ProgramSub|null $programSub */
 
 $this->title = 'Update Program Info';
 
 $programSub = $programSub ?? null;
+$program = $program ?? ($programSub ? $programSub->program : null);
 
 $this->params['breadcrumbs'][] = [
-    'label' => $model->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
-    'url' => ['/program-registration/manager-dashboard', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]
+    'label' => ($program ? $program->program_abbr : '') . ($programSub ? ' / ' . $programSub->sub_name : ''),
+    'url' => ['/program-registration/manager-dashboard', 'id' => $program ? $program->id : null, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -27,9 +31,32 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="card">
             <div class="card-body pt-4">
 
-    <?= $this->render('_form', [
-        'model' => $model,
-    ]) ?>
+    <?php if($programSub){ ?>
+        <?php $form = ActiveForm::begin(); ?>
+
+        <?= $form->field($model, 'sub_name')->textInput(['maxlength' => true]) ?>
+        <?= $form->field($model, 'sub_abbr')->textInput(['maxlength' => true]) ?>
+        <?= $form->field($model, 'advisor')->textInput(['maxlength' => true]) ?>
+
+        <?php
+            $subTable = Yii::$app->db->schema->getTableSchema(app\models\ProgramSub::tableName());
+            $hasActive = $subTable && $subTable->getColumn('is_active');
+        ?>
+        <?php if($hasActive){ ?>
+            <?= $form->field($model, 'is_active')->checkbox() ?>
+        <?php } ?>
+
+        <br>
+        <div class="form-group">
+            <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
+    <?php }else{ ?>
+        <?= $this->render('_form', [
+            'model' => $model,
+        ]) ?>
+    <?php } ?>
 
 </div>
             </div>

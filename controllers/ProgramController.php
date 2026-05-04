@@ -133,27 +133,37 @@ class ProgramController extends Controller
             return $this->redirect(['/program-registration/manager-parent', 'id' => $program->id]);
         }
 
-        $role = UserRole::findOne([
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'status' => 10,
         ]);
+        if($sub){
+            $roleQuery->andWhere(['or', ['program_sub' => $sub], ['program_sub' => null]]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
             throw new NotFoundHttpException('Manager role not found for this program.');
         }
 
         $programSub = null;
-        if($role->program->has_sub == 1){
-            if($sub){
-                $programSub = $role->programSub;
-            }else{
+        $model = null;
+
+        if((int)$program->has_sub === 1){
+            if(!$sub){
                 throw new NotFoundHttpException('Please provide sub program.');
             }
-        }
 
-        $model = $this->findModel($id);
+            $programSub = ProgramSub::findOne(['id' => (int)$sub, 'program_id' => (int)$id]);
+            if(!$programSub){
+                throw new NotFoundHttpException('Sub program not found.');
+            }
+            $model = $programSub;
+        }else{
+            $model = $this->findModel($id);
+        }
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -163,8 +173,10 @@ class ProgramController extends Controller
         } else {
             $model->loadDefaultValues();
         }
+
         return $this->render('info', [
             'model' => $model,
+            'program' => $program,
             'programSub' => $programSub,
         ]);
     }
