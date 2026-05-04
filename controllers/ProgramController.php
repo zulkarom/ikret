@@ -855,28 +855,22 @@ class ProgramController extends Controller
 
     public function actionRegisterFields($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne([
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub
+            'status' => 10,
         ]);
+        if($sub !== null){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
             return;
         }
 
-        $programSub = null;
         $program = $role->program;
-
-        if($role->program->has_sub == 1){
-            if($sub){
-                $programSub = $role->programSub;
-            }else{
-                throw new NotFoundHttpException('Please provide sub program.');
-            }
-        }
-
         return $this->redirect(['/program-reg-field/index', 'id' => $program->id, 'sub' => $sub]);
     }
 
