@@ -120,10 +120,32 @@ use yii\helpers\Url;
                 $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
                 $sub_menu = [];
 
-                $sub_menu[] = [
-                  'name' => 'Parent',
-                  'url' => ['/program-registration/manager-parent', 'id' => $pid]
-                ];
+                $activeSubIds = [];
+                if($subs){
+                  foreach($subs as $sp){
+                    if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
+                      continue;
+                    }
+                    $activeSubIds[(int)$sp->id] = true;
+                  }
+                }
+
+                $hasAllActiveSubs = true;
+                if(!$hasProgramLevel){
+                  foreach(array_keys($activeSubIds) as $sid){
+                    if(!array_key_exists((int)$sid, $allowedSubs)){
+                      $hasAllActiveSubs = false;
+                      break;
+                    }
+                  }
+                }
+
+                if($hasProgramLevel || $hasAllActiveSubs){
+                  $sub_menu[] = [
+                    'name' => 'Parent',
+                    'url' => ['/program-registration/manager-parent', 'id' => $pid]
+                  ];
+                }
                 if($subs){
                   foreach($subs as $sp){
                     if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){

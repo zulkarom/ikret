@@ -209,7 +209,12 @@ class UserController extends Controller
     }
 
     public function actionSubProgramOptions($program){
-        $list = ProgramSub::find()->where(['program_id' => $program])->all();
+        $query = ProgramSub::find()->where(['program_id' => $program]);
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $query->andWhere(['is_active' => 1]);
+        }
+        $list = $query->all();
         $html = '<option value="-1">N/A</option>';
         if($list){
             $html = '<option>Select Competition</option>';

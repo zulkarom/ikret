@@ -78,7 +78,14 @@ class Program extends \yii\db\ActiveRecord
     }
 
     public static function listPrograms(){
-        return ArrayHelper::map(self::find()->all(),'id', 'program_name');
+        $query = self::find();
+        $programTable = Yii::$app->db->schema->getTableSchema(self::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $query->andWhere(['is_active' => 1]);
+        }else if($programTable && $programTable->getColumn('status')){
+            $query->andWhere(['status' => 10]);
+        }
+        return ArrayHelper::map($query->all(),'id', 'program_name');
     }
 
     public function getProgramSubs()

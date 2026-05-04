@@ -30,6 +30,7 @@ use Yii;
 use yii\db\Expression;
 use yii\db\Query;
 use yii\web\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
@@ -787,22 +788,42 @@ class ProgramRegistrationController extends Controller
             return;
         }
 
-        $roles = UserRole::find()->where([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'status' => 10,
-        ])->all();
-
-        $hasProgramLevel = false;
-        $allowedSubs = [];
-        if($roles){
-            foreach($roles as $r){
-                if(empty($r->program_sub)){
-                    $hasProgramLevel = true;
-                    break;
+        if((int)$program->has_sub === 1){
+            $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+            $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+            $activeSubIds = [];
+            foreach($program->programSubs as $sp){
+                if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
+                    continue;
                 }
-                $allowedSubs[(int)$r->program_sub] = true;
+                $activeSubIds[(int)$sp->id] = true;
+            }
+
+            $roles = UserRole::find()->where([
+                'program_id' => $id,
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+                'status' => 10,
+            ])->all();
+
+            $hasProgramLevel = false;
+            $allowedSubs = [];
+            if($roles){
+                foreach($roles as $r){
+                    if(empty($r->program_sub)){
+                        $hasProgramLevel = true;
+                        break;
+                    }
+                    $allowedSubs[(int)$r->program_sub] = true;
+                }
+            }
+
+            if(!$hasProgramLevel){
+                foreach(array_keys($activeSubIds) as $sid){
+                    if(!array_key_exists((int)$sid, $allowedSubs)){
+                        throw new ForbiddenHttpException('You do not have access to the parent dashboard for this program.');
+                    }
+                }
             }
         }
 
@@ -813,9 +834,6 @@ class ProgramRegistrationController extends Controller
         if($subs){
             foreach($subs as $sp){
                 if($hasSubActiveColumn && (int)$sp->getAttribute('is_active') !== 1){
-                    continue;
-                }
-                if(!$hasProgramLevel && !array_key_exists((int)$sp->id, $allowedSubs)){
                     continue;
                 }
                 $subStats[(int)$sp->id] = $this->buildDashboardStats($program, $sp);
