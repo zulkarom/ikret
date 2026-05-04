@@ -497,6 +497,23 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0</div>
 
                  echo '</td></tr>';
                 $i++;
+              }else if($item->item_type == 4){ //long text
+                echo '<tr><td width="10">'.$i.'. </td><td>
+                 <div class="row">
+                    <div class="col-md-10">
+                        <label> '.$item->item_text.'</label>
+                        ';
+                    echo '<div><textarea class="form-control" rows="6" name="'.$formName.'['.$item->colum_ans.']" name="">'.$model->{$item->colum_ans}.'</textarea></div>';
+                    echo '</div>
+         
+                 </div>';
+
+                 if(!$write){
+                  echo '<br /> ** '. $item->colum_ans.' **';
+                }
+
+                 echo '</td></tr>';
+                $i++;
               }
             }
           }
