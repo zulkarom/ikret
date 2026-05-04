@@ -156,11 +156,18 @@ if($programSub){
                                     foreach($sessions as $s){
                                         $modeText = $modeList[(int)$s->mode] ?? $s->mode;
                                         $range = '';
-                                        if($s->datetime_start){
-                                            $range .= date('d M Y H:i', strtotime($s->datetime_start));
-                                        }
-                                        if($s->datetime_end){
-                                            $range .= ($range ? ' - ' : '') . date('d M Y H:i', strtotime($s->datetime_end));
+                                        if($s->datetime_start && $s->datetime_end){
+                                            $startTs = strtotime($s->datetime_start);
+                                            $endTs = strtotime($s->datetime_end);
+                                            if(date('Y-m-d', $startTs) === date('Y-m-d', $endTs)){
+                                                $range = date('d M Y H:i', $startTs) . ' - ' . date('H:i', $endTs);
+                                            }else{
+                                                $range = date('d M Y H:i', $startTs) . ' - ' . date('d M Y H:i', $endTs);
+                                            }
+                                        }else if($s->datetime_start){
+                                            $range = date('d M Y H:i', strtotime($s->datetime_start));
+                                        }else if($s->datetime_end){
+                                            $range = date('d M Y H:i', strtotime($s->datetime_end));
                                         }
                                         $meta = [];
                                         if($range){ $meta[] = $range; }
