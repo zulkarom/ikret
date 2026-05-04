@@ -1148,17 +1148,35 @@ class ProgramController extends Controller
 
     public function actionRubrics($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $hasSub = ((int)$program->has_sub === 1);
+
+        $roleQuery = UserRole::find()->where([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'status' => 10,
+        ]);
+        if($hasSub){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
-            return;
+            throw new \yii\web\ForbiddenHttpException('You do not have access to this program.');
         }
 
         $programSub = null;
-        $program = $role->program;
-        if($role->program->has_sub == 1){
+        if($hasSub){
             if($sub){
-                $programSub = $role->programSub;
+                $programSub = ProgramSub::findOne(['id' => (int)$sub, 'program_id' => (int)$id]);
+                if(!$programSub){
+                    throw new NotFoundHttpException('Sub program not found.');
+                }
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
@@ -1168,7 +1186,7 @@ class ProgramController extends Controller
             $rubrics = ProgramRubric::find()
             ->where(['program_id' => $id, 'program_sub' => $sub])->all();
         }else{
-            $rubrics = ProgramRubric::find()->where(['program_id' => $id])->all();
+            $rubrics = ProgramRubric::find()->where(['program_id' => $id, 'program_sub' => null])->all();
         }
         
         $model = $this->findModel($id);
@@ -1187,21 +1205,34 @@ class ProgramController extends Controller
             return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
-        $role = UserRole::findOne([
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $hasSub = ((int)$program->has_sub === 1);
+
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub,
             'status' => 10,
         ]);
+        if($hasSub){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
-            return;
+            throw new \yii\web\ForbiddenHttpException('You do not have access to this program.');
         }
 
-        $program = $role->program;
-        if($program->has_sub == 1 && !$sub){
+        if($hasSub && !$sub){
             throw new NotFoundHttpException('Please provide sub program.');
+        }
+
+        if(!$hasSub){
+            $sub = null;
         }
 
         $rubric = new Rubric();
@@ -1239,16 +1270,30 @@ class ProgramController extends Controller
             return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
-        $role = UserRole::findOne([
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $hasSub = ((int)$program->has_sub === 1);
+
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub,
             'status' => 10,
         ]);
+        if($hasSub){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
-            return;
+            throw new \yii\web\ForbiddenHttpException('You do not have access to this program.');
+        }
+
+        if(!$hasSub){
+            $sub = null;
         }
 
         if(!$rubric){
@@ -1289,16 +1334,30 @@ class ProgramController extends Controller
             return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
-        $role = UserRole::findOne([
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $hasSub = ((int)$program->has_sub === 1);
+
+        $roleQuery = UserRole::find()->where([
             'program_id' => $id,
             'user_id' => Yii::$app->user->identity->id,
             'role_name' => 'manager',
-            'program_sub' => $sub,
             'status' => 10,
         ]);
+        if($hasSub){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
 
         if(!$role){
-            return;
+            throw new \yii\web\ForbiddenHttpException('You do not have access to this program.');
+        }
+
+        if(!$hasSub){
+            $sub = null;
         }
 
         $assign = ProgramRubric::findOne(['id' => $pr, 'program_id' => $id, 'program_sub' => $sub]);

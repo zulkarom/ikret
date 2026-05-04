@@ -1286,6 +1286,8 @@ class ProgramRegistrationController extends Controller
         $rubricQuery = ProgramRubric::find()->where(['program_id' => $programId]);
         if($subId){
             $rubricQuery->andWhere(['program_sub' => $subId]);
+        }else{
+            $rubricQuery->andWhere(['program_sub' => null]);
         }
         $rubricCount = (clone $rubricQuery)->count();
 
