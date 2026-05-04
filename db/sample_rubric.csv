@@ -1,14 +1,16 @@
 category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
-Corporate Portfolio Evaluation,Company Background & Ownership,scale,10,Background,Portfolio ini mempersembahkan latar belakang syarikat dan pemilik perniagaan dengan jelas dan lengkap.,0,1
-,Business Identity (Name Logo Vision & Mission),scale,10,Identity,"Identiti perniagaan (nama, logo, visi, misi) adalah jelas, konsisten, dan profesional.",0,1
-,Business Registration & Formal Elements,scale,10,Registration,"Portfolio menunjukkan elemen formal perniagaan (contoh: pendaftaran syarikat, kad perniagaan, dll.) dengan lengkap dan realistik.",0,1
-,Business Concept & Value Proposition,scale,10,Concept,Idea perniagaan e-commerce diterangkan dengan jelas serta mempunyai nilai unik (USP) dan kelebihan kompetitif.,0,1
-,Product/Service Presentation,scale,10,Product,"Produk atau perkhidmatan dipersembahkan dengan jelas, tersusun, dan menarik.",0,1
-,Business Platform (Physical & Online Presence),scale,10,Platform,Portfolio menunjukkan kehadiran platform perniagaan (fizikal dan/atau dalam talian) secara jelas dan relevan.,0,1
-,Business Activities & Operations,scale,10,Operations,Aktiviti dan operasi perniagaan diterangkan dengan realistik dan selari dengan model e-commerce.,0,1
-,Business Timeline,scale,10,Timeline,"Portfolio ini menunjukkan perancangan garis masa (timeline) pembangunan perniagaan yang jelas, realistik, dan tersusun (contoh: fasa pelancaran, pemasaran, dan perkembangan).",0,1
-,Creativity & Visual Presentation,scale,10,Creativity,"Portfolio dipersembahkan secara kreatif, menarik, dan mempunyai identiti visual yang konsisten.",0,1
-,Professionalism & Portfolio Quality,scale,10,Professionalism,"Portfolio disediakan dengan kemas, tersusun, dan mencapai tahap dokumentasi profesional.",0,1
-PENILAIAN AKHIR JURI,Adakah pasukan ini layak menerima: Best Corporate Portfolio Award?,boolean,2,Final Decision,,1,1
-KOMEN JURI,Kekuatan:,textarea,,Strengths,,0,0
-,Penambahbaikan:,textarea,,Improvements,,0,0
+SECTION A: THE MOST ATTRACTIVE BOOTH - SUSTAINABILITY THEME,Display Business Registration No. (SSU or SSM),boolean,2,Registration,,0,1
+,Preparation and set up of business,scale,5,Setup,,0,1
+,Arrangement of products or services in a business (including variety in product and service display),scale,5,Arrangement,,0,1
+,Do you recommend this booth to be the most attractive booth?,boolean,2,Recommendation,,1,1
+,State your reason(s) if any,textarea,,Reason,,0,0
+SECTION B: THE MOST INNOVATIVE PRODUCT,Product quality and packaging,scale,5,Quality,,0,1
+,Pricing Strategies,scale,5,Pricing,,0,1
+,"Knowledge - clear, through description of product or service",scale,5,Knowledge,,0,1
+,Do you recommend this product to be the most innovative product?,boolean,2,Recommendation,,1,1
+,State your reason(s) if any,textarea,,Reason,,0,0
+SECTION C: THE MOST INFLUENTIAL PROMOTIONAL STRATEGIES,Creative strategies in promotional activities,scale,5,Creativity,,0,1
+,Compelling pitch that successfully convinces customers that the product or service is beneficial and worth buying,scale,5,Pitch,,0,1
+,Teamwork among the peers,scale,5,Teamwork,,0,1
+,Do you recommend this group for the best marketing strategies?,boolean,2,Recommendation,,1,1
+,State your reason(s) if any,textarea,,Reason,,0,0

@@ -4,6 +4,7 @@ use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\DetailView;
+use yii\helpers\HtmlPurifier;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
@@ -142,6 +143,19 @@ if($plain && $edit){
 
                         <?php if($selectedCat){ ?>
                             <div class="mb-3">
+                                <div class="mb-2"><b>Category Description</b></div>
+                                <form method="post" action="<?= Url::to(['program/rubric-category-edit', 'id' => $rubric->id, 'cat' => $selectedCat->id]) ?>">
+                                    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                                    <div class="mb-2">
+                                        <textarea name="category_description" class="form-control rubric-category-richtext" rows="6" placeholder="Category description"><?= Html::encode(html_entity_decode((string)$selectedCat->category_description, ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?></textarea>
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary btn-sm">Save Description</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="mb-3">
                                 <div class="mb-2"><b><?= Html::encode($selectedCat->category_name) ?></b></div>
                                 <form method="post" action="<?= Url::to(['program/rubric-item-add', 'id' => $rubric->id, 'cat' => $selectedCat->id]) ?>">
                                     <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
@@ -261,6 +275,22 @@ if($plain && $edit){
                 $urlCatSort = Url::to(['program/rubric-category-sort', 'id' => $rubric->id]);
                 $urlItemSort = $selectedCat ? Url::to(['program/rubric-item-sort', 'id' => $rubric->id, 'cat' => $selectedCat->id]) : '';
                 $this->registerJs(<<<JS
+if(window.tinymce){
+  tinymce.remove('.rubric-category-richtext');
+  tinymce.init({
+    selector: '.rubric-category-richtext',
+    menubar: false,
+    plugins: [
+      'advlist', 'autolink', 'lists', 'link', 'charmap',
+      'searchreplace', 'visualblocks', 'code', 'fullscreen',
+      'paste'
+    ],
+    toolbar: 'undo redo | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+    height: 200,
+    branding: false
+  });
+}
+
 function rubricPostOrder(url, ids){
     if(!url){ return; }
     var params = new URLSearchParams();
@@ -418,6 +448,11 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
     if($rubric && $rubric->categories){
       foreach($rubric->categories as $cat){
         echo '<b>'.strtoupper($cat->category_name).'</b>';
+        $catDesc = (string)$cat->category_description;
+        if(trim($catDesc) !== ''){
+          $descHtml = html_entity_decode($catDesc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+          echo '<div class="mt-2 small text-muted border-start ps-2">' . HtmlPurifier::process($descHtml) . '</div>';
+        }
         ?>
 
 <div class="card">

@@ -616,6 +616,7 @@ class ProgramController extends Controller
         $cat = new RubricCategory();
         $cat->rubric_id = $rubric->id;
         $cat->category_name = Yii::$app->request->post('category_name');
+        $cat->category_description = Yii::$app->request->post('category_description');
         $cat->cat_order = Yii::$app->request->post('cat_order');
         if($cat->cat_order === null || $cat->cat_order === '' ){
             $max = (int)RubricCategory::find()->where(['rubric_id' => $rubric->id])->max('cat_order');
@@ -653,6 +654,7 @@ class ProgramController extends Controller
         }
 
         $category->category_name = Yii::$app->request->post('category_name', $category->category_name);
+        $category->category_description = Yii::$app->request->post('category_description', $category->category_description);
         $category->cat_order = Yii::$app->request->post('cat_order', $category->cat_order);
         $category->is_recommend = (int)Yii::$app->request->post('is_recommend', $category->is_recommend) === 1 ? 1 : 0;
 
