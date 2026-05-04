@@ -242,35 +242,44 @@ $this->registerCss(<<<CSS
 }
 CSS);
 
-$renderCards = static function($cards){
-    foreach($cards as $card){
-        $accentClass = 'accent-' . $card['accent'];
-        $actionLabel = array_key_exists('actionLabel', $card) && $card['actionLabel'] ? $card['actionLabel'] : 'Dashboard';
-        echo '<div class="col-12 col-md-6 col-xl-4 mb-3">';
-        echo '<div class="card dashboard-card ' . Html::encode($accentClass) . '">';
-        echo '<div class="dashboard-card__inner">';
-        echo '<div class="dashboard-card__icon"><i class="' . Html::encode($card['icon']) . '"></i></div>';
-        echo '<h5 class="dashboard-card__title">' . Html::encode($card['title']) . '</h5>';
-        echo '<div class="dashboard-card__text">' . Html::encode($card['description']) . '</div>';
-        echo '<div class="dashboard-card__stats">';
-        foreach($card['stats'] as $stat){
-            echo '<div class="dashboard-card__stat">';
-            echo '<span class="dashboard-card__stat-value">' . Html::encode($stat['value']) . '</span>';
-            echo '<span class="dashboard-card__stat-label">' . Html::encode($stat['label']) . '</span>';
-            echo '</div>';
-        }
-        echo '</div>';
-        echo '<div class="d-flex flex-wrap gap-2">';
-        echo Html::a(Html::encode($actionLabel) . ' <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
-        if(array_key_exists('secondaryUrl', $card) && $card['secondaryUrl']){
-            echo Html::a('Info', $card['secondaryUrl'], ['class' => 'btn btn-outline-secondary']);
-        }
-        echo '</div>';
-        echo '</div>';
-        echo '</div>';
-        echo '</div>';
-    }
-};
+ $renderCards = static function($cards){
+     foreach($cards as $card){
+         $accentClass = 'accent-' . $card['accent'];
+         $actionLabel = array_key_exists('actionLabel', $card) && $card['actionLabel'] ? $card['actionLabel'] : 'Update';
+         echo '<div class="col-12 col-md-6 col-xl-4 mb-3">';
+         echo '<div class="card dashboard-card ' . Html::encode($accentClass) . '">';
+         echo '<div class="dashboard-card__inner">';
+         echo '<div class="dashboard-card__icon"><i class="' . Html::encode($card['icon']) . '"></i></div>';
+         echo '<h5 class="dashboard-card__title">' . Html::encode($card['title']) . '</h5>';
+         echo '<div class="dashboard-card__text">' . Html::encode($card['description']) . '</div>';
+         echo '<div class="dashboard-card__stats">';
+         foreach($card['stats'] as $stat){
+             echo '<div class="dashboard-card__stat">';
+             echo '<span class="dashboard-card__stat-value">' . Html::encode($stat['value']) . '</span>';
+             echo '<span class="dashboard-card__stat-label">' . Html::encode($stat['label']) . '</span>';
+             echo '</div>';
+         }
+         echo '</div>';
+         echo '<div class="d-flex flex-wrap gap-2">';
+         echo Html::a(Html::encode($actionLabel) . ' <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-primary dashboard-card__action']);
+         if(array_key_exists('secondaryUrl', $card) && $card['secondaryUrl']){
+             echo Html::a('Info', $card['secondaryUrl'], ['class' => 'btn btn-outline-secondary']);
+         }
+         echo '</div>';
+         echo '</div>';
+         echo '</div>';
+         echo '</div>';
+     }
+ };
+
+ $getStatValue = static function(array $card, string $label){
+     foreach(($card['stats'] ?? []) as $stat){
+         if(($stat['label'] ?? null) === $label){
+             return (string)($stat['value'] ?? '');
+         }
+     }
+     return '';
+ };
 
 ?>
 
@@ -281,29 +290,6 @@ $renderCards = static function($cards){
 </div><!-- End Page Title -->
 
 <section class="section dashboard">
-    <div class="dashboard-hero mb-4">
-        <div class="dashboard-hero__eyebrow">
-            <i class="bi bi-speedometer2"></i>
-            Program Dashboard
-        </div>
-        <h2 class="mt-3 mb-2"><?= Html::encode($title) ?></h2>
-        <div class="text-white-50">Program-level setup and registration structure.</div>
-        <div class="dashboard-hero__stats">
-            <div class="dashboard-hero__stat">
-                <span class="dashboard-hero__stat-value"><?= (int)($dashboardStats['registrations_total'] ?? 0) ?></span>
-                <span class="dashboard-hero__stat-label">Total Entries</span>
-            </div>
-            <div class="dashboard-hero__stat">
-                <span class="dashboard-hero__stat-value"><?= Html::encode($dashboardStats['registration_status'] ?? 'Open') ?></span>
-                <span class="dashboard-hero__stat-label">Registration</span>
-            </div>
-            <div class="dashboard-hero__stat">
-                <span class="dashboard-hero__stat-value"><?= Html::encode($formatDate($dashboardStats['date_start'] ?? null)) ?></span>
-                <span class="dashboard-hero__stat-label">Start Date</span>
-            </div>
-        </div>
-    </div>
-
     <div class="dashboard-section">
         <div class="dashboard-section__head">
             <h3 class="dashboard-section__title">Program Level</h3>
@@ -320,8 +306,46 @@ $renderCards = static function($cards){
             <div class="dashboard-section__meta">Pick a sub program to manage participants and scoring</div>
         </div>
         <?php if($subCards){ ?>
-            <div class="row">
-                <?php $renderCards($subCards); ?>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Sub Program Name</th>
+                            <th class="text-end">Participant Members</th>
+                            <th class="text-end">Registered Groups</th>
+                            <th class="text-end">Rubrics</th>
+                            
+                            <th class="text-end">Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($subCards as $card){ ?>
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                      
+                                        <?= Html::encode($card['title']) ?>
+                                    </div>
+                                  
+                                </td> 
+                                <td class="text-end"><?= Html::encode($getStatValue($card, 'Total Members')) ?></td>
+                                 <td class="text-end"><?= Html::encode($getStatValue($card, 'Registered (Groups)')) ?></td>
+                                <td class="text-end"><?= Html::encode($getStatValue($card, 'Rubrics')) ?></td>
+                               
+                                <td class="text-end"><?= Html::encode($getStatValue($card, 'Completed')) ?></td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <?= Html::a('Dashboard <i class="bi bi-arrow-right-short"></i>', $card['url'], ['class' => 'btn btn-sm btn-primary']) ?>
+                                        <?php if(array_key_exists('secondaryUrl', $card) && $card['secondaryUrl']){ ?>
+                                            <?= Html::a('Info', $card['secondaryUrl'], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
+                                        <?php } ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
             </div>
         <?php }else{ ?>
             <div class="alert alert-info">No sub programs available for your manager role.</div>

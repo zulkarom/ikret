@@ -1,14 +1,14 @@
-category_name,item_text,item_description,item_type,option_number,item_short,is_recommend,is_required
-Digital Storefront Evaluation,Innovation & Originality,Projek ini menunjukkan tahap inovasi dan keaslian idea yang tinggi dalam pembangunan digital storefront e-commerce.,scale,10,Innovation,0,1
-,Business Innovation & Value Proposition,"Projek ini memaparkan idea inovatif, dan relevan dengan trend semasa (AI/commerce).",scale,10,Business Innovation,0,1
-,Value Creation,Projek ini berjaya mencipta nilai kepada pengguna dan menyelesaikan masalah sebenar dalam pasaran e-commerce.,scale,10,Value Creation,0,1
-,AI & Technology Use,"Penggunaan AI dan teknologi digital dalam projek ini adalah relevan, berkesan, dan meningkatkan fungsi serta pengalaman pengguna.",scale,10,AI Tech,0,1
-,User Experience (UX),"Digital storefront ini menyediakan pengalaman pengguna yang mudah, interaktif, dan menarik.",scale,10,UX,0,1
-,Digital Storefront Experience (UI/UX & Branding),"Rekabentuk Digital storefront antaramuka / halaman adalah sangat profesional, branding konsisten, pengalaman pengguna lancar & engaging",scale,10,UIUX Branding,0,1
-,E-Commerce Functionality & User Journey,"User journey lengkap (browse → cart → checkout simulation), dan fungsi berjalan lancer serta jelas.",scale,10,User Journey,0,1
-,Product Strategy & Content Quality,"Produk dipaparkan dengan jelas, deskripsi produk adalah berkualiti tinggi, dan ada strategi positioning",scale,10,Product Strategy,0,1
-,Scalability,Projek ini mempunyai potensi yang tinggi untuk berkembang dan dikomersialkan dalam pasaran sebenar.,scale,10,Scalability,0,1
-,Execution,"Projek ini dilaksanakan dengan baik dari segi kualiti, kefungsian, dan tahap kesiapsiagaan sebagai produk e-commerce.",scale,10,Execution,0,1
-,Adakah pasukan ini layak menerima: Best Digital Storefront Award?,,boolean,2,Final Decision,1,1
-KOMEN JURI,Kekuatan Projek:,,textarea,,Strengths,0,0
-,Cadangan Penambahbaikan:,,textarea,,Improvements,0,0
+category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
+Corporate Portfolio Evaluation,Company Background & Ownership,scale,10,Background,Portfolio ini mempersembahkan latar belakang syarikat dan pemilik perniagaan dengan jelas dan lengkap.,0,1
+,Business Identity (Name Logo Vision & Mission),scale,10,Identity,"Identiti perniagaan (nama, logo, visi, misi) adalah jelas, konsisten, dan profesional.",0,1
+,Business Registration & Formal Elements,scale,10,Registration,"Portfolio menunjukkan elemen formal perniagaan (contoh: pendaftaran syarikat, kad perniagaan, dll.) dengan lengkap dan realistik.",0,1
+,Business Concept & Value Proposition,scale,10,Concept,Idea perniagaan e-commerce diterangkan dengan jelas serta mempunyai nilai unik (USP) dan kelebihan kompetitif.,0,1
+,Product/Service Presentation,scale,10,Product,"Produk atau perkhidmatan dipersembahkan dengan jelas, tersusun, dan menarik.",0,1
+,Business Platform (Physical & Online Presence),scale,10,Platform,Portfolio menunjukkan kehadiran platform perniagaan (fizikal dan/atau dalam talian) secara jelas dan relevan.,0,1
+,Business Activities & Operations,scale,10,Operations,Aktiviti dan operasi perniagaan diterangkan dengan realistik dan selari dengan model e-commerce.,0,1
+,Business Timeline,scale,10,Timeline,"Portfolio ini menunjukkan perancangan garis masa (timeline) pembangunan perniagaan yang jelas, realistik, dan tersusun (contoh: fasa pelancaran, pemasaran, dan perkembangan).",0,1
+,Creativity & Visual Presentation,scale,10,Creativity,"Portfolio dipersembahkan secara kreatif, menarik, dan mempunyai identiti visual yang konsisten.",0,1
+,Professionalism & Portfolio Quality,scale,10,Professionalism,"Portfolio disediakan dengan kemas, tersusun, dan mencapai tahap dokumentasi profesional.",0,1
+PENILAIAN AKHIR JURI,Adakah pasukan ini layak menerima: Best Corporate Portfolio Award?,boolean,2,Final Decision,,1,1
+KOMEN JURI,Kekuatan:,textarea,,Strengths,,0,0
+,Penambahbaikan:,textarea,,Improvements,,0,0
