@@ -2,6 +2,9 @@
 ALTER TABLE `rubric`
   ADD COLUMN `rubric_description` LONGTEXT NULL AFTER `rubric_name`;
 
+-- Ensure rubric table supports 4-byte UTF-8 (emoji)
+ALTER TABLE `rubric` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- Create rubric judging sessions table
 CREATE TABLE `rubric_judging_session` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -17,4 +20,4 @@ CREATE TABLE `rubric_judging_session` (
   PRIMARY KEY (`id`),
   KEY `idx_rjs_rubric_id` (`rubric_id`),
   CONSTRAINT `fk_rjs_rubric_id` FOREIGN KEY (`rubric_id`) REFERENCES `rubric` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

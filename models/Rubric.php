@@ -18,6 +18,14 @@ use Yii;
  */
 class Rubric extends \yii\db\ActiveRecord
 {
+    public function beforeSave($insert)
+    {
+        $this->rubric_name = $this->encodeUnsupportedUtf8($this->rubric_name);
+        $this->rubric_description = $this->encodeUnsupportedUtf8($this->rubric_description);
+
+        return parent::beforeSave($insert);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -109,5 +117,31 @@ class Rubric extends \yii\db\ActiveRecord
 
         return $total;
 
+    }
+
+    private function encodeUnsupportedUtf8($value)
+    {
+        if($value === null || $value === ''){
+            return $value;
+        }
+
+        return preg_replace_callback('/[\x{10000}-\x{10FFFF}]/u', function($matches){
+            return '&#' . $this->utf8Codepoint($matches[0]) . ';';
+        }, $value);
+    }
+
+    private function utf8Codepoint($char)
+    {
+        if(function_exists('mb_ord')){
+            return mb_ord($char, 'UTF-8');
+        }
+
+        $bytes = unpack('C*', $char);
+        $b1 = $bytes[1];
+        $b2 = $bytes[2];
+        $b3 = $bytes[3];
+        $b4 = $bytes[4];
+
+        return (($b1 & 0x07) << 18) | (($b2 & 0x3F) << 12) | (($b3 & 0x3F) << 6) | ($b4 & 0x3F);
     }
 }

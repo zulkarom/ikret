@@ -73,7 +73,7 @@ if($programSub){
                                 echo '<div class="row g-2 align-items-center">';
                                 echo '<div class="col-md-8">';
                                 echo '<input type="text" name="rubric_name" class="form-control" value="'.Html::encode($r->rubric->rubric_name).'" />';
-                                echo '<textarea name="rubric_description" class="form-control mt-2 rubric-richtext" rows="6" placeholder="Rubric description">'.Html::encode($r->rubric->rubric_description).'</textarea>';
+                                echo '<textarea name="rubric_description" class="form-control mt-2 rubric-richtext" rows="6" placeholder="Rubric description">'.Html::encode(html_entity_decode((string)$r->rubric->rubric_description, ENT_QUOTES | ENT_HTML5, 'UTF-8')).'</textarea>';
 
                                 echo '<div class="mt-3">';
                                 echo '<div class="mb-2"><b>Judging Sessions</b></div>';
@@ -220,5 +220,4 @@ JS);
 
 
     </section>
-
 
