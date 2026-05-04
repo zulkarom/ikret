@@ -54,7 +54,7 @@ class ManagerAnalysisSearch extends ProgramRegistration
     public function search($params)
     {
         $query = ProgramRegistration::find()->alias('a')
-        ->select('a.*, j.rubric_id, AVG(j.score) as  purata')
+        ->select('a.*, MAX(j.rubric_id) AS rubric_id, AVG(j.score) as purata')
         ->joinWith(['user u'])
         ->leftJoin('program_reg_jury j','j.reg_id = a.id')
         ->where(['>', 'a.status', 0])
