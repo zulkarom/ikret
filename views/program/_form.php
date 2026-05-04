@@ -18,8 +18,6 @@ use yii\helpers\Html;
     <?= $form->field($model, 'program_name')->textInput(['maxlength' => true]) ?>
     <?= $form->field($model, 'program_abbr')->textInput(['maxlength' => true]) ?>
 
-    <?= $form->field($model, 'reg_closed')->checkbox() ?>
-
     <?= $form->field($model, 'reg_info')->widget(TinyMce::className(), [
     'options' => ['rows' => 14],
     'language' => 'en',
@@ -64,6 +62,11 @@ use yii\helpers\Html;
 </div>
 
     <br>
+
+    <?= $form->field($model, 'reg_closed')->checkbox() ?>
+
+    <?= $form->field($model, 'has_sub')->checkbox() ?>
+
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
