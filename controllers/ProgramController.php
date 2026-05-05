@@ -379,6 +379,7 @@ class ProgramController extends Controller
     {
         $participantQuery = (new Query())
             ->from(['r' => ProgramRegistration::tableName()])
+            ->leftJoin(['u' => User::tableName()], 'u.id = r.user_id')
             ->leftJoin(['m' => Member::tableName()], 'm.program_reg_id = r.id')
             ->where(['r.program_id' => (int)$programId])
             ->andWhere(['in', 'r.status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]]);
@@ -391,7 +392,12 @@ class ProgramController extends Controller
 
         $groupCount = (int)$participantQuery->count('DISTINCT r.id');
         $memberCount = (int)$participantQuery->count('m.id');
-        $participantCount = $groupCount + $memberCount;
+
+        $leaderMemberCount = (int)(clone $participantQuery)
+            ->select(new Expression("COUNT(DISTINCT CASE WHEN ((m.member_matric IS NOT NULL AND m.member_matric <> '' AND u.matric IS NOT NULL AND u.matric <> '' AND m.member_matric = u.matric) OR ((m.member_matric IS NULL OR m.member_matric = '') AND m.member_name = u.fullname)) THEN m.id ELSE NULL END)"))
+            ->scalar();
+
+        $participantCount = $groupCount + $memberCount - $leaderMemberCount;
 
         $sessionQuery = (new Query())
             ->from(['pr' => ProgramRubric::tableName()])
