@@ -643,6 +643,7 @@ class ProgramRegistrationController extends Controller
             if ($session->has('keep-data') && $session->get('keep-data') == 1){
                 $model->users = $session->get('users');
                 $model->rubric_id = $session->get('rubric_id');
+                $model->judging_session_id = $session->get('judging_session_id');
                 $model->keep_data = $session->get('keep_data');
                 $model->keep_open = $session->get('keep_open');
             }
@@ -662,6 +663,7 @@ class ProgramRegistrationController extends Controller
                         $session->set('keep-data', 1);
                         $session->set('users', $model->users);
                         $session->set('rubric_id', $model->rubric_id);
+                        $session->set('judging_session_id', $model->judging_session_id);
                         $session->set('keep_data', $model->keep_data);
                         $session->set('keep_open', $model->keep_data);
                     }else{
@@ -696,13 +698,8 @@ class ProgramRegistrationController extends Controller
                                             'user_id' => $u,
                                             'reg_id' => $select,
                                             'stage' => $model->stage,
-                                            'method' => $model->method,
-                                            'location' => $model->location,
-                                            'date_start' => $model->date_start,
-                                            'date_end' => $model->date_end,
                                             'rubric_id' => $model->rubric_id,
-                                            'note' => $model->note,
-                                            'link' => $model->link,
+                                            'judging_session_id' => $model->judging_session_id,
                                             'created_at' => time(),
                                             'updated_at' => time(),
                                         ]);
@@ -1783,6 +1780,7 @@ class ProgramRegistrationController extends Controller
         $session->remove('keep-data');
         $session->remove('users');
         $session->remove('rubric_id');
+        $session->remove('judging_session_id');
         $session->remove('date_start');
         $session->remove('date_end');
         $session->remove('location');
@@ -1790,6 +1788,27 @@ class ProgramRegistrationController extends Controller
         $session->remove('link');
         $session->remove('keep_open');
         $session->remove('keep_data');
+    }
+
+    public function actionJudgingSessionListJson($rubric_id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $rubricId = (int)$rubric_id;
+        if($rubricId <= 0){
+            return [];
+        }
+
+        $sessions = RubricJudgingSession::find()
+            ->where(['rubric_id' => $rubricId])
+            ->orderBy(['datetime_start' => SORT_ASC, 'session_name' => SORT_ASC])
+            ->all();
+
+        $out = [];
+        foreach($sessions as $s){
+            $out[] = ['id' => (int)$s->id, 'text' => $s->session_name];
+        }
+        return ['results' => $out];
     }
 
     public function actionManagerAnalysis($id, $sub = null){

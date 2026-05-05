@@ -2,6 +2,7 @@
 
 use app\models\ProgramRubric;
 use app\models\UserRole;
+use app\models\RubricJudgingSession;
 use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -38,6 +39,32 @@ use yii\helpers\Url;
         }
         ?>
         <?= $form->field($model, 'rubric_id')->dropDownList($rubricArray,$prompt) ?>
+        </div>
+
+        <div class="col-md-3">
+        <?php
+        $sessionUrl = Url::to(['judging-session-list-json'], true);
+        $sessionData = [];
+        if($model->judging_session_id){
+            $s = RubricJudgingSession::findOne((int)$model->judging_session_id);
+            if($s){
+                $sessionData[(int)$s->id] = $s->session_name;
+            }
+        }
+        ?>
+        <?= $form->field($model, 'judging_session_id')->widget(Select2::class, [
+            'data' => $sessionData,
+            'options' => ['placeholder' => 'Select..'],
+            'pluginOptions' => [
+                'allowClear' => true,
+                'ajax' => [
+                    'url' => $sessionUrl,
+                    'dataType' => 'json',
+                    'data' => new \yii\web\JsExpression('function(params){ return { rubric_id: $("#juryassign-rubric_id").val() }; }'),
+                    'delay' => 250,
+                ],
+            ],
+        ]) ?>
         </div>
 
         <?php if($program->programStages){
@@ -88,6 +115,17 @@ if($programSub){
 }
 
 $this->registerJs('
+
+function clearJudgingSession(){
+    var el = $("#juryassign-judging_session_id");
+    if(el.length){
+        el.val(null).trigger("change");
+    }
+}
+
+$(document).on("change", "#juryassign-rubric_id", function(){
+    clearJudgingSession();
+});
 
 $("#btn-clear-form").click(function(){
     var url = "'. $url .'";

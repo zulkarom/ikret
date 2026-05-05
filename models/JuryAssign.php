@@ -51,7 +51,7 @@ class JuryAssign extends \yii\db\ActiveRecord
 
             ['users', 'each', 'rule' => ['integer']],
 
-            [['reg_id', 'user_id', 'rubric_id', 'created_at', 'updated_at', 'method', 'stage', 'status', 'keep_data', 'keep_open'], 'integer'],
+            [['reg_id', 'user_id', 'rubric_id', 'judging_session_id', 'created_at', 'updated_at', 'method', 'stage', 'status', 'keep_data', 'keep_open'], 'integer'],
 
             [['location'], 'string', 'max' => 255],
 
@@ -65,9 +65,13 @@ class JuryAssign extends \yii\db\ActiveRecord
 
             [['date_start', 'date_end'], 'validateDates'],
 
+            [['judging_session_id'], 'validateJudgingSession'],
+
             [['reg_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramRegistration::class, 'targetAttribute' => ['reg_id' => 'id']],
 
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
+
+            [['judging_session_id'], 'exist', 'skipOnError' => true, 'targetClass' => RubricJudgingSession::class, 'targetAttribute' => ['judging_session_id' => 'id']],
         ];
     }
 
@@ -87,6 +91,7 @@ class JuryAssign extends \yii\db\ActiveRecord
             'date_start' => 'Start Date',
             'date_end' => 'End Date',
             'rubric_id' => 'Rubric',
+            'judging_session_id' => 'Judging Session',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'statusLabel' => 'Status'
@@ -129,6 +134,32 @@ class JuryAssign extends \yii\db\ActiveRecord
         if(strtotime($this->date_end) < strtotime($this->date_start)){
             $this->addError('date_start','Please give correct Start and End dates');
             $this->addError('date_end','Please give correct Start and End dates');
+        }
+    }
+
+    public function validateJudgingSession()
+    {
+        if(!$this->rubric_id){
+            return;
+        }
+
+        $hasSessions = RubricJudgingSession::find()->where(['rubric_id' => (int)$this->rubric_id])->exists();
+        if(!$hasSessions){
+            return;
+        }
+
+        if(!$this->judging_session_id){
+            $this->addError('judging_session_id', 'Judging Session cannot be blank.');
+            return;
+        }
+
+        $session = RubricJudgingSession::findOne((int)$this->judging_session_id);
+        if(!$session){
+            return;
+        }
+
+        if((int)$session->rubric_id !== (int)$this->rubric_id){
+            $this->addError('judging_session_id', 'Selected Judging Session does not match the selected Rubric.');
         }
     }
 
@@ -187,6 +218,11 @@ class JuryAssign extends \yii\db\ActiveRecord
     public function getRubric()
     {
         return $this->hasOne(Rubric::class, ['id' => 'rubric_id']);
+    }
+
+    public function getJudgingSession()
+    {
+        return $this->hasOne(RubricJudgingSession::class, ['id' => 'judging_session_id']);
     }
 
     public static function listRubrics(){
