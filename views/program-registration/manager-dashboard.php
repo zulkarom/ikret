@@ -83,6 +83,18 @@ if((int)$program->program_type === 1){
         ],
     ];
     $subProgramLevelCards[] = [
+        'title' => 'Jury Applications',
+        'url' => Url::to(['program-registration/manager-jury-applications', 'id' => $id, 'sub' => $sub]),
+        'icon' => 'bi bi-person-lines-fill',
+        'accent' => 'teal',
+        'description' => 'Review and track incoming jury applications.',
+        'stats' => [
+            ['label' => 'Total', 'value' => (string)($dashboardStats['jury_applications_total'] ?? 0)],
+            ['label' => 'New', 'value' => (string)($dashboardStats['jury_applications_new'] ?? 0)],
+            ['label' => 'Approved', 'value' => (string)($dashboardStats['jury_applications_approved'] ?? 0)],
+        ],
+    ];
+    $subProgramLevelCards[] = [
         'title' => 'Result By Assignments',
         'url' => Url::to(['program-registration/jury-result', 'id' => $id, 'sub' => $sub]),
         'icon' => 'bi bi-bar-chart-line-fill',

@@ -6,6 +6,7 @@ use app\models\CertificateJury;
 use app\models\CertificateTemplate;
 use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
+use app\models\JuryApplicationSearch;
 use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
 use app\models\ManagerSessionSearch;
@@ -21,6 +22,8 @@ use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
 use app\models\ProgramRubric;
 use app\models\ProgramSub;
+use app\models\JuryApplication;
+use app\models\QuestionnaireAnswer;
 use app\models\Rubric;
 use app\models\RubricAnswer;
 use app\models\Setting;
@@ -745,6 +748,43 @@ class ProgramRegistrationController extends Controller
         
     }
 
+    public function actionManagerJuryApplications($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub,
+            'status' => 10,
+        ]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $programSub = null;
+        if((int)$role->program->has_sub === 1){
+            if(!$sub){
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+            $programSub = $role->programSub;
+        }
+
+        $searchModel = new JuryApplicationSearch();
+        $searchModel->program_id = (int)$id;
+        $searchModel->program_sub_id = $sub ? (int)$sub : null;
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('manager-jury-applications', [
+            'role' => $role,
+            'programSub' => $programSub,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
     public function actionManagerDashboard($id, $sub = null)
     {
         if(!Yii::$app->user->identity->isManager) return false;
@@ -1316,6 +1356,16 @@ class ProgramRegistrationController extends Controller
         }
         $memberTotal = (clone $memberQuery)->count();
 
+        $juryAppQuery = JuryApplication::find()->where(['program_id' => $programId]);
+        if($subId){
+            $juryAppQuery->andWhere(['program_sub_id' => $subId]);
+        }else{
+            $juryAppQuery->andWhere(['program_sub_id' => null]);
+        }
+        $juryAppTotal = (clone $juryAppQuery)->count();
+        $juryAppNew = (clone $juryAppQuery)->andWhere(['status' => 0])->count();
+        $juryAppApproved = (clone $juryAppQuery)->andWhere(['status' => 10])->count();
+
         return [
             'registrations_total' => (int)$registrationTotal,
             'registrations_registered' => (int)$registeredTotal,
@@ -1326,6 +1376,9 @@ class ProgramRegistrationController extends Controller
             'rubrics_count' => (int)$rubricCount,
             'achievements_count' => (int)$achievementCount,
             'awarded_count' => (int)$awardedCount,
+            'jury_applications_total' => (int)$juryAppTotal,
+            'jury_applications_new' => (int)$juryAppNew,
+            'jury_applications_approved' => (int)$juryAppApproved,
             'fields_enabled_count' => (int)$fieldEnabledCount,
             'fields_required_count' => (int)$fieldRequiredCount,
             'registration_status' => ((int)$program->getAttribute('reg_closed') === 1) ? 'Closed' : 'Open',

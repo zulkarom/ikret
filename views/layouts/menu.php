@@ -14,7 +14,8 @@ use yii\helpers\Url;
       if(Yii::$app->user->isGuest){
         
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
-        $menu[] = ['name' => 'Register', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
+        $menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
+        $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
       }else{
 
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
@@ -196,6 +197,8 @@ use yii\helpers\Url;
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
+
+          $menu[] = ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index'], 'icon' => 'bi bi-person-plus'];
           
 
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];

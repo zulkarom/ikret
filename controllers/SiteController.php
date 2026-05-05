@@ -11,6 +11,12 @@ use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\PasswordResetRequestForm;
 use app\models\QuestionnaireAnswer;
+use app\models\JuryApplication;
+use app\models\JuryApplyForm;
+use app\models\JuryRequirement;
+use app\models\Program;
+use app\models\ProgramSub;
+use app\models\RubricJudgingSession;
 use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
 use app\models\Session;
@@ -129,6 +135,9 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            if($model->password === $model->username){
+                Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
+            }
             if($t){
                 return $this->redirect(['site/qr', 't' => $t]);
             }else{
@@ -142,6 +151,145 @@ class SiteController extends Controller
         return $this->render('login', [
             'model' => $model,
             'attendanceToken' => $t
+        ]);
+    }
+
+    public function actionJuryApply()
+    {
+        $model = new JuryApplyForm();
+
+        $requirements = JuryRequirement::find()
+            ->where(['is_required' => 1, 'is_active' => 1])
+            ->orderBy(['program_id' => SORT_ASC, 'program_sub_id' => SORT_ASC])
+            ->all();
+
+        $programIdAllow = [];
+        $programSubIdAllow = [];
+        if($requirements){
+            foreach($requirements as $r){
+                $programIdAllow[(int)$r->program_id] = true;
+                if($r->program_sub_id){
+                    $programSubIdAllow[(int)$r->program_sub_id] = true;
+                }
+            }
+        }
+
+        $programsById = [];
+        if($programIdAllow){
+            $programs = Program::find()->where(['id' => array_keys($programIdAllow)])->orderBy(['program_name' => SORT_ASC])->all();
+            if($programs){
+                foreach($programs as $p){
+                    $programsById[(int)$p->id] = $p;
+                }
+            }
+        }
+
+        $subsById = [];
+        if($programSubIdAllow){
+            $subs = ProgramSub::find()->where(['id' => array_keys($programSubIdAllow)])->orderBy(['sub_name' => SORT_ASC])->all();
+            if($subs){
+                foreach($subs as $sp){
+                    $subsById[(int)$sp->id] = $sp;
+                }
+            }
+        }
+
+        $sessionsAll = RubricJudgingSession::find()->orderBy(['session_name' => SORT_ASC])->all();
+        $sessionsById = [];
+        if($sessionsAll){
+            foreach($sessionsAll as $s){
+                $sessionsById[(int)$s->id] = $s;
+            }
+        }
+
+        $counts = JuryApplication::find()
+            ->select(['program_id', 'program_sub_id', 'judging_session_id', 'COUNT(*) AS c'])
+            ->groupBy(['program_id', 'program_sub_id', 'judging_session_id'])
+            ->asArray()
+            ->all();
+
+        $countMap = [];
+        if($counts){
+            foreach($counts as $row){
+                $pid = (int)$row['program_id'];
+                $subKey = $row['program_sub_id'] !== null ? (string)(int)$row['program_sub_id'] : 'null';
+                $sessionKey = $row['judging_session_id'] !== null ? (string)(int)$row['judging_session_id'] : 'null';
+                $countMap[$pid . ':' . $subKey . ':' . $sessionKey] = (int)$row['c'];
+            }
+        }
+
+        $juryMatrix = [];
+        if($requirements){
+            foreach($requirements as $r){
+                $pid = (int)$r->program_id;
+                $subId = $r->program_sub_id ? (int)$r->program_sub_id : null;
+                $sid = $r->judging_session_id ? (int)$r->judging_session_id : null;
+
+                $pname = isset($programsById[$pid]) ? $programsById[$pid]->program_name : ('Program #' . $pid);
+                if($subId && isset($subsById[$subId])){
+                    $rowLabel = $pname . ' / ' . $subsById[$subId]->sub_name;
+                }else{
+                    $rowLabel = $pname;
+                }
+
+                $rowKey = $pid . ':' . ($subId ? (string)$subId : 'null');
+                if(!isset($juryMatrix[$rowKey])){
+                    $juryMatrix[$rowKey] = [
+                        'program_id' => $pid,
+                        'program_sub_id' => $subId,
+                        'label' => $rowLabel,
+                        'sessions' => [],
+                    ];
+                }
+
+                if($sid && isset($sessionsById[$sid])){
+                    $sessionName = $sessionsById[$sid]->session_name;
+                }elseif($sid){
+                    $sessionName = 'Session #' . $sid;
+                }else{
+                    $sessionName = 'N/A';
+                }
+
+                $countKey = $pid . ':' . ($subId ? (string)$subId : 'null') . ':' . ($sid ? (string)$sid : 'null');
+                $used = $countMap[$countKey] ?? 0;
+                $limit = $r->jury_limit;
+                $disabled = ($limit !== null && $used >= (int)$limit);
+
+                $juryMatrix[$rowKey]['sessions'][] = [
+                    'requirement_id' => (int)$r->id,
+                    'judging_session_id' => $sid,
+                    'session_name' => $sessionName,
+                    'used' => (int)$used,
+                    'limit' => $limit === null ? null : (int)$limit,
+                    'disabled' => $disabled,
+                ];
+            }
+        }
+
+        if($juryMatrix){
+            foreach($juryMatrix as &$row){
+                usort($row['sessions'], function($a, $b){
+                    return strcmp((string)$a['session_name'], (string)$b['session_name']);
+                });
+            }
+            unset($row);
+        }
+
+        $programList = [];
+        $programMeta = [];
+        $programSubList = [];
+        $sessionList = [];
+
+        if($model->load(Yii::$app->request->post())){
+            if($model->submit()){
+                Yii::$app->session->addFlash('success', 'Your application has been submitted.');
+                return $this->refresh();
+            }
+        }
+
+        return $this->render('jury-apply', [
+            'model' => $model,
+            'juryMatrix' => $juryMatrix,
         ]);
     }
 
