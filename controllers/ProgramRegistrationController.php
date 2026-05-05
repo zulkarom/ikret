@@ -1517,6 +1517,7 @@ class ProgramRegistrationController extends Controller
 
             $transaction = Yii::$app->db->beginTransaction();
             $created = 0;
+            $skipped = 0;
 
             try{
                 foreach($groupedData as $groupName => $groupRows){
@@ -1554,11 +1555,25 @@ class ProgramRegistrationController extends Controller
                         }
                     }
 
+                    $programSubValue = isset($firstRow['program_sub']) && $firstRow['program_sub'] !== '' ? (int)$firstRow['program_sub'] : null;
+                    $existingRegistrationQuery = ProgramRegistration::find()->where([
+                        'user_id' => $user->id,
+                        'program_id' => (int)$program->id,
+                    ]);
+                    if($program->has_sub == 1){
+                        $existingRegistrationQuery->andWhere(['program_sub' => $programSubValue]);
+                    }
+                    $existingRegistration = $existingRegistrationQuery->one();
+                    if($existingRegistration){
+                        $skipped++;
+                        continue;
+                    }
+
                     // Create program registration
                     $registration = new ProgramRegistration();
                     $registration->user_id = $user->id;
                     $registration->program_id = (int)$program->id;
-                    $registration->program_sub = isset($firstRow['program_sub']) && $firstRow['program_sub'] !== '' ? (int)$firstRow['program_sub'] : null;
+                    $registration->program_sub = $programSubValue;
                     $registration->status = ProgramRegistration::STATUS_REGISTERED;
                     $registration->created_at = time();
                     $registration->updated_at = time();
@@ -1615,7 +1630,11 @@ class ProgramRegistrationController extends Controller
                 }
 
                 $transaction->commit();
-                Yii::$app->session->addFlash('success', $created . ' group registration(s) imported successfully.');
+                $msg = $created . ' group registration(s) imported successfully.';
+                if($skipped > 0){
+                    $msg .= ' ' . $skipped . ' group(s) skipped (already registered).';
+                }
+                Yii::$app->session->addFlash('success', $msg);
                 return $this->refresh();
             }catch(\Throwable $e){
                 $transaction->rollBack();
