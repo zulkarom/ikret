@@ -3,8 +3,7 @@
 /** @var yii\web\View $this */
 /** @var app\models\JuryRequirement $model */
 
- $programList = $programList ?? [];
- $subList = $subList ?? [];
+ $programSubCombinedList = $programSubCombinedList ?? [];
  $sessionList = $sessionList ?? [];
 
 $this->title = 'Update Jury Requirement';
@@ -24,8 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-body pt-4">
             <?= $this->render('_form', [
                 'model' => $model,
-                'programList' => $programList,
-                'subList' => $subList,
+                'programSubCombinedList' => $programSubCombinedList,
                 'sessionList' => $sessionList,
             ]) ?>
         </div>

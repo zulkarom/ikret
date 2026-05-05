@@ -50,21 +50,46 @@ $this->params['breadcrumbs'][] = $this->title;
                         ['class' => 'yii\grid\SerialColumn'],
                         'id',
                         [
-                            'label' => 'Program',
+                            'label' => 'Program / Sub Program',
                             'value' => function($model){
-                                return $model->program ? $model->program->program_name : null;
-                            }
-                        ],
-                        [
-                            'label' => 'Program Sub',
-                            'value' => function($model){
-                                return $model->programSub ? $model->programSub->sub_name : null;
+                                $name = $model->program ? $model->program->program_name : null;
+                                if($model->programSub){
+                                    $sub = $model->programSub->sub_name;
+                                    if($name){
+                                        return $name . ' / ' . $sub;
+                                    }
+                                    return $sub;
+                                }
+                                return $name;
                             }
                         ],
                         [
                             'label' => 'Session',
                             'value' => function($model){
-                                return $model->judgingSession ? $model->judgingSession->session_name : null;
+                                if(!$model->judgingSession){
+                                    return null;
+                                }
+
+                                $s = $model->judgingSession;
+                                $start = $s->datetime_start ? new \DateTime($s->datetime_start) : null;
+                                $end = $s->datetime_end ? new \DateTime($s->datetime_end) : null;
+
+                                $range = '';
+                                if($start && $end){
+                                    if($start->format('Y-m-d') === $end->format('Y-m-d')){
+                                        $range = $start->format('d M Y') . ' ' . $start->format('H:i') . ' - ' . $end->format('H:i');
+                                    }else{
+                                        $range = $start->format('d M Y H:i') . ' - ' . $end->format('d M Y H:i');
+                                    }
+                                }elseif($start){
+                                    $range = $start->format('d M Y H:i');
+                                }
+
+                                if($range !== ''){
+                                    return $s->session_name . ' (' . $range . ')';
+                                }
+
+                                return $s->session_name;
                             }
                         ],
                         [

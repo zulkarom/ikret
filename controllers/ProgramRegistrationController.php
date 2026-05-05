@@ -29,6 +29,8 @@ use app\models\RubricAnswer;
 use app\models\Setting;
 use app\models\User;
 use app\models\UserRole;
+use app\models\JuryProfile;
+use app\models\RubricJudgingSession;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
@@ -783,6 +785,342 @@ class ProgramRegistrationController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    public function actionAdminJuryApplications($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $program = Program::findOne((int)$id);
+        if(!$program){
+            throw new NotFoundHttpException('Program not found.');
+        }
+
+        $programSub = null;
+        if((int)$program->has_sub === 1){
+            if(!$sub){
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+            $programSub = ProgramSub::findOne((int)$sub);
+            if(!$programSub || (int)$programSub->program_id !== (int)$program->id){
+                throw new NotFoundHttpException('Sub program not found.');
+            }
+        }
+
+        $searchModel = new JuryApplicationSearch();
+        $searchModel->program_id = (int)$id;
+        $searchModel->program_sub_id = $sub ? (int)$sub : null;
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('manager-jury-applications', [
+            'role' => null,
+            'program' => $program,
+            'programSub' => $programSub,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionAdminJuryApplicationsAll()
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $searchModel = new JuryApplicationSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+
+        return $this->render('manager-jury-applications', [
+            'role' => null,
+            'program' => null,
+            'programSub' => null,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionJuryApplicationView($id)
+    {
+        $model = JuryApplication::findOne((int)$id);
+        if(!$model){
+            throw new NotFoundHttpException('Application not found.');
+        }
+
+        if(Yii::$app->user->identity->isAdmin){
+            return $this->render('jury-application-view', [
+                'model' => $model,
+            ]);
+        }
+
+        if(!Yii::$app->user->identity->isManager){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $role = UserRole::findOne([
+            'program_id' => $model->program_id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $model->program_sub_id,
+            'status' => 10,
+        ]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        return $this->render('jury-application-view', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionJuryApplicationBulkUpdate()
+    {
+        if(!Yii::$app->request->isPost){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $ids = Yii::$app->request->post('selection', []);
+        $action = Yii::$app->request->post('bulk_action');
+
+        if(!in_array($action, ['approve', 'reject'], true)){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $targetStatus = $action === 'approve' ? 10 : 20;
+
+        if(!$ids || !is_array($ids)){
+            Yii::$app->session->addFlash('warning', 'No applications selected.');
+            return $this->redirect(Yii::$app->request->referrer ?: ['admin-jury-applications-all']);
+        }
+
+        $isAdmin = !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin;
+        $isManager = !Yii::$app->user->isGuest && Yii::$app->user->identity->isManager;
+
+        if(!$isAdmin && !$isManager){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $updated = 0;
+        $skipped = 0;
+        foreach($ids as $id){
+            $app = JuryApplication::findOne((int)$id);
+            if(!$app){
+                $skipped++;
+                continue;
+            }
+
+            if($isManager && !$isAdmin){
+                $role = UserRole::findOne([
+                    'program_id' => $app->program_id,
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'program_sub' => $app->program_sub_id,
+                    'status' => 10,
+                ]);
+                if(!$role){
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            $app->status = $targetStatus;
+            if($app->save(false, ['status'])){
+                $updated++;
+            }else{
+                $skipped++;
+            }
+        }
+
+        if($updated > 0){
+            Yii::$app->session->addFlash('success', 'Updated ' . $updated . ' application(s).');
+        }
+        if($skipped > 0){
+            Yii::$app->session->addFlash('warning', 'Skipped ' . $skipped . ' application(s).');
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['admin-jury-applications-all']);
+    }
+
+    public function actionJuryApplicationImport()
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        return $this->render('jury-application-import');
+    }
+
+    public function actionJuryApplicationImportCsv()
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        if(!Yii::$app->request->isPost){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $file = UploadedFile::getInstanceByName('csv_file');
+        if(!$file){
+            Yii::$app->session->addFlash('error', 'No file uploaded.');
+            return $this->redirect(['jury-application-import']);
+        }
+
+        $handle = fopen($file->tempName, 'r');
+        if(!$handle){
+            Yii::$app->session->addFlash('error', 'Could not read uploaded file.');
+            return $this->redirect(['jury-application-import']);
+        }
+
+        $header = fgetcsv($handle);
+        if(!$header){
+            fclose($handle);
+            Yii::$app->session->addFlash('error', 'Empty CSV.');
+            return $this->redirect(['jury-application-import']);
+        }
+
+        $header = array_map(function($h){
+            return strtolower(trim((string)$h));
+        }, $header);
+
+        $required = ['email', 'judging_session_id'];
+        foreach($required as $col){
+            if(!in_array($col, $header, true)){
+                fclose($handle);
+                Yii::$app->session->addFlash('error', 'Missing required column: ' . $col);
+                return $this->redirect(['jury-application-import']);
+            }
+        }
+
+        $idx = array_flip($header);
+        $created = 0;
+        $skipped = 0;
+        $errors = 0;
+
+        $tx = Yii::$app->db->beginTransaction();
+        try{
+            while(($row = fgetcsv($handle)) !== false){
+                $email = isset($idx['email']) ? trim((string)($row[$idx['email']] ?? '')) : '';
+                $sessionId = isset($idx['judging_session_id']) ? (int)trim((string)($row[$idx['judging_session_id']] ?? '')) : 0;
+                $programId = isset($idx['program_id']) ? (int)trim((string)($row[$idx['program_id']] ?? '')) : 0;
+                $programSubId = isset($idx['program_sub_id']) ? (int)trim((string)($row[$idx['program_sub_id']] ?? '')) : null;
+                $fullNameCsv = isset($idx['fullname']) ? trim((string)($row[$idx['fullname']] ?? '')) : '';
+
+                if($email === '' || $sessionId <= 0){
+                    $skipped++;
+                    continue;
+                }
+
+                if($programId <= 0){
+                    $session = RubricJudgingSession::findOne($sessionId);
+                    if(!$session){
+                        $skipped++;
+                        continue;
+                    }
+
+                    $prRows = ProgramRubric::find()
+                        ->select(['program_id', 'program_sub'])
+                        ->where(['rubric_id' => $session->rubric_id])
+                        ->asArray()
+                        ->all();
+
+                    if(!$prRows){
+                        $skipped++;
+                        continue;
+                    }
+
+                    if(count($prRows) !== 1){
+                        $errors++;
+                        continue;
+                    }
+
+                    $programId = (int)$prRows[0]['program_id'];
+                    $programSubId = !empty($prRows[0]['program_sub']) ? (int)$prRows[0]['program_sub'] : null;
+                }
+
+                $user = User::find()->where(['email' => $email])->one();
+                if(!$user){
+                    if($fullNameCsv === ''){
+                        $skipped++;
+                        continue;
+                    }
+
+                    $user = new User();
+                    $user->scenario = 'create';
+                    $user->email = $email;
+                    $user->username = $email;
+                    $user->fullname = $fullNameCsv;
+                    $user->status = User::STATUS_ACTIVE;
+                    $user->is_student = 0;
+                    $user->is_internal = 0;
+                    $user->generateAuthKey();
+                    $user->setPassword($email);
+
+                    if(!$user->save()){
+                        $errors++;
+                        continue;
+                    }
+                }
+
+                $juryProfile = JuryProfile::find()->where(['user_id' => $user->id])->one();
+                if(!$juryProfile){
+                    $juryProfile = new JuryProfile();
+                    $juryProfile->user_id = (int)$user->id;
+                    $juryProfile->fullname = $fullNameCsv !== '' ? $fullNameCsv : ($user->fullname ?? '');
+                    $juryProfile->category = isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '';
+                    $juryProfile->phone = isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null;
+                    $juryProfile->institution = isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null;
+                    $juryProfile->designation = isset($idx['designation']) ? trim((string)($row[$idx['designation']] ?? '')) : null;
+                    $juryProfile->address = isset($idx['address']) ? trim((string)($row[$idx['address']] ?? '')) : null;
+                    $juryProfile->created_at = time();
+                    $juryProfile->updated_at = time();
+
+                    if(!$juryProfile->save()){
+                        $errors++;
+                        continue;
+                    }
+                }
+
+                $exists = JuryApplication::find()->where([
+                    'jury_profile_id' => $juryProfile->id,
+                    'program_id' => $programId,
+                    'program_sub_id' => $programSubId,
+                    'judging_session_id' => $sessionId,
+                ])->exists();
+                if($exists){
+                    $skipped++;
+                    continue;
+                }
+
+                $app = new JuryApplication();
+                $app->jury_profile_id = (int)$juryProfile->id;
+                $app->program_id = $programId;
+                $app->program_sub_id = $programSubId ?: null;
+                $app->judging_session_id = $sessionId;
+                $app->declaration_accepted = 1;
+                $app->status = 0;
+                $app->created_at = time();
+
+                if($app->save()){
+                    $created++;
+                }else{
+                    $errors++;
+                }
+            }
+
+            fclose($handle);
+            $tx->commit();
+        }catch(\Throwable $e){
+            fclose($handle);
+            $tx->rollBack();
+            throw $e;
+        }
+
+        if($created > 0){
+            Yii::$app->session->addFlash('success', 'Imported ' . $created . ' application(s).');
+        }
+        if($skipped > 0){
+            Yii::$app->session->addFlash('warning', 'Skipped ' . $skipped . ' row(s).');
+        }
+        if($errors > 0){
+            Yii::$app->session->addFlash('error', 'Failed ' . $errors . ' row(s).');
+        }
+
+        return $this->redirect(['admin-jury-applications-all']);
     }
 
     public function actionManagerDashboard($id, $sub = null)

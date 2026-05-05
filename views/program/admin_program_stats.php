@@ -30,11 +30,34 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                     <?php $i = 1; foreach($rows as $row){ ?>
                         <tr>
                             <td><?=$i?>.</td>
-                            <td><?= Html::encode($row['label']) ?></td>
-                            <td><?= (int)($row['group_count'] ?? 0) ?></td>
-                            <td><?= (int)$row['participant_count'] ?></td>
-                            <td><?= (int)($row['rubric_count'] ?? 0) ?></td>
-                            <td><?= (int)$row['session_count'] ?></td>
+                            <?php
+                            $program = $row['program'] ?? null;
+                            $sub = $row['sub'] ?? null;
+                            $pid = $program ? (int)$program->id : null;
+                            $sid = $sub ? (int)$sub->id : null;
+                            ?>
+                            <td>
+                                <?php
+                                $label = Html::encode($row['label']);
+                                if($pid){
+                                    echo Html::a($label, ['/program-registration/manager-dashboard', 'id' => $pid, 'sub' => $sid]);
+                                }else{
+                                    echo $label;
+                                }
+                                ?>
+                            </td>
+                            <td>
+                                <?= $pid ? Html::a((string)(int)($row['group_count'] ?? 0), ['/program-registration/index', 'ProgramRegistrationSearch' => ['programx_id' => $pid]]) : (int)($row['group_count'] ?? 0) ?>
+                            </td>
+                            <td>
+                                <?= $pid ? Html::a((string)(int)($row['participant_count'] ?? 0), ['/program-registration/index', 'ProgramRegistrationSearch' => ['programx_id' => $pid]]) : (int)($row['participant_count'] ?? 0) ?>
+                            </td>
+                            <td>
+                                <?= $pid ? Html::a((string)(int)($row['rubric_count'] ?? 0), ['/program/rubrics', 'id' => $pid, 'sub' => $sid]) : (int)($row['rubric_count'] ?? 0) ?>
+                            </td>
+                            <td>
+                                <?= $pid ? Html::a((string)(int)($row['session_count'] ?? 0), ['/program/rubrics', 'id' => $pid, 'sub' => $sid]) : (int)($row['session_count'] ?? 0) ?>
+                            </td>
                         </tr>
                     <?php $i++; } ?>
                 </tbody>

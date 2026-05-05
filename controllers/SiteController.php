@@ -248,7 +248,41 @@ class SiteController extends Controller
                 }
 
                 if($sid && isset($sessionsById[$sid])){
-                    $sessionName = $sessionsById[$sid]->session_name;
+                    $session = $sessionsById[$sid];
+
+                    $modeList = RubricJudgingSession::listMode();
+                    $modeLabel = isset($modeList[(int)$session->mode]) ? $modeList[(int)$session->mode] : null;
+
+                    $start = $session->datetime_start ? new \DateTime($session->datetime_start) : null;
+                    $end = $session->datetime_end ? new \DateTime($session->datetime_end) : null;
+
+                    $range = '';
+                    if($start && $end){
+                        if($start->format('Y-m-d') === $end->format('Y-m-d')){
+                            $range = $start->format('d M Y') . ' ' . $start->format('H:i') . ' - ' . $end->format('H:i');
+                        }else{
+                            $range = $start->format('d M Y H:i') . ' - ' . $end->format('d M Y H:i');
+                        }
+                    }elseif($start){
+                        $range = $start->format('d M Y H:i');
+                    }
+
+                    $parts = [];
+                    if($range !== ''){
+                        $parts[] = $range;
+                    }
+                    if($session->location){
+                        $parts[] = $session->location;
+                    }
+                    if($modeLabel){
+                        $parts[] = $modeLabel;
+                    }
+
+                    if($parts){
+                        $sessionName = $session->session_name . ' (' . implode(' / ', $parts) . ')';
+                    }else{
+                        $sessionName = $session->session_name;
+                    }
                 }elseif($sid){
                     $sessionName = 'Session #' . $sid;
                 }else{

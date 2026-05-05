@@ -25,11 +25,23 @@ class JuryApplyForm extends Model
             [['email', 'fullname', 'category', 'phone', 'institution', 'designation', 'requirement_ids'], 'required'],
             [['email'], 'email'],
             [['address'], 'string'],
+            [['requirement_ids'], 'validateRequirementIds'],
             [['requirement_ids'], 'each', 'rule' => ['integer']],
             [['declaration_accepted'], 'boolean'],
             [['email', 'fullname', 'category', 'phone', 'institution', 'designation'], 'string', 'max' => 255],
             [['declaration_accepted'], 'compare', 'compareValue' => 1, 'message' => 'You must accept the declaration.'],
         ];
+    }
+
+    public function validateRequirementIds($attribute)
+    {
+        $ids = is_array($this->$attribute) ? $this->$attribute : [];
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        $this->$attribute = $ids;
+
+        if(!$ids){
+            $this->addError($attribute, 'Please select at least one session.');
+        }
     }
 
     public function attributeLabels()
@@ -47,11 +59,6 @@ class JuryApplyForm extends Model
         }
 
         $ids = is_array($this->requirement_ids) ? $this->requirement_ids : [];
-        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
-        if(!$ids){
-            $this->addError('requirement_ids', 'Please select at least one option.');
-            return false;
-        }
 
         $requirements = JuryRequirement::find()
             ->where(['id' => $ids, 'is_required' => 1, 'is_active' => 1])

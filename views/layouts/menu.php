@@ -1,6 +1,7 @@
 <?php
 
 use app\models\UserRole;
+use app\models\Program;
 use app\models\ProgramSub;
 use app\models\AppSetting;
 use yii\helpers\Url;
@@ -202,6 +203,8 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
 
           $menu[] = ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index'], 'icon' => 'bi bi-person-plus'];
+
+          $menu[] = ['name' => 'Jury Applications (Active)', 'url' => ['/program-registration/admin-jury-applications-all'], 'icon' => 'bi bi-person-check'];
           
 
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];

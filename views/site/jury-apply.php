@@ -45,7 +45,7 @@ $juryMatrix = $juryMatrix ?? [];
         <div class="card-body pt-4">
             <h5 class="card-title">Program Related</h5>
 
-            <?= $form->field($model, 'requirement_ids')->error() ?>
+            <?= Html::error($model, 'requirement_ids', ['class' => 'invalid-feedback d-block']) ?>
 
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">
