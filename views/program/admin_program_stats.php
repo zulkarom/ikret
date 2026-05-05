@@ -24,6 +24,7 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                         <th>Program / Sub</th>
                         <th style="width: 180px;">Group Count</th>
                         <th style="width: 180px;">Participant Count</th>
+                        <th style="width: 180px;">Rubric Count</th>
                         <th style="width: 180px;">Rubrics Sessions Count</th>
                     </tr>
                     <?php $i = 1; foreach($rows as $row){ ?>
@@ -32,6 +33,7 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                             <td><?= Html::encode($row['label']) ?></td>
                             <td><?= (int)($row['group_count'] ?? 0) ?></td>
                             <td><?= (int)$row['participant_count'] ?></td>
+                            <td><?= (int)($row['rubric_count'] ?? 0) ?></td>
                             <td><?= (int)$row['session_count'] ?></td>
                         </tr>
                     <?php $i++; } ?>

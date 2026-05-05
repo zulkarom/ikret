@@ -339,6 +339,7 @@ class ProgramController extends Controller
                     'label' => $program->program_abbr ?: $program->program_name,
                     'group_count' => $programLevelCounts['group_count'],
                     'participant_count' => $programLevelCounts['participant_count'],
+                    'rubric_count' => $programLevelCounts['rubric_count'],
                     'session_count' => $programLevelCounts['session_count'],
                 ];
                 continue;
@@ -350,6 +351,7 @@ class ProgramController extends Controller
                 'label' => ($program->program_abbr ?: $program->program_name) . ' / Parent',
                 'group_count' => $programLevelCounts['group_count'],
                 'participant_count' => $programLevelCounts['participant_count'],
+                'rubric_count' => $programLevelCounts['rubric_count'],
                 'session_count' => $programLevelCounts['session_count'],
             ];
 
@@ -363,6 +365,7 @@ class ProgramController extends Controller
                         'label' => ($program->program_abbr ?: $program->program_name) . ' / ' . $sub->sub_name,
                         'group_count' => $counts['group_count'],
                         'participant_count' => $counts['participant_count'],
+                        'rubric_count' => $counts['rubric_count'],
                         'session_count' => $counts['session_count'],
                     ];
                 }
@@ -403,11 +406,13 @@ class ProgramController extends Controller
             $sessionQuery->andWhere(['pr.program_sub' => (int)$programSubId]);
         }
 
+        $rubricCount = (int)$sessionQuery->count('DISTINCT pr.rubric_id');
         $sessionCount = (int)$sessionQuery->count('rjs.id');
 
         return [
             'group_count' => $groupCount,
             'participant_count' => $participantCount,
+            'rubric_count' => $rubricCount,
             'session_count' => $sessionCount,
         ];
     }
