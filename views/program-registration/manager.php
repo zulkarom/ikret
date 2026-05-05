@@ -119,7 +119,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 if($model->flag == 1){
                     $html .= '<i class="bi bi-flag-fill" style="color:blue"></i> ';
                 }
-                $html .= $model->shortFieldsHtml;
+                $text = $model->participantText;
+                if(!empty($model->group_name)){
+                    $text .= ' (' . $model->group_name . ')';
+                }
+                $html .= Html::encode($text);
                 return $html;
             }
         ];

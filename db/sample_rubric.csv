@@ -1,14 +1,12 @@
 category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
-Presentation Evaluation,Purpose: The presentation clearly establishes a purpose and a central idea.,scale,4,Purpose,Ranges from unclear or missing purpose to a clear and compelling central idea that effectively guides the presentation.,0,1
-,"Content: The content is accurate, well-organized, and supported with relevant evidence.",scale,4,Content,Ranges from confusing content with factual errors and weak support to fully accurate content with clear subject definition and strong supporting evidence.,0,1
-,Comprehension: The presenter demonstrates understanding of the topic and responds effectively to questions.,scale,4,Comprehension,Ranges from limited understanding with incorrect responses to complete understanding with accurate and confident answers.,0,1
-,"Presentation: The presentation is delivered confidently with clear speech, appropriate body language, and good engagement.",scale,4,Presentation,"Ranges from nervous and unclear delivery with poor engagement to confident, clear, and engaging delivery with effective use of body language and voice.",0,1
-,"Visual Aids: The visual aids are clear, relevant, and enhance the presentation.",scale,4,Visual Aids,"Ranges from ineffective and cluttered visuals to high-quality, clear, and well-structured visuals that support understanding.",0,1
-,Length: The presentation duration is appropriate and meets the required time limit.,scale,4,Length,Ranges from significantly under or over time to fully meeting the required time limit.,0,1
-,Creativity: The presentation demonstrates creativity and effectively engages the audience.,scale,4,Creativity,"Ranges from no creativity and low engagement to highly creative, compelling delivery that enhances audience understanding and interest.",0,1
-Final Evaluation,Do you recommend this group for the Best Presentation Award?,boolean,2,Best Presentation,"Select Yes if the group delivers an outstanding, clear, and engaging presentation.",1,1
-,Do you recommend this group for the Social Impact Excellence Award?,boolean,2,Social Impact,Select Yes if the project demonstrates strong positive impact on society or community.,1,1
-,Do you recommend this group for the Social Innovator Award?,boolean,2,Social Innovator,Select Yes if the project shows innovative solutions addressing social challenges.,1,1
-,Do you recommend this group for the Best Sustainable Solution Award?,boolean,2,Sustainability,"Select Yes if the solution demonstrates strong sustainability in environmental, social, or economic aspects.",1,1
+Evaluation,Practical Application of Knowledge,scale,4,Application,"Ranges from failing to apply relevant knowledge with no practical linkage to excellent application that is highly relevant, insightful, and practical.",0,1
+,Shariah Compliance & Contract Justification,scale,4,Shariah,"Ranges from no understanding of Shariah principles and incorrect contracts to excellent mastery with strong, accurate, and well-justified application.",0,1
+,Problem Resolution & Commercial Viability,scale,4,Solution,"Ranges from failing to address the problem with no viable solution to an excellent solution that is highly viable, scalable, and impactful.",0,1
+,The Implementation Blueprint,scale,4,Blueprint,"Ranges from having no clear implementation plan to a comprehensive, strategic, and actionable blueprint.",0,1
+,Innovation & Creativity,scale,4,Innovation,"Ranges from no innovation and lack of originality to highly innovative, unique, and impactful ideas.",0,1
+,Clarity of Presentation & Communication,scale,4,Clarity,"Ranges from very unclear communication to highly clear, professional, and engaging presentation.",0,1
+Final Evaluation,Is this team eligible to receive BEST INNOVATION PRESENTION?,boolean,2,Best Presenter,,1,1
+,Is this team eligible to receive MOST CREATIVE INNOVATION POSTER?,boolean,2,Best Poster,,1,1
+,Is this team eligible to receive BEST INNOVATIVE SOLUTION?,boolean,2,Best Solution,,1,1
 ,Strengths,textarea,,Strengths,,0,0
-,Areas for Improvement,textarea,,Improvements,,0,0
+,Areas for Improvement,textarea,,Improvement,,0,0
