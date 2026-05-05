@@ -207,6 +207,8 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Jury Applications (Active)', 'url' => ['/program-registration/admin-jury-applications-all'], 'icon' => 'bi bi-person-check'];
           
 
+          $menu[] = ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index'], 'icon' => 'bi bi-person-badge'];
+
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
 
           $menu[] = ['name' => 'Program Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
