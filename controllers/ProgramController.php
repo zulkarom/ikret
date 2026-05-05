@@ -313,7 +313,15 @@ class ProgramController extends Controller
     {
         if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
 
-        $programs = Program::find()->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
+        $programQuery = Program::find();
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programQuery->andWhere(['is_active' => 1]);
+        }else if($programTable && $programTable->getColumn('status')){
+            $programQuery->andWhere(['status' => 10]);
+        }
+
+        $programs = $programQuery->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
 
         $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
         $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
@@ -344,16 +352,6 @@ class ProgramController extends Controller
                 ];
                 continue;
             }
-
-            $rows[] = [
-                'program' => $program,
-                'sub' => null,
-                'label' => ($program->program_abbr ?: $program->program_name) . ' / Parent',
-                'group_count' => $programLevelCounts['group_count'],
-                'participant_count' => $programLevelCounts['participant_count'],
-                'rubric_count' => $programLevelCounts['rubric_count'],
-                'session_count' => $programLevelCounts['session_count'],
-            ];
 
             if($subs){
                 foreach($subs as $sub){
