@@ -1473,6 +1473,7 @@ class ProgramRegistrationController extends Controller
             // Read all rows and group by group_name
             $groupedData = [];
             $rowNo = 1;
+            $lastGroupName = '';
             while(($row = fgetcsv($handle)) !== false){
                 $rowNo++;
                 $rowAssoc = [];
@@ -1493,7 +1494,13 @@ class ProgramRegistrationController extends Controller
 
                 $groupName = isset($rowAssoc['group_name']) ? trim((string)$rowAssoc['group_name']) : '';
                 if($groupName === ''){
-                    continue; // Skip rows without group_name
+                    if($lastGroupName === ''){
+                        continue; // Skip rows without group_name (no previous row to refer to)
+                    }
+                    $groupName = $lastGroupName;
+                    $rowAssoc['group_name'] = $groupName;
+                }else{
+                    $lastGroupName = $groupName;
                 }
 
                 if(!isset($groupedData[$groupName])){
