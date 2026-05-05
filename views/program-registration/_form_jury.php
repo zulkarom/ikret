@@ -2,7 +2,6 @@
 
 use app\models\ProgramRubric;
 use app\models\UserRole;
-use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -58,39 +57,6 @@ use yii\helpers\Url;
         
         ?>
        
-    </div>
-
-    <div class="row">
-        <div class="col-md-3"><?=$form->field($model, 'date_start')->widget(DatePicker::classname(), [
-    'removeButton' => false,
-    'pickerIcon' => '<i class="bi bi-calendar3"></i>',
-    'pluginOptions' => [
-        'autoclose'=>true,
-        'format' => 'yyyy-mm-dd',
-        'todayHighlight' => true,
-        
-    ],
-]);
-?></div>
-        <div class="col-md-3"><?=$form->field($model, 'date_end')->widget(DatePicker::classname(), [
-    'removeButton' => false,
-    'pickerIcon' => '<i class="bi bi-calendar3"></i>',
-    'pluginOptions' => [
-        'autoclose'=>true,
-        'format' => 'yyyy-mm-dd',
-        'todayHighlight' => true,
-        
-    ],
-    
-    
-]);
-?></div>
-        <div class="col-md-6"><?= $form->field($model, 'location')->textInput() ?></div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6"><?= $form->field($model, 'note')->textarea(['rows' => 3]) ?></div>
-        <div class="col-md-6"><?= $form->field($model, 'link')->textarea(['rows' => 3]) ?></div>
     </div>
 
     <?=$form->field($model, 'keep_data')->checkbox(['label'=>'Keep current data in this form after submitting']);?>

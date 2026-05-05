@@ -643,11 +643,6 @@ class ProgramRegistrationController extends Controller
             if ($session->has('keep-data') && $session->get('keep-data') == 1){
                 $model->users = $session->get('users');
                 $model->rubric_id = $session->get('rubric_id');
-                $model->date_start = $session->get('date_start');
-                $model->date_end = $session->get('date_end');
-                $model->location = $session->get('location');
-                $model->note = $session->get('note');
-                $model->link = $session->get('link');
                 $model->keep_data = $session->get('keep_data');
                 $model->keep_open = $session->get('keep_open');
             }
@@ -667,11 +662,6 @@ class ProgramRegistrationController extends Controller
                         $session->set('keep-data', 1);
                         $session->set('users', $model->users);
                         $session->set('rubric_id', $model->rubric_id);
-                        $session->set('date_start', $model->date_start);
-                        $session->set('date_end', $model->date_end);
-                        $session->set('location', $model->location);
-                        $session->set('note', $model->note);
-                        $session->set('link', $model->link);
                         $session->set('keep_data', $model->keep_data);
                         $session->set('keep_open', $model->keep_data);
                     }else{
