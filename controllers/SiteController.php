@@ -14,6 +14,7 @@ use app\models\QuestionnaireAnswer;
 use app\models\JuryApplication;
 use app\models\JuryApplyForm;
 use app\models\JuryRequirement;
+use app\models\AppSetting;
 use app\models\Program;
 use app\models\ProgramSub;
 use app\models\RubricJudgingSession;
@@ -156,6 +157,10 @@ class SiteController extends Controller
 
     public function actionJuryApply()
     {
+        if(!AppSetting::getBool('call_for_juries_enabled', true)){
+            throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
+        }
+
         $model = new JuryApplyForm();
 
         $requirements = JuryRequirement::find()

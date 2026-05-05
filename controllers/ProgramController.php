@@ -309,6 +309,109 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionAdminProgramStats()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+
+        $programs = Program::find()->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+
+        $rows = [];
+
+        foreach($programs as $program){
+            $programId = (int)$program->id;
+            $hasSub = (int)$program->has_sub === 1;
+
+            $subs = $hasSub ? $program->programSubs : [];
+            if($subs && $hasSubActiveColumn){
+                $subs = array_values(array_filter($subs, function($s){
+                    return (int)$s->getAttribute('is_active') === 1;
+                }));
+            }
+
+            $programLevelCounts = $this->getProgramStatsCounts($programId, null);
+            if(!$hasSub){
+                $rows[] = [
+                    'program' => $program,
+                    'sub' => null,
+                    'label' => $program->program_abbr ?: $program->program_name,
+                    'group_count' => $programLevelCounts['group_count'],
+                    'participant_count' => $programLevelCounts['participant_count'],
+                    'session_count' => $programLevelCounts['session_count'],
+                ];
+                continue;
+            }
+
+            $rows[] = [
+                'program' => $program,
+                'sub' => null,
+                'label' => ($program->program_abbr ?: $program->program_name) . ' / Parent',
+                'group_count' => $programLevelCounts['group_count'],
+                'participant_count' => $programLevelCounts['participant_count'],
+                'session_count' => $programLevelCounts['session_count'],
+            ];
+
+            if($subs){
+                foreach($subs as $sub){
+                    $subId = (int)$sub->id;
+                    $counts = $this->getProgramStatsCounts($programId, $subId);
+                    $rows[] = [
+                        'program' => $program,
+                        'sub' => $sub,
+                        'label' => ($program->program_abbr ?: $program->program_name) . ' / ' . $sub->sub_name,
+                        'group_count' => $counts['group_count'],
+                        'participant_count' => $counts['participant_count'],
+                        'session_count' => $counts['session_count'],
+                    ];
+                }
+            }
+        }
+
+        return $this->render('admin_program_stats', [
+            'rows' => $rows,
+        ]);
+    }
+
+    protected function getProgramStatsCounts($programId, $programSubId)
+    {
+        $participantQuery = (new Query())
+            ->from(['r' => ProgramRegistration::tableName()])
+            ->leftJoin(['m' => Member::tableName()], 'm.program_reg_id = r.id')
+            ->where(['r.program_id' => (int)$programId])
+            ->andWhere(['in', 'r.status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]]);
+
+        if($programSubId === null){
+            $participantQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+        }else{
+            $participantQuery->andWhere(['r.program_sub' => (int)$programSubId]);
+        }
+
+        $groupCount = (int)$participantQuery->count('DISTINCT r.id');
+        $memberCount = (int)$participantQuery->count('m.id');
+        $participantCount = $groupCount + $memberCount;
+
+        $sessionQuery = (new Query())
+            ->from(['pr' => ProgramRubric::tableName()])
+            ->leftJoin(['rjs' => RubricJudgingSession::tableName()], 'rjs.rubric_id = pr.rubric_id')
+            ->where(['pr.program_id' => (int)$programId]);
+
+        if($programSubId === null){
+            $sessionQuery->andWhere(['or', ['pr.program_sub' => null], ['pr.program_sub' => 0]]);
+        }else{
+            $sessionQuery->andWhere(['pr.program_sub' => (int)$programSubId]);
+        }
+
+        $sessionCount = (int)$sessionQuery->count('rjs.id');
+
+        return [
+            'group_count' => $groupCount,
+            'participant_count' => $participantCount,
+            'session_count' => $sessionCount,
+        ];
+    }
+
     public function actionAdminProgramAdd()
     {
         if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;

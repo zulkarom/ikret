@@ -5,6 +5,7 @@ use yii\helpers\Html;
 
 /** @var yii\web\View $this */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var bool $callForJuriesEnabled */
 
 $this->title = 'Jury Requirements';
 $this->params['breadcrumbs'][] = $this->title;
@@ -23,6 +24,20 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <p>
                 <?= Html::a('Create', ['create'], ['class' => 'btn btn-primary']) ?>
+            </p>
+
+            <p>
+                <?php if(!empty($callForJuriesEnabled)): ?>
+                    <?= Html::a('Public Form: ON (click to turn OFF)', ['toggle-call-for-juries'], [
+                        'class' => 'btn btn-success',
+                        'data' => ['method' => 'post'],
+                    ]) ?>
+                <?php else: ?>
+                    <?= Html::a('Public Form: OFF (click to turn ON)', ['toggle-call-for-juries'], [
+                        'class' => 'btn btn-danger',
+                        'data' => ['method' => 'post'],
+                    ]) ?>
+                <?php endif; ?>
             </p>
 
             <div class="table-responsive">

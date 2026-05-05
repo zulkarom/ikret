@@ -1,16 +1,14 @@
 category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
-Product / Service Evaluation,Level of originality in the product or service features and functionalities,scale,5,Originality,Assesses creativity and innovation in product or service design,0,1
-,Ability of the product or service to solve customer problems,scale,5,Problem Solving,Evaluates how effectively the product addresses real customer needs,0,1
-,Potential positive impact on society economy or environment,scale,5,Impact,Assesses contribution to society economy environment and sustainability considerations,0,1
-,Potential to disrupt existing markets,scale,5,Market Disruption,Evaluates innovation and ability to challenge existing market solutions,0,1
-,Business viability including market understanding and revenue potential,scale,5,Business Viability,Assesses market research customer understanding and potential for profitability,0,1
-,Recommend for Best Product or Service Award,boolean,2,Best Product,,1,1
-Presentation Evaluation,Ability of the presenter to communicate effectively and create excitement,scale,7,Communication,Evaluates clarity engagement and effectiveness of presentation delivery,0,1
-,Ability to inspire confidence in investors or customers,scale,8,Confidence,Assesses presenter's ability to build trust and credibility,0,1
-,Delivery of story and speech inspiration,scale,9,Storytelling,Evaluates storytelling ability audience engagement and delivery style,0,1
-,Overall potential for future growth and entrepreneurial success,scale,10,Overall Potential,Assesses vision scalability and long-term business potential,0,1
-,Recommend for Best Presenter Award,boolean,2,Best Presenter,,1,1
-,Recommend for Best Young Entrepreneur Award,boolean,2,Best Entrepreneur,,1,1
-,Recommend for Best Business Idea,boolean,2,Best Business Idea,,1,1
+Presentation Evaluation,Purpose: The presentation clearly establishes a purpose and a central idea.,scale,4,Purpose,Ranges from unclear or missing purpose to a clear and compelling central idea that effectively guides the presentation.,0,1
+,"Content: The content is accurate, well-organized, and supported with relevant evidence.",scale,4,Content,Ranges from confusing content with factual errors and weak support to fully accurate content with clear subject definition and strong supporting evidence.,0,1
+,Comprehension: The presenter demonstrates understanding of the topic and responds effectively to questions.,scale,4,Comprehension,Ranges from limited understanding with incorrect responses to complete understanding with accurate and confident answers.,0,1
+,"Presentation: The presentation is delivered confidently with clear speech, appropriate body language, and good engagement.",scale,4,Presentation,"Ranges from nervous and unclear delivery with poor engagement to confident, clear, and engaging delivery with effective use of body language and voice.",0,1
+,"Visual Aids: The visual aids are clear, relevant, and enhance the presentation.",scale,4,Visual Aids,"Ranges from ineffective and cluttered visuals to high-quality, clear, and well-structured visuals that support understanding.",0,1
+,Length: The presentation duration is appropriate and meets the required time limit.,scale,4,Length,Ranges from significantly under or over time to fully meeting the required time limit.,0,1
+,Creativity: The presentation demonstrates creativity and effectively engages the audience.,scale,4,Creativity,"Ranges from no creativity and low engagement to highly creative, compelling delivery that enhances audience understanding and interest.",0,1
+Final Evaluation,Do you recommend this group for the Best Presentation Award?,boolean,2,Best Presentation,"Select Yes if the group delivers an outstanding, clear, and engaging presentation.",1,1
+,Do you recommend this group for the Social Impact Excellence Award?,boolean,2,Social Impact,Select Yes if the project demonstrates strong positive impact on society or community.,1,1
+,Do you recommend this group for the Social Innovator Award?,boolean,2,Social Innovator,Select Yes if the project shows innovative solutions addressing social challenges.,1,1
+,Do you recommend this group for the Best Sustainable Solution Award?,boolean,2,Sustainability,"Select Yes if the solution demonstrates strong sustainability in environmental, social, or economic aspects.",1,1
 ,Strengths,textarea,,Strengths,,0,0
 ,Areas for Improvement,textarea,,Improvements,,0,0

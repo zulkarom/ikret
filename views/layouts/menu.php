@@ -2,6 +2,7 @@
 
 use app\models\UserRole;
 use app\models\ProgramSub;
+use app\models\AppSetting;
 use yii\helpers\Url;
 
 ?>
@@ -15,7 +16,9 @@ use yii\helpers\Url;
         
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
         $menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
-        $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
+        if(AppSetting::getBool('call_for_juries_enabled', true)){
+          $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
+        }
       }else{
 
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
@@ -210,6 +213,8 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Registration Fields Config', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
 
           $menu[] = ['name' => 'Program Sub Programs', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
+
+          $menu[] = ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats'], 'icon' => 'bi bi-bar-chart'];
 
           $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
 
