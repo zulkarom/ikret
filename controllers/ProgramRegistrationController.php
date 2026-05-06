@@ -1375,12 +1375,26 @@ class ProgramRegistrationController extends Controller
                 }
 
                 try{
+                    $juryProfile = $this->ensureJuryRoleProfileRequirementForUser(
+                        $user,
+                        (int)$programId,
+                        $programSubId ?: null,
+                        $sessionId,
+                        [
+                            'category' => isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '',
+                            'phone' => isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null,
+                            'institution' => isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null,
+                            'designation' => isset($idx['designation']) ? trim((string)($row[$idx['designation']] ?? '')) : null,
+                            'address' => isset($idx['address']) ? trim((string)($row[$idx['address']] ?? '')) : null,
+                        ]
+                    );
+
                     $existingApp = JuryApplication::find()->where([
+                        'jury_profile_id' => (int)$juryProfile->id,
                         'program_id' => $programId,
                         'program_sub_id' => $programSubId ?: null,
                         'judging_session_id' => $sessionId,
-                    ])->innerJoin('jury_profiles jp', 'jp.id = jury_applications.jury_profile_id')
-                    ->andWhere(['jp.user_id' => (int)$user->id])
+                    ])
                     ->exists();
                     if($existingApp){
                         $skipped++;
@@ -1393,13 +1407,7 @@ class ProgramRegistrationController extends Controller
                         $programSubId ?: null,
                         $sessionId,
                         0,
-                        [
-                            'category' => isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '',
-                            'phone' => isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null,
-                            'institution' => isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null,
-                            'designation' => isset($idx['designation']) ? trim((string)($row[$idx['designation']] ?? '')) : null,
-                            'address' => isset($idx['address']) ? trim((string)($row[$idx['address']] ?? '')) : null,
-                        ]
+                        []
                     );
                     if($app && (int)$app->status === 0){
                         $created++;
@@ -2152,7 +2160,7 @@ class ProgramRegistrationController extends Controller
         return $this->ensureJuryPipelineForUser($user, $programId, $programSubId, $judgingSessionId, 10);
     }
 
-    protected function ensureJuryPipelineForUser($user, $programId, $programSubId = null, $judgingSessionId = null, $applicationStatus = 10, array $profileData = [])
+    protected function ensureJuryRoleProfileRequirementForUser($user, $programId, $programSubId = null, $judgingSessionId = null, array $profileData = [])
     {
         if(!$user || !$user->id){
             throw new \RuntimeException('Jury user not found.');
@@ -2205,7 +2213,7 @@ class ProgramRegistrationController extends Controller
             throw new \RuntimeException('Unable to save jury profile: ' . implode('; ', $profile->getFirstErrors()));
         }
 
-        $app = JuryApplication::find()->where([
+        $existingApp = JuryApplication::find()->where([
             'jury_profile_id' => (int)$profile->id,
             'program_id' => (int)$programId,
             'program_sub_id' => $programSubId ?: null,
@@ -2233,7 +2241,7 @@ class ProgramRegistrationController extends Controller
             'program_sub_id' => $programSubId ?: null,
             'judging_session_id' => $judgingSessionId ?: null,
         ])->count();
-        if(!$app){
+        if(!$existingApp){
             $requiredLimit++;
         }
 
@@ -2244,6 +2252,19 @@ class ProgramRegistrationController extends Controller
         if(!$requirement->save()){
             throw new \RuntimeException('Unable to save jury requirement: ' . implode('; ', $requirement->getFirstErrors()));
         }
+
+        return $profile;
+    }
+
+    protected function ensureJuryPipelineForUser($user, $programId, $programSubId = null, $judgingSessionId = null, $applicationStatus = 10, array $profileData = [])
+    {
+        $profile = $this->ensureJuryRoleProfileRequirementForUser($user, $programId, $programSubId, $judgingSessionId, $profileData);
+        $app = JuryApplication::find()->where([
+            'jury_profile_id' => (int)$profile->id,
+            'program_id' => (int)$programId,
+            'program_sub_id' => $programSubId ?: null,
+            'judging_session_id' => $judgingSessionId ?: null,
+        ])->one();
 
         if(!$app){
             $app = new JuryApplication();
