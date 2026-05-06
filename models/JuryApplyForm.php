@@ -124,7 +124,7 @@ class JuryApplyForm extends Model
                 $profile->created_at = time();
             }
 
-            $profile->fullname = $this->fullname;
+            $profile->fullname = (string)$user->fullname;
             $profile->category = $this->category;
             $profile->phone = $this->phone;
             $profile->institution = $this->institution;

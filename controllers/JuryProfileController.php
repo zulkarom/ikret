@@ -152,7 +152,7 @@ class JuryProfileController extends Controller
                     $isNew = true;
                 }
 
-                $profile->fullname = $fullname;
+                $profile->fullname = (string)$user->fullname;
                 $profile->category = $category;
                 $profile->phone = $phone !== '' ? $phone : null;
                 $profile->institution = $institution !== '' ? $institution : null;

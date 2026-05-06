@@ -23,7 +23,7 @@ use yii\helpers\Html;
     ]); ?>
     <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
     <div class="row">
-        <div class="col-md-6"><?= $form->field($model, 'rubric')->dropDownList(ArrayHelper::map($rubrics, 'id', 'rubric.rubric_name'))->label(false) ?></div>
+        <div class="col-md-6"><?= $form->field($model, 'rubric')->dropDownList(ArrayHelper::map($rubrics, 'rubric_id', 'rubric.rubric_name'))->label(false) ?></div>
 
         <div class="col-md-6"><?= Html::submitButton('Apply Filter', ['class' => 'btn btn-primary']) ?></div>
  

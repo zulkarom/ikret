@@ -592,7 +592,7 @@ class ProgramRegistrationController extends Controller
 
         $firstRubric = null;
         if($rubrics){
-            $firstRubric = $rubrics[0]->id;
+            $firstRubric = $rubrics[0]->rubric_id;
         }
 
         $searchModel = new JuryResultSearch();
@@ -694,6 +694,22 @@ class ProgramRegistrationController extends Controller
                                         $peserta = $ada->registration->participantText;
                                         Yii::$app->session->addFlash('error', 'Failed: ' .$name . ' had been assigned to ' . $peserta);
                                     }else{
+                                        try{
+                                            $registration = ProgramRegistration::findOne((int)$select);
+                                            if(!$registration){
+                                                throw new \RuntimeException('Participant registration not found.');
+                                            }
+                                            $this->ensureApprovedJuryApplicationForUser(
+                                                User::findOne((int)$u),
+                                                (int)$registration->program_id,
+                                                $registration->program_sub ? (int)$registration->program_sub : null,
+                                                $model->judging_session_id ? (int)$model->judging_session_id : null
+                                            );
+                                        }catch(\Throwable $e){
+                                            Yii::$app->session->addFlash('error', 'Failed to prepare jury application: ' . $e->getMessage());
+                                            continue;
+                                        }
+
                                         $jury = new JuryAssign([
                                             'user_id' => $u,
                                             'reg_id' => $select,
@@ -735,6 +751,320 @@ class ProgramRegistrationController extends Controller
         }
 
         
+    }
+
+    public function actionManagerImportJuryAssignments($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        [$role, $program, $programSub] = $this->findManagerProgramScope($id, $sub);
+
+        $rubrics = $this->getScopedProgramRubrics($program, $programSub);
+        $selectedStage = (int)Yii::$app->request->post('stage', Yii::$app->request->get('stage', 0));
+        $stages = $program->programStages;
+
+        $rubricIds = ArrayHelper::getColumn($rubrics, 'rubric_id');
+        $availableSessions = [];
+        if($rubricIds){
+            $availableSessions = RubricJudgingSession::find()
+                ->where(['rubric_id' => $rubricIds])
+                ->orderBy(['rubric_id' => SORT_ASC, 'datetime_start' => SORT_ASC, 'session_name' => SORT_ASC])
+                ->all();
+        }
+        $availableSessionIds = ArrayHelper::getColumn($availableSessions, 'id');
+
+        if(Yii::$app->request->isPost){
+            $csvFile = UploadedFile::getInstanceByName('csv_file');
+            if(!$csvFile){
+                Yii::$app->session->addFlash('error', 'Please upload a CSV file.');
+                return $this->refresh();
+            }
+
+            $handle = fopen($csvFile->tempName, 'r');
+            if($handle === false){
+                Yii::$app->session->addFlash('error', 'Unable to read the uploaded CSV file.');
+                return $this->refresh();
+            }
+
+            $headers = fgetcsv($handle);
+            if(!$headers){
+                fclose($handle);
+                Yii::$app->session->addFlash('error', 'The CSV file is empty.');
+                return $this->refresh();
+            }
+
+            $headers = array_map(function($header){
+                return strtolower(trim((string)$header));
+            }, $headers);
+
+            $requiredColumns = ['jury_name', 'jury_email', 'group_name', 'rubric_id', 'session_id'];
+            foreach($requiredColumns as $column){
+                if(!in_array($column, $headers, true)){
+                    fclose($handle);
+                    Yii::$app->session->addFlash('error', 'Missing required column: ' . $column);
+                    return $this->refresh();
+                }
+            }
+
+            $unknownHeaders = array_diff($headers, $requiredColumns);
+            if($unknownHeaders){
+                fclose($handle);
+                Yii::$app->session->addFlash('error', 'Unknown CSV column(s): ' . implode(', ', $unknownHeaders));
+                return $this->refresh();
+            }
+
+            $idx = array_flip($headers);
+            $created = 0;
+            $skipped = 0;
+            $messages = [];
+            $warnings = [];
+            $createdUsers = 0;
+            $createdProfiles = 0;
+            $createdRoles = 0;
+            $rowNo = 1;
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try{
+                while(($row = fgetcsv($handle)) !== false){
+                    $rowNo++;
+
+                    $juryName = trim((string)($row[$idx['jury_name']] ?? ''));
+                    $juryEmail = strtolower(trim((string)($row[$idx['jury_email']] ?? '')));
+                    $groupName = trim((string)($row[$idx['group_name']] ?? ''));
+                    $rubricId = (int)trim((string)($row[$idx['rubric_id']] ?? '0'));
+                    $sessionIdRaw = trim((string)($row[$idx['session_id']] ?? ''));
+                    $sessionId = $sessionIdRaw === '' ? 0 : (int)$sessionIdRaw;
+
+                    if($juryName === '' && $juryEmail === '' && $groupName === '' && $rubricId === 0 && $sessionId === 0){
+                        continue;
+                    }
+
+                    if($juryName === '' || $juryEmail === '' || $groupName === '' || $rubricId <= 0){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': jury_name, jury_email, group_name and rubric_id are required.';
+                        continue;
+                    }
+
+                    if(!in_array($rubricId, $rubricIds, true)){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': rubric_id is not available in this manager scope - ' . $rubricId;
+                        continue;
+                    }
+
+                    $jury = User::find()
+                        ->where('LOWER(email) = :email', [':email' => $juryEmail])
+                        ->one();
+                    if(!$jury){
+                        $jury = new User();
+                        $jury->scenario = 'create';
+                        $jury->email = $juryEmail;
+                        $jury->username = $juryEmail;
+                        $jury->fullname = $juryName;
+                        $jury->status = User::STATUS_ACTIVE;
+                        $jury->is_student = 0;
+                        $jury->is_internal = 0;
+                        $jury->generateAuthKey();
+                        $jury->setPassword($juryEmail);
+
+                        if(!$jury->save()){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': failed to create jury user - ' . implode('; ', $jury->getFirstErrors());
+                            continue;
+                        }
+                        $createdUsers++;
+                    }else{
+                        $dirty = [];
+                        if((int)$jury->status !== (int)User::STATUS_ACTIVE){
+                            $jury->status = User::STATUS_ACTIVE;
+                            $dirty[] = 'status';
+                        }
+                        if(!$jury->username){
+                            $jury->username = $juryEmail;
+                            $dirty[] = 'username';
+                        }
+                        if(!$jury->fullname){
+                            $jury->fullname = $juryName;
+                            $dirty[] = 'fullname';
+                        }
+                        if($dirty){
+                            $jury->save(false, $dirty);
+                        }
+                    }
+
+                    if($jury->fullname && strcasecmp(trim((string)$jury->fullname), $juryName) !== 0){
+                        $warnings[] = 'Row ' . $rowNo . ': name mismatch for ' . $juryEmail . ' - user fullname: "' . $jury->fullname . '", CSV jury_name: "' . $juryName . '"';
+                    }
+
+                    $juryRole = UserRole::find()->where([
+                        'user_id' => (int)$jury->id,
+                        'role_name' => 'jury',
+                    ])->one();
+                    if(!$juryRole){
+                        $juryRole = new UserRole();
+                        $juryRole->user_id = (int)$jury->id;
+                        $juryRole->role_name = 'jury';
+                        $juryRole->status = 10;
+                        $juryRole->approve_at = new Expression('NOW()');
+                        if(!$juryRole->save()){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': failed to create jury role - ' . implode('; ', $juryRole->getFirstErrors());
+                            continue;
+                        }
+                        $createdRoles++;
+                    }else if((int)$juryRole->status !== 10){
+                        $juryRole->status = 10;
+                        $juryRole->approve_at = new Expression('NOW()');
+                        $juryRole->save(false, ['status', 'approve_at']);
+                    }
+
+                    $juryProfile = JuryProfile::find()->where(['user_id' => (int)$jury->id])->one();
+                    if(!$juryProfile){
+                        $juryProfile = new JuryProfile();
+                        $juryProfile->user_id = (int)$jury->id;
+                        $juryProfile->created_at = time();
+                        $createdProfiles++;
+                    }
+                    $juryProfile->fullname = (string)$jury->fullname;
+                    $juryProfile->category = $juryProfile->category ?: 'General';
+                    $juryProfile->updated_at = time();
+                    if(!$juryProfile->save()){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': failed to create/update jury profile - ' . implode('; ', $juryProfile->getFirstErrors());
+                        continue;
+                    }
+
+                    if($sessionId > 0){
+                        if(!in_array($sessionId, $availableSessionIds, true)){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': session_id is not available in this manager scope - ' . $sessionId;
+                            continue;
+                        }
+
+                        $session = null;
+                        foreach($availableSessions as $availableSession){
+                            if((int)$availableSession->id === $sessionId){
+                                $session = $availableSession;
+                                break;
+                            }
+                        }
+                        if(!$session || (int)$session->rubric_id !== $rubricId){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': session_id does not belong to rubric_id.';
+                            continue;
+                        }
+                    }else{
+                        $sessionRequired = RubricJudgingSession::find()->where(['rubric_id' => $rubricId])->exists();
+                        if($sessionRequired){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': session_id is required for rubric_id ' . $rubricId;
+                            continue;
+                        }
+                    }
+
+                    $registrationQuery = ProgramRegistration::find()
+                        ->where(['program_id' => (int)$program->id])
+                        ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
+                        ->andWhere('LOWER(TRIM(group_name)) = :group_name', [':group_name' => strtolower($groupName)]);
+
+                    if($programSub){
+                        $registrationQuery->andWhere(['program_sub' => (int)$programSub->id]);
+                    }
+
+                    $registrations = $registrationQuery->all();
+                    if(count($registrations) !== 1){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': group_name must match exactly one participant group in this scope - ' . $groupName;
+                        continue;
+                    }
+
+                    $registration = $registrations[0];
+
+                    try{
+                        $this->ensureApprovedJuryApplicationForUser(
+                            $jury,
+                            (int)$registration->program_id,
+                            $registration->program_sub ? (int)$registration->program_sub : null,
+                            $sessionId ?: null
+                        );
+                    }catch(\Throwable $e){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': failed to prepare approved jury application - ' . $e->getMessage();
+                        continue;
+                    }
+
+                    $existingAssign = JuryAssign::findOne([
+                        'user_id' => (int)$jury->id,
+                        'reg_id' => (int)$registration->id,
+                        'stage' => $selectedStage,
+                    ]);
+                    if($existingAssign){
+                        $skipped++;
+                        $messages[] = 'Row ' . $rowNo . ': jury already assigned to group - ' . $groupName;
+                        continue;
+                    }
+
+                    $assign = new JuryAssign([
+                        'user_id' => (int)$jury->id,
+                        'reg_id' => (int)$registration->id,
+                        'stage' => $selectedStage,
+                        'rubric_id' => $rubricId,
+                        'judging_session_id' => $sessionId ?: null,
+                        'created_at' => time(),
+                        'updated_at' => time(),
+                    ]);
+
+                    if(!$assign->save()){
+                        $skipped++;
+                        $firstErrors = $assign->getFirstErrors();
+                        $messages[] = 'Row ' . $rowNo . ': failed to save assignment' . ($firstErrors ? ' - ' . implode('; ', $firstErrors) : '');
+                        continue;
+                    }
+
+                    $created++;
+                }
+
+                fclose($handle);
+                $transaction->commit();
+
+                if($created > 0){
+                    Yii::$app->session->addFlash('success', $created . ' jury assignment(s) imported successfully.');
+                }
+                if($createdUsers > 0){
+                    Yii::$app->session->addFlash('success', 'Created ' . $createdUsers . ' jury user(s). Default password: email.');
+                }
+                if($createdProfiles > 0){
+                    Yii::$app->session->addFlash('success', 'Created ' . $createdProfiles . ' jury profile(s).');
+                }
+                if($createdRoles > 0){
+                    Yii::$app->session->addFlash('success', 'Added jury role for ' . $createdRoles . ' user(s).');
+                }
+                if($warnings){
+                    Yii::$app->session->addFlash('warning', implode('<br>', array_slice($warnings, 0, 10)));
+                }
+                if($skipped > 0){
+                    Yii::$app->session->addFlash('warning', $skipped . ' row(s) skipped.');
+                }
+                if($messages){
+                    Yii::$app->session->addFlash('error', implode('<br>', array_slice($messages, 0, 10)));
+                }
+
+                return $this->refresh();
+            }catch(\Throwable $e){
+                fclose($handle);
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('manager-import-jury-assignments', [
+            'role' => $role,
+            'program' => $program,
+            'programSub' => $programSub,
+            'rubrics' => $rubrics,
+            'availableSessions' => $availableSessions,
+            'stages' => $stages,
+            'selectedStage' => $selectedStage,
+        ]);
     }
 
     public function actionManagerJuryApplications($id, $sub = null)
@@ -1047,7 +1377,7 @@ class ProgramRegistrationController extends Controller
                 if(!$juryProfile){
                     $juryProfile = new JuryProfile();
                     $juryProfile->user_id = (int)$user->id;
-                    $juryProfile->fullname = $fullNameCsv !== '' ? $fullNameCsv : ($user->fullname ?? '');
+                    $juryProfile->fullname = (string)($user->fullname ?? '');
                     $juryProfile->category = isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '';
                     $juryProfile->phone = isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null;
                     $juryProfile->institution = isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null;
@@ -1776,6 +2106,103 @@ class ProgramRegistrationController extends Controller
         
     }
 
+    protected function findManagerProgramScope($id, $sub = null)
+    {
+        $role = UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub,
+            'status' => 10,
+        ]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $programSub = null;
+        $program = $role->program;
+        if((int)$program->has_sub === 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        return [$role, $program, $programSub];
+    }
+
+    protected function getScopedProgramRubrics($program, $programSub = null)
+    {
+        $query = ProgramRubric::find()
+            ->alias('pr')
+            ->where(['pr.program_id' => (int)$program->id]);
+
+        if($programSub){
+            $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+            $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+
+            if($hasSubActiveColumn && (int)$programSub->getAttribute('is_active') !== 1){
+                $query->andWhere('0=1');
+            }else{
+                $query->andWhere(['pr.program_sub' => (int)$programSub->id]);
+            }
+        }else{
+            $query->andWhere(['or', ['pr.program_sub' => null], ['pr.program_sub' => 0]]);
+        }
+
+        return $query->all();
+    }
+
+    protected function ensureApprovedJuryApplicationForUser($user, $programId, $programSubId = null, $judgingSessionId = null)
+    {
+        if(!$user || !$user->id){
+            throw new \RuntimeException('Jury user not found.');
+        }
+
+        $profile = JuryProfile::find()->where(['user_id' => (int)$user->id])->one();
+        if(!$profile){
+            $profile = new JuryProfile();
+            $profile->user_id = (int)$user->id;
+            $profile->fullname = (string)$user->fullname;
+            $profile->category = 'General';
+            $profile->created_at = time();
+        }
+        $profile->fullname = (string)$user->fullname;
+        if(!$profile->category){
+            $profile->category = 'General';
+        }
+        $profile->updated_at = time();
+        if(!$profile->save()){
+            throw new \RuntimeException('Unable to save jury profile: ' . implode('; ', $profile->getFirstErrors()));
+        }
+
+        $app = JuryApplication::find()->where([
+            'jury_profile_id' => (int)$profile->id,
+            'program_id' => (int)$programId,
+            'program_sub_id' => $programSubId ?: null,
+            'judging_session_id' => $judgingSessionId ?: null,
+        ])->one();
+
+        if(!$app){
+            $app = new JuryApplication();
+            $app->jury_profile_id = (int)$profile->id;
+            $app->program_id = (int)$programId;
+            $app->program_sub_id = $programSubId ?: null;
+            $app->judging_session_id = $judgingSessionId ?: null;
+            $app->created_at = time();
+        }
+
+        $app->declaration_accepted = 1;
+        $app->status = 10;
+
+        if(!$app->save()){
+            throw new \RuntimeException('Unable to save jury application: ' . implode('; ', $app->getFirstErrors()));
+        }
+
+        return $app;
+    }
+
     private function clearSession($session){
         $session->remove('keep-data');
         $session->remove('users');
@@ -1790,13 +2217,32 @@ class ProgramRegistrationController extends Controller
         $session->remove('keep_data');
     }
 
-    public function actionJudgingSessionListJson($rubric_id)
+    public function actionJudgingSessionListJson($rubric_id, $program_id = null, $sub = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         $rubricId = (int)$rubric_id;
         if($rubricId <= 0){
             return [];
+        }
+
+        $programId = $program_id !== null ? (int)$program_id : null;
+        $programSubId = $sub !== null ? (int)$sub : null;
+        if($programId){
+            $rubricQuery = ProgramRubric::find()->where([
+                'program_id' => $programId,
+                'rubric_id' => $rubricId,
+            ]);
+
+            if($programSubId){
+                $rubricQuery->andWhere(['program_sub' => $programSubId]);
+            }else{
+                $rubricQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+            }
+
+            if(!$rubricQuery->exists()){
+                return ['results' => []];
+            }
         }
 
         $sessions = RubricJudgingSession::find()
@@ -1831,7 +2277,7 @@ class ProgramRegistrationController extends Controller
         }
         $firstRubric = null;
         if($rubrics){
-            $firstRubric = $rubrics[0]->id;
+            $firstRubric = $rubrics[0]->rubric_id;
         }
         $firstStage = null;
         $stages = $program->programStages;

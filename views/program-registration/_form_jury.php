@@ -26,13 +26,25 @@ use yii\helpers\Url;
 
     <div class="col-md-9">
         <?php
+        $programRubricQuery = ProgramRubric::find()
+            ->alias('pr')
+            ->where(['pr.program_id' => (int)$program->id]);
+
         if($programSub){
-            $list_rubrics = $programSub->programRubrics;
+            $subTable = Yii::$app->db->schema->getTableSchema(\app\models\ProgramSub::tableName());
+            $hasSubActiveColumn = $subTable && $subTable->getColumn('is_active');
+
+            if($hasSubActiveColumn && (int)$programSub->getAttribute('is_active') !== 1){
+                $programRubricQuery->andWhere('0=1');
+            }else{
+                $programRubricQuery->andWhere(['pr.program_sub' => (int)$programSub->id]);
+            }
         }else{
-            $list_rubrics = $program->programRubrics;
+            $programRubricQuery->andWhere(['or', ['pr.program_sub' => null], ['pr.program_sub' => 0]]);
         }
-        //print_r($list_rubrics);die();
-        $rubricArray = ArrayHelper::map($list_rubrics, 'id', 'rubric.rubric_name');
+
+        $list_rubrics = $programRubricQuery->all();
+        $rubricArray = ArrayHelper::map($list_rubrics, 'rubric_id', 'rubric.rubric_name');
         $prompt = [];
         if(count($rubricArray) > 1){
             $prompt = ['prompt' => 'Choose Rubric'];
@@ -60,7 +72,7 @@ use yii\helpers\Url;
                 'ajax' => [
                     'url' => $sessionUrl,
                     'dataType' => 'json',
-                    'data' => new \yii\web\JsExpression('function(params){ return { rubric_id: $("#juryassign-rubric_id").val() }; }'),
+                    'data' => new \yii\web\JsExpression('function(params){ return { rubric_id: $("#juryassign-rubric_id").val(), program_id: ' . (int)$program->id . ', sub: ' . ($programSub ? (int)$programSub->id : 'null') . ' }; }'),
                     'delay' => 250,
                 ],
             ],
@@ -97,7 +109,7 @@ use yii\helpers\Url;
 
     <div class="form-group">
         <?= Html::button('Assign Jury to Selected Participants', ['id'=>'btn-submit-jury', 'class' => 'btn btn-success']) ?> 
-        
+        <?= Html::a('Import Jury Assignment CSV', ['manager-import-jury-assignments', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-outline-primary']) ?>
         <?= Html::button('Clear Form', ['id'=>'btn-clear-form', 'class' => 'btn btn-outline-success']) ?> <a href="javascript:void(0)" id="hide-jury-form">Hide this form</a>
     </div>
 
