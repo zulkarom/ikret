@@ -203,30 +203,35 @@ use yii\helpers\Url;
 
         if(Yii::$app->user->identity->isAdmin){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
-          $menu[] = ['name' => 'User Role Request', 'url' => ['/committee/request'], 'icon' => 'bi bi-brightness-high-fill'];
+          $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => [
+            ['name' => 'All Users', 'url' => ['/user/all']],
+            ['name' => 'User Role Request', 'url' => ['/committee/request']],
+          ]];
 
-          $menu[] = ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index'], 'icon' => 'bi bi-person-plus'];
+          $menu[] = ['name' => 'Jury Management', 'url' => ['/'], 'icon' => 'bi bi-person-badge', 'children' => [
+            ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index']],
+            ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all']],
+            ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
+          ]];
 
-          $menu[] = ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all'], 'icon' => 'bi bi-person-check'];
-          
+          $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
+            ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
+            ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
+            ['name' => 'Settings', 'url' => ['/setting/update']],
+          ]];
 
-          $menu[] = ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index'], 'icon' => 'bi bi-person-badge'];
+          $menu[] = ['name' => 'Registration & Committees', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
+            ['name' => 'All Registration', 'url' => ['/program-registration/index']],
+            ['name' => 'List of Committees', 'url' => ['/committee/index']],
+          ]];
 
-          $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
+          $menu[] = ['name' => 'Judging', 'url' => ['/'], 'icon' => 'bi bi-calendar-event', 'children' => [
+            ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
+          ]];
 
-          $menu[] = ['name' => 'All Registration', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
-
-          $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
-
-          $menu[] = ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
-
-          $menu[] = ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
-
-          $menu[] = ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions'], 'icon' => 'bi bi-calendar-event'];
-
-          $menu[] = ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats'], 'icon' => 'bi bi-bar-chart'];
-
-          $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
+          $menu[] = ['name' => 'Reports & Analytics', 'url' => ['/'], 'icon' => 'bi bi-bar-chart', 'children' => [
+            ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats']],
+          ]];
 
           
           

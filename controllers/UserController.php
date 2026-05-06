@@ -8,6 +8,7 @@ use app\models\JuryAssign;
 use app\models\JuryProfile;
 use app\models\JurySearch;
 use app\models\MentorSearch;
+use app\models\Program;
 use app\models\ProgramSub;
 use app\models\RegisterForm;
 use Yii;
@@ -204,6 +205,63 @@ class UserController extends Controller
         ]);
     }
 
+    public function actionAssignManager($id)
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        $model = $this->findModel($id);
+        $assignments = $this->managerAssignmentOptions();
+        $existingKeys = $this->existingManagerAssignmentKeys($model->id);
+
+        if($this->request->isPost){
+            $selected = (array)$this->request->post('assignments', []);
+            $created = 0;
+
+            foreach($selected as $key){
+                if(array_key_exists($key, $existingKeys)){
+                    continue;
+                }
+
+                $parts = explode(':', $key);
+                $programId = isset($parts[0]) ? (int)$parts[0] : 0;
+                $programSub = isset($parts[1]) && (int)$parts[1] > 0 ? (int)$parts[1] : null;
+
+                if(!$this->isValidManagerAssignment($assignments, $programId, $programSub)){
+                    continue;
+                }
+
+                $role = new UserRole();
+                $role->user_id = $model->id;
+                $role->role_name = 'manager';
+                $role->program_id = $programId;
+                $role->program_sub = $programSub;
+                $role->status = 10;
+                $role->approve_at = new Expression('NOW()');
+
+                if($role->save()){
+                    $created++;
+                    $existingKeys[$key] = true;
+                }else{
+                    $role->flashError();
+                }
+            }
+
+            if($created > 0){
+                Yii::$app->session->addFlash('success', $created . " manager access assigned");
+            }else{
+                Yii::$app->session->addFlash('info', "No new manager access assigned");
+            }
+
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->render('assign-manager', [
+            'model' => $model,
+            'assignments' => $assignments,
+            'existingKeys' => $existingKeys,
+        ]);
+    }
+
     public function actionDelete($id)
     {
         if(!Yii::$app->user->identity->isAdmin) return false;
@@ -299,6 +357,81 @@ class UserController extends Controller
             ->all();
     }
 
+    protected function managerAssignmentOptions()
+    {
+        $query = Program::find()->with('programSubs')->orderBy(['id' => SORT_ASC]);
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $query->andWhere(['is_active' => 1]);
+        }
+
+        $programs = [];
+        foreach($query->all() as $program){
+            $items = [];
+            $hasSub = $programTable && $programTable->getColumn('has_sub') && (int)$program->has_sub === 1;
+
+            if($hasSub){
+                $subs = $program->programSubs;
+                foreach($subs as $sub){
+                    $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+                    if($subTable && $subTable->getColumn('is_active') && (int)$sub->is_active !== 1){
+                        continue;
+                    }
+
+                    $items[] = [
+                        'key' => $program->id . ':' . $sub->id,
+                        'program_id' => (int)$program->id,
+                        'program_sub' => (int)$sub->id,
+                        'label' => $sub->sub_name,
+                    ];
+                }
+            }else{
+                $items[] = [
+                    'key' => $program->id . ':0',
+                    'program_id' => (int)$program->id,
+                    'program_sub' => null,
+                    'label' => 'All / N/A',
+                ];
+            }
+
+            $programs[] = [
+                'id' => (int)$program->id,
+                'name' => $program->program_name,
+                'items' => $items,
+            ];
+        }
+
+        return $programs;
+    }
+
+    protected function existingManagerAssignmentKeys($id)
+    {
+        $roles = UserRole::find()
+            ->where(['user_id' => $id, 'role_name' => 'manager'])
+            ->all();
+        $keys = [];
+
+        foreach($roles as $role){
+            $keys[$role->program_id . ':' . ((int)$role->program_sub > 0 ? $role->program_sub : 0)] = true;
+        }
+
+        return $keys;
+    }
+
+    protected function isValidManagerAssignment($assignments, $programId, $programSub)
+    {
+        $key = $programId . ':' . ($programSub ? $programSub : 0);
+        foreach($assignments as $program){
+            foreach($program['items'] as $item){
+                if($item['key'] === $key){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     protected function findUserJuryProfile($id)
     {
         return JuryProfile::find()
@@ -350,10 +483,14 @@ class UserController extends Controller
             'stage', 'score', 'group_name', 'project_name', 'session_id', 'scanned_at',
             'fullname', 'category', 'institution', 'created_at', 'updated_at', 'submitted_at',
         ];
+        $excludedTables = [
+            'user_role',
+            'program_reg_jury',
+        ];
         $related = [];
 
         foreach($schema->getTableNames('', true) as $tableName){
-            if($tableName === $userTable){
+            if($tableName === $userTable || in_array($tableName, $excludedTables)){
                 continue;
             }
 

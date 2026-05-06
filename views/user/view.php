@@ -32,6 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <p>
             <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
             <?= Html::a('Login As', ['login-as', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
+            <?= Html::a('Assign as Manager', ['assign-manager', 'id' => $model->id], ['class' => 'btn btn-success']) ?>
         </p>
     <?php endif; ?>
 
