@@ -12,14 +12,17 @@ use yii\helpers\Url;
       <?php
       
       $menu[] = ['name' => 'Home', 'url' => ['/'], 'icon' => 'bi bi-house'];
+      if(AppSetting::getBool('call_for_juries_enabled', true)){
+          $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
+        }
+
+      $menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
 
       if(Yii::$app->user->isGuest){
         
         $menu[] = ['name' => 'Login', 'url' => ['/site/login'], 'icon' => 'bi bi-box-arrow-in-right'];
-        $menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
-        if(AppSetting::getBool('call_for_juries_enabled', true)){
-          $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
-        }
+        
+        
       }else{
 
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
@@ -182,7 +185,7 @@ use yii\helpers\Url;
             }
 
             $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
-            $menu[] = ['name' => 'List of Mentors', 'url' => ['/user/mentor'], 'icon' => 'bi bi-person-badge'];
+           // $menu[] = ['name' => 'List of Mentors', 'url' => ['/user/mentor'], 'icon' => 'bi bi-person-badge'];
             $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
             $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [
@@ -204,20 +207,20 @@ use yii\helpers\Url;
 
           $menu[] = ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index'], 'icon' => 'bi bi-person-plus'];
 
-          $menu[] = ['name' => 'Jury Applications (Active)', 'url' => ['/program-registration/admin-jury-applications-all'], 'icon' => 'bi bi-person-check'];
+          $menu[] = ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all'], 'icon' => 'bi bi-person-check'];
           
 
           $menu[] = ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index'], 'icon' => 'bi bi-person-badge'];
 
           $menu[] = ['name' => 'List of Committees', 'url' => ['/committee/index'], 'icon' => 'bi bi-diagram-2'];
 
-          $menu[] = ['name' => 'Program Registration (All)', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
+          $menu[] = ['name' => 'All Registration', 'url' => ['/program-registration/index'], 'icon' => 'bi bi-list-stars'];
 
           $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
 
-          $menu[] = ['name' => 'Registration Fields Config', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
+          $menu[] = ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index'], 'icon' => 'bi bi-ui-checks-grid'];
 
-          $menu[] = ['name' => 'Program Sub Programs', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
+          $menu[] = ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
 
           $menu[] = ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions'], 'icon' => 'bi bi-calendar-event'];
 

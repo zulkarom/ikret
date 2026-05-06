@@ -39,6 +39,10 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
             [
                 'attribute' => 'fullname',
+                'format' => 'html',
+                'value' => function($model){
+                    return Html::a(Html::encode($model->fullname), ['view', 'id' => $model->id]);
+                }
             ],
             [
                 'attribute' => 'email',

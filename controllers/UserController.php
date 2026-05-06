@@ -3,6 +3,9 @@
 namespace app\controllers;
 
 use app\models\ChangePasswordForm;
+use app\models\JuryApplication;
+use app\models\JuryAssign;
+use app\models\JuryProfile;
 use app\models\JurySearch;
 use app\models\MentorSearch;
 use app\models\ProgramSub;
@@ -13,6 +16,7 @@ use app\models\User;
 use app\models\UserRole;
 use app\models\UserSearch;
 use yii\db\Expression;
+use yii\db\IntegrityException;
 use yii\db\Query;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -178,7 +182,233 @@ class UserController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'deleteBlockers' => $this->findUserDeleteBlockers($model->id),
         ]);
+    }
+
+    public function actionView($id)
+    {
+        if(!Yii::$app->user->identity->isAdmin && !Yii::$app->user->identity->isManager) return false;
+
+        $model = $this->findModel($id);
+
+        return $this->render('view', [
+            'model' => $model,
+            'deleteBlockers' => $this->findUserDeleteBlockers($model->id),
+            'userRoles' => $this->findUserRoles($model->id),
+            'committeeRoles' => $this->findUserCommitteeRoles($model->id),
+            'juryProfile' => $this->findUserJuryProfile($model->id),
+            'juryApplications' => $this->findUserJuryApplications($model->id),
+            'juryAssignments' => $this->findUserJuryAssignments($model->id),
+            'relatedData' => $this->findUserRelatedData($model->id),
+        ]);
+    }
+
+    public function actionDelete($id)
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        if((int)$id === (int)Yii::$app->user->identity->id){
+            Yii::$app->session->addFlash('error', "You cannot delete your own account");
+            return $this->redirect(['update', 'id' => $id]);
+        }
+
+        $model = $this->findModel($id);
+        $deleteBlockers = $this->findUserDeleteBlockers($model->id);
+
+        if($deleteBlockers){
+            Yii::$app->session->addFlash('error', "Could not delete this user because related records exist: " . implode(', ', $deleteBlockers));
+            return $this->redirect(['update', 'id' => $id]);
+        }
+
+        try {
+            if($model->delete()){
+                Yii::$app->session->addFlash('success', "User Deleted");
+                return $this->redirect(['all']);
+            }
+        } catch (IntegrityException $e) {
+            Yii::$app->session->addFlash('error', "Could not delete this user because other records are related to it");
+            return $this->redirect(['update', 'id' => $id]);
+        }
+
+        Yii::$app->session->addFlash('error', "Could not delete this user");
+        return $this->redirect(['update', 'id' => $id]);
+    }
+
+    protected function findUserDeleteBlockers($id)
+    {
+        $schema = Yii::$app->db->schema;
+        $userTable = $schema->getRawTableName(User::tableName());
+        $labels = [
+            'user_role' => 'User Role',
+            'jury_profiles' => 'Jury Profile',
+            'program_reg_jury' => 'Jury Assignment',
+            'program_reg_mentor' => 'Mentor Assignment',
+            'program_reg' => 'Program Registration',
+            'questionnaire_ans' => 'Questionnaire Answer',
+            'questionnaire_ans_post' => 'Post Questionnaire Answer',
+            'session_attendance' => 'Session Attendance',
+            'auth_assignment' => 'Auth Assignment',
+        ];
+        $blockers = [];
+
+        foreach($schema->getTableNames('', true) as $tableName){
+            if($tableName === $userTable){
+                continue;
+            }
+
+            $table = $schema->getTableSchema($tableName);
+            if(!$table || !$table->getColumn('user_id')){
+                continue;
+            }
+
+            $count = (new Query())
+                ->from($tableName)
+                ->where(['user_id' => (string)$id])
+                ->count();
+
+            if((int)$count > 0){
+                $label = array_key_exists($tableName, $labels) ? $labels[$tableName] : $tableName;
+                $blockers[] = $label . ' (' . (int)$count . ')';
+            }
+        }
+
+        return $blockers;
+    }
+
+    protected function findUserRoles($id)
+    {
+        return UserRole::find()
+            ->with(['program', 'programSub', 'committee'])
+            ->where(['user_id' => $id])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+    }
+
+    protected function findUserCommitteeRoles($id)
+    {
+        return UserRole::find()
+            ->with(['committee'])
+            ->where(['user_id' => $id, 'role_name' => 'committee'])
+            ->andWhere(['is not', 'committee_id', null])
+            ->orderBy(['is_leader' => SORT_ASC, 'id' => SORT_DESC])
+            ->all();
+    }
+
+    protected function findUserJuryProfile($id)
+    {
+        return JuryProfile::find()
+            ->where(['user_id' => $id])
+            ->one();
+    }
+
+    protected function findUserJuryApplications($id)
+    {
+        $profile = $this->findUserJuryProfile($id);
+        if(!$profile){
+            return [];
+        }
+
+        return JuryApplication::find()
+            ->with(['program', 'programSub', 'judgingSession'])
+            ->where(['jury_profile_id' => $profile->id])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+    }
+
+    protected function findUserJuryAssignments($id)
+    {
+        return JuryAssign::find()
+            ->with(['registration.program', 'registration.programSub', 'rubric', 'judgingSession'])
+            ->where(['user_id' => $id])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+    }
+
+    protected function findUserRelatedData($id)
+    {
+        $schema = Yii::$app->db->schema;
+        $userTable = $schema->getRawTableName(User::tableName());
+        $labels = [
+            'user_role' => 'User Role',
+            'jury_profiles' => 'Jury Profile',
+            'program_reg_jury' => 'Jury Assignment',
+            'program_reg_mentor' => 'Mentor Assignment',
+            'program_reg' => 'Program Registration',
+            'questionnaire_ans' => 'Questionnaire Answer',
+            'questionnaire_ans_post' => 'Post Questionnaire Answer',
+            'session_attendance' => 'Session Attendance',
+            'auth_assignment' => 'Auth Assignment',
+        ];
+        $preferredColumns = [
+            'id', 'role_name', 'status', 'program_id', 'program_sub', 'program_sub_id',
+            'committee_id', 'reg_id', 'program_reg_id', 'rubric_id', 'judging_session_id',
+            'stage', 'score', 'group_name', 'project_name', 'session_id', 'scanned_at',
+            'fullname', 'category', 'institution', 'created_at', 'updated_at', 'submitted_at',
+        ];
+        $related = [];
+
+        foreach($schema->getTableNames('', true) as $tableName){
+            if($tableName === $userTable){
+                continue;
+            }
+
+            $table = $schema->getTableSchema($tableName);
+            if(!$table || !$table->getColumn('user_id')){
+                continue;
+            }
+
+            $count = (new Query())
+                ->from($tableName)
+                ->where(['user_id' => (string)$id])
+                ->count();
+
+            if((int)$count === 0){
+                continue;
+            }
+
+            $columns = [];
+            foreach($preferredColumns as $column){
+                if($table->getColumn($column)){
+                    $columns[] = $column;
+                }
+            }
+
+            if(!$columns){
+                foreach(array_keys($table->columns) as $column){
+                    if($column !== 'user_id'){
+                        $columns[] = $column;
+                    }
+                    if(count($columns) >= 8){
+                        break;
+                    }
+                }
+            }
+
+            $query = (new Query())
+                ->select($columns)
+                ->from($tableName)
+                ->where(['user_id' => (string)$id])
+                ->limit(20);
+
+            if(!empty($table->primaryKey)){
+                $query->orderBy([$table->primaryKey[0] => SORT_DESC]);
+            }
+
+            $related[] = [
+                'label' => array_key_exists($tableName, $labels) ? $labels[$tableName] : $tableName,
+                'table' => $tableName,
+                'count' => (int)$count,
+                'columns' => $columns,
+                'rows' => $query->all(),
+            ];
+        }
+
+        return $related;
     }
 
     protected function findModel($id)
