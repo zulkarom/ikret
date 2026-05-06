@@ -15,7 +15,6 @@ class RegisterForm extends Model
     public $password;
     public $password_repeat;
     public $email;
-    public $institution;
     public $role_name = ['participant'];
     public $self_register = true;
     public $button_label = 'Register';
@@ -27,7 +26,7 @@ class RegisterForm extends Model
     {
         return [
 			
-            [['username', 'fullname', 'institution'], 'string'],
+            [['username', 'fullname'], 'string'],
 
             ['email', 'email'],
 
@@ -36,8 +35,6 @@ class RegisterForm extends Model
             [['username', 'fullname', 'password', 'password_repeat', 'email'], 'required'],
 
             [['password'], 'string', 'min' => 6],
-
-            [['institution'], 'string'],
 
         ];
     }
@@ -68,36 +65,59 @@ class RegisterForm extends Model
             return null;
         }
 
-        $existingUser = User::findByUsername(strtolower($this->username));
-        if ($existingUser) {
-            if (strpos($existingUser->email, '@dummy.com') !== false) {
-                $user = $existingUser;
-                $user->fullname = strtoupper($this->fullname);
-                $user->matric = strtolower($this->username);
-                $user->institution = $this->institution;
-                $user->email = strtolower($this->email);
-                if ($this->self_register) {
-                    $user->setPassword($this->password);
-                }
-                $user->generateAuthKey();
-                $user->status = 10;
+        $username = strtolower(trim($this->username));
+        $email = strtolower(trim($this->email));
 
-                if (!$user->save()) {
-                    $user->flashError();
-                    Yii::$app->session->addFlash('error', 'Failed to update existing user.');
-                    return false;
+        $user = $this->findExistingUser($username, $email);
+        if ($user) {
+            if ($this->isDummyEmail($user->email)) {
+                $usernameOwner = $this->findUserByUsername($username);
+                if ($usernameOwner && (int)$usernameOwner->id !== (int)$user->id) {
+                    $this->addError('username', 'Username is already taken.');
+                    return null;
                 }
-            } else {
+
+                if (!$this->isDummyEmail($email) && $email !== strtolower((string)$user->email)) {
+                    $emailOwner = $this->findUserByEmail($email);
+                    if ($emailOwner && (int)$emailOwner->id !== (int)$user->id) {
+                        $this->addError('email', 'Email is already taken.');
+                        return null;
+                    }
+                    $user->email = $email;
+                }
+            } elseif ($username !== strtolower((string)$user->username)) {
+                $usernameOwner = $this->findUserByUsername($username);
+                if ($usernameOwner && (int)$usernameOwner->id !== (int)$user->id) {
+                    $this->addError('username', 'Username is already taken.');
+                    return null;
+                }
+                $user->username = $username;
+                $user->matric = $username;
+            }
+
+            $user->setPassword($this->password);
+            $user->generateAuthKey();
+
+            if (!$user->save()) {
+                $user->flashError();
+                Yii::$app->session->addFlash('error', 'Failed to update existing user.');
+                return false;
+            }
+        } else {
+            if ($this->findUserByEmail($email)) {
+                $this->addError('email', 'Email is already taken.');
+                return null;
+            }
+            if ($this->findUserByUsername($username)) {
                 $this->addError('username', 'Username is already taken.');
                 return null;
             }
-        } else {
+
             $user = new User();
-            $user->username = strtolower($this->username);
-            $user->matric = strtolower($this->username);
+            $user->username = $username;
+            $user->matric = $username;
             $user->fullname = strtoupper($this->fullname);
-            $user->email = strtolower($this->email);
-            $user->institution = $this->institution;
+            $user->email = $email;
 
             if ($this->self_register) {
                 $user->setPassword($this->password);
@@ -134,5 +154,32 @@ class RegisterForm extends Model
         }
 
         return true;
+    }
+
+    private function findExistingUser($username, $email)
+    {
+        if (!$this->isDummyEmail($email)) {
+            $user = $this->findUserByEmail($email);
+            if ($user) {
+                return $user;
+            }
+        }
+
+        return $this->findUserByUsername($username);
+    }
+
+    private function findUserByUsername($username)
+    {
+        return User::findOne(['username' => $username]);
+    }
+
+    private function findUserByEmail($email)
+    {
+        return User::findOne(['email' => $email]);
+    }
+
+    private function isDummyEmail($email)
+    {
+        return substr(strtolower((string)$email), -10) === '@dummy.com';
     }
 }

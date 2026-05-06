@@ -27,7 +27,7 @@ $this->title = 'I-CREATE - Login';
 
                   <div class="pt-4 pb-2">
                     <h5 class="card-title text-center pb-0 fs-4">Login to Your Account</h5>
-                    <p class="text-center small">Enter your username & password to login</p>
+                    <p class="text-center small">Enter your username or email & password to login</p>
                   </div>
 
              
@@ -44,8 +44,11 @@ $this->title = 'I-CREATE - Login';
                     <div class="col-12">
 
                     <?= $form
-            ->field($model, 'username', ['addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]])
-            ->label('Username')
+            ->field($model, 'username', [
+              'template' => '{label}{input}<i style="font-size:11px">Email / Matric number / Staff No. or any unique username</i>{error}',
+              'addon' => ['append' => ['content'=>'<i class="bi bi-person"></i>']]
+            ])
+            ->label('Username or Email')
             ->textInput() ?>
             </div>
 

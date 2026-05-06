@@ -24,13 +24,6 @@ use yii\helpers\Url;
 ->textInput(['style' => 'text-transform: lowercase']) ?>
 </div>
 
-<div class="col-12">
-<?= $form
-->field($model, 'institution')
-->textInput() ?>
-</div>
-
-
 <?php if($model->self_register){?>
 <div class="col-12">
 <?= $form

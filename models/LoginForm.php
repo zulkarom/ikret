@@ -38,7 +38,7 @@ class LoginForm extends Model
     public function attributeLabels()
     {
         return [
-            'username' => 'Username',
+            'username' => 'Username or Email',
         ];
     }
 
@@ -80,7 +80,7 @@ class LoginForm extends Model
     public function getUser()
     {
         if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
+            $this->_user = User::findByUsernameOrEmail($this->username);
         }
 
         return $this->_user;
