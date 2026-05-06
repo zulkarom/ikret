@@ -2184,6 +2184,39 @@ class ProgramRegistrationController extends Controller
             'judging_session_id' => $judgingSessionId ?: null,
         ])->one();
 
+        $requirement = JuryRequirement::find()->where([
+            'program_id' => (int)$programId,
+            'program_sub_id' => $programSubId ?: null,
+            'judging_session_id' => $judgingSessionId ?: null,
+        ])->one();
+
+        if(!$requirement){
+            $requirement = new JuryRequirement();
+            $requirement->program_id = (int)$programId;
+            $requirement->program_sub_id = $programSubId ?: null;
+            $requirement->judging_session_id = $judgingSessionId ?: null;
+            $requirement->is_required = 0;
+            $requirement->is_active = 0;
+            $requirement->created_at = time();
+        }
+
+        $requiredLimit = (int)JuryApplication::find()->where([
+            'program_id' => (int)$programId,
+            'program_sub_id' => $programSubId ?: null,
+            'judging_session_id' => $judgingSessionId ?: null,
+        ])->count();
+        if(!$app){
+            $requiredLimit++;
+        }
+
+        if($requirement->jury_limit === null || (int)$requirement->jury_limit < $requiredLimit){
+            $requirement->jury_limit = $requiredLimit;
+        }
+        $requirement->updated_at = time();
+        if(!$requirement->save()){
+            throw new \RuntimeException('Unable to save jury requirement: ' . implode('; ', $requirement->getFirstErrors()));
+        }
+
         if(!$app){
             $app = new JuryApplication();
             $app->jury_profile_id = (int)$profile->id;
