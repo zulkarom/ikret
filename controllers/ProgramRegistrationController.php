@@ -812,6 +812,30 @@ class ProgramRegistrationController extends Controller
             foreach($summaryRows as $summaryRow){
                 $juryStatusSummary[(int)$summaryRow['status']] = (int)$summaryRow['total'];
             }
+
+            $participantQuery = (new Query())
+                ->from(['r' => ProgramRegistration::tableName()])
+                ->leftJoin(['u' => User::tableName()], 'u.id = r.user_id')
+                ->leftJoin(['m' => Member::tableName()], 'm.program_reg_id = r.id')
+                ->where(['r.program_id' => (int)$role->program_id])
+                ->andWhere(['in', 'r.status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]]);
+
+            if($sub === null){
+                $participantQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+            }else{
+                $participantQuery->andWhere(['r.program_sub' => (int)$sub]);
+            }
+
+            $groupCount = (int)$participantQuery->count('DISTINCT r.id');
+            $memberCount = (int)$participantQuery->count('m.id');
+            $leaderMemberCount = (int)(clone $participantQuery)
+                ->select(new Expression("COUNT(DISTINCT CASE WHEN ((m.member_matric IS NOT NULL AND m.member_matric <> '' AND u.matric IS NOT NULL AND u.matric <> '' AND m.member_matric = u.matric) OR ((m.member_matric IS NULL OR m.member_matric = '') AND m.member_name = u.fullname)) THEN m.id ELSE NULL END)"))
+                ->scalar();
+
+            $registrationSummary = [
+                'participantCount' => $groupCount + $memberCount - $leaderMemberCount,
+                'groupCount' => $groupCount,
+            ];
     
             return $this->render('manager', [
                 'searchModel' => $searchModel,
@@ -820,6 +844,7 @@ class ProgramRegistrationController extends Controller
                 'model' => $model,
                 'programSub' => $programSub,
                 'juryStatusSummary' => $juryStatusSummary,
+                'registrationSummary' => $registrationSummary,
             ]);
         }
 
@@ -934,6 +959,11 @@ class ProgramRegistrationController extends Controller
             $createdProfiles = 0;
             $createdRoles = 0;
             $rowNo = 1;
+            $lastJuryName = '';
+            $lastJuryEmail = '';
+            $lastRubricId = 0;
+            $lastSessionIdRaw = '';
+            $hasLastSessionId = false;
 
             $transaction = Yii::$app->db->beginTransaction();
             try{
@@ -943,8 +973,36 @@ class ProgramRegistrationController extends Controller
                     $juryName = trim((string)($row[$idx['jury_name']] ?? ''));
                     $juryEmail = strtolower(trim((string)($row[$idx['jury_email']] ?? '')));
                     $groupName = trim((string)($row[$idx['group_name']] ?? ''));
-                    $rubricId = (int)trim((string)($row[$idx['rubric_id']] ?? '0'));
+                    $rubricIdRaw = trim((string)($row[$idx['rubric_id']] ?? ''));
                     $sessionIdRaw = trim((string)($row[$idx['session_id']] ?? ''));
+
+                    if($juryName === '' && $lastJuryName !== ''){
+                        $juryName = $lastJuryName;
+                    }else if($juryName !== ''){
+                        $lastJuryName = $juryName;
+                    }
+
+                    if($juryEmail === '' && $lastJuryEmail !== ''){
+                        $juryEmail = $lastJuryEmail;
+                    }else if($juryEmail !== ''){
+                        $lastJuryEmail = $juryEmail;
+                    }
+
+                    if($rubricIdRaw === '' && $lastRubricId > 0){
+                        $rubricId = $lastRubricId;
+                    }else{
+                        $rubricId = (int)$rubricIdRaw;
+                        if($rubricId > 0){
+                            $lastRubricId = $rubricId;
+                        }
+                    }
+
+                    if($sessionIdRaw === '' && $hasLastSessionId){
+                        $sessionIdRaw = $lastSessionIdRaw;
+                    }else if($sessionIdRaw !== ''){
+                        $lastSessionIdRaw = $sessionIdRaw;
+                        $hasLastSessionId = true;
+                    }
                     $sessionId = $sessionIdRaw === '' ? 0 : (int)$sessionIdRaw;
 
                     if($juryName === '' && $juryEmail === '' && $groupName === '' && $rubricId === 0 && $sessionId === 0){

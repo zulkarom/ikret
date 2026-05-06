@@ -11,6 +11,7 @@ use app\models\JuryAssign;
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var array $registrationSummary */
 $program = $role->program;
 $sub_str = $programSub? ' / ' . $programSub->sub_abbr  : '';
 $this->title = 'Registration ('.$program->program_abbr . $sub_str.')';
@@ -26,6 +27,13 @@ $this->registerCss(<<<CSS
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     margin-bottom: 1rem;
+}
+
+.registration-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 .jury-summary-card {
@@ -68,6 +76,7 @@ $this->registerCss(<<<CSS
 }
 
 @media (max-width: 575.98px) {
+    .registration-summary-grid,
     .jury-summary-grid {
         grid-template-columns: 1fr;
     }
@@ -86,6 +95,17 @@ CSS);
         $statusColors = JuryAssign::getStatusColor();
         $selectedStatus = $searchModel->jury_status;
         ?>
+        <div class="registration-summary-grid">
+            <div class="jury-summary-card">
+                <div class="jury-summary-label">Total Participants</div>
+                <div class="jury-summary-count text-primary"><?= Html::encode($registrationSummary['participantCount'] ?? 0) ?></div>
+            </div>
+            <div class="jury-summary-card">
+                <div class="jury-summary-label">Total Groups</div>
+                <div class="jury-summary-count text-success"><?= Html::encode($registrationSummary['groupCount'] ?? 0) ?></div>
+            </div>
+        </div>
+
         <div class="jury-summary-grid">
             <?php foreach($statusList as $status => $label): ?>
                 <?php

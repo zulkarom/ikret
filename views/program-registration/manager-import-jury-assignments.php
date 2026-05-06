@@ -67,7 +67,8 @@ if($stages){
                         <li>Auto-created jury profiles use category <code>General</code>.</li>
                         <li><code>jury_name</code> must match the existing jury full name when that user already has a name.</li>
                         <li><code>group_name</code> must match exactly one participant group in this scope.</li>
-                        <li>Each row must provide its own <code>rubric_id</code> and <code>session_id</code>.</li>
+                        <li>Blank <code>jury_name</code>, <code>jury_email</code>, <code>rubric_id</code>, or <code>session_id</code> cells reuse the previous non-empty value.</li>
+                        <li>Each row must provide its own <code>group_name</code>.</li>
                         <li><code>stage</code> is still controlled by this page and applies to every imported row.</li>
                         <li>If a rubric has no sessions, leave <code>session_id</code> blank or use <code>0</code>.</li>
                         <?php if($programSub){ ?><li>Because this page was opened from a sub program, the reference lists below include other active sibling sub programs under the same parent.</li><?php } ?>
