@@ -67,7 +67,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $model->id], [
                                     'class' => 'btn btn-danger btn-sm',
                                     'data-confirm' => 'Delete this jury profile? This will also remove jury applications and jury role access for this user.',
-                                    'data-method' => 'post',
                                     'title' => 'Delete',
                                 ]);
                             }

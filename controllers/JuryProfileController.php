@@ -223,10 +223,6 @@ class JuryProfileController extends Controller
     {
         if(!Yii::$app->user->identity->isAdmin) return false;
 
-        if(!Yii::$app->request->isPost){
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
-
         $model = $this->findModel($id);
 
         if($this->hasJuryAssignments($model->user_id)){
