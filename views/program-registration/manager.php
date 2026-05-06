@@ -4,7 +4,9 @@ use kartik\export\ExportMenu;
 use kartik\form\ActiveForm;
 //use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\grid\GridView;
+use app\models\JuryAssign;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
@@ -17,6 +19,60 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
+
+$this->registerCss(<<<CSS
+.jury-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.jury-summary-card {
+    display: block;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.jury-summary-card:hover {
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1.25rem rgba(15, 23, 42, 0.1);
+}
+
+.jury-summary-card.active {
+    border-color: #0d6efd;
+    box-shadow: 0 0.5rem 1.25rem rgba(13, 110, 253, 0.16);
+}
+
+.jury-summary-label {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.jury-summary-count {
+    margin-top: 0.25rem;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+@media (max-width: 575.98px) {
+    .jury-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+CSS);
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1>
@@ -25,6 +81,39 @@ $this->params['breadcrumbs'][] = $this->title;
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
+        <?php
+        $statusList = JuryAssign::getStatusArray();
+        $statusColors = JuryAssign::getStatusColor();
+        $selectedStatus = $searchModel->jury_status;
+        ?>
+        <div class="jury-summary-grid">
+            <?php foreach($statusList as $status => $label): ?>
+                <?php
+                $summaryUrlParams = Yii::$app->request->queryParams;
+                unset($summaryUrlParams['page'], $summaryUrlParams['per-page']);
+                $summaryUrlParams[0] = 'manager';
+                $summaryUrlParams['id'] = $program->id;
+                if($programSub){
+                    $summaryUrlParams['sub'] = $programSub->id;
+                }
+                $summaryUrlParams[$searchModel->formName()]['jury_status'] = $status;
+                $isActive = (string)$selectedStatus !== '' && (int)$selectedStatus === (int)$status;
+                ?>
+                <?= Html::a(
+                    '<div class="jury-summary-label">' . Html::encode($label) . '</div>' .
+                    '<div class="jury-summary-count text-' . Html::encode($statusColors[$status] ?? 'secondary') . '">' . Html::encode($juryStatusSummary[$status] ?? 0) . '</div>',
+                    Url::to($summaryUrlParams),
+                    ['class' => 'jury-summary-card' . ($isActive ? ' active' : '')]
+                ) ?>
+            <?php endforeach; ?>
+        </div>
+
+        <?php if((string)$selectedStatus !== ''): ?>
+            <div class="mb-3">
+                <?= Html::a('Clear Status Filter', ['manager', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+            </div>
+        <?php endif; ?>
+
         <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-info'])?> 
         <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
     </div> 
@@ -188,11 +277,50 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => $colums,
     ]); ?>
 
+    <div class="mt-3">
+        <?= Html::button('Delete Selected Judging Input', [
+            'id' => 'btn-reset-judging-input',
+            'class' => 'btn btn-outline-warning',
+        ]) ?>
+    </div>
+
 </div>
             </div>
         </div>
 
 
         <?php ActiveForm::end(); ?>
+        <?= Html::beginForm(['manager', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], 'post', ['id' => 'reset-judging-input-form', 'style' => 'display:none']) ?>
+            <?= Html::hiddenInput('action', 'reset_judging_input') ?>
+        <?= Html::endForm() ?>
+        <?php
+        $this->registerJs(<<<JS
+$("#btn-reset-judging-input").on("click", function(){
+    var selected = $("input[name='selection[]']:checked").map(function(){
+        return $(this).val();
+    }).get();
+
+    if(selected.length === 0){
+        alert("Please select at least one participant first.");
+        return false;
+    }
+
+    if(!confirm("Delete judging input for selected participants and revert their jury assignments to ASSIGNED?")){
+        return false;
+    }
+
+    var form = $("#reset-judging-input-form");
+    form.find("input[name='selection[]']").remove();
+    selected.forEach(function(id){
+        $("<input>", {
+            type: "hidden",
+            name: "selection[]",
+            value: id
+        }).appendTo(form);
+    });
+    form[0].submit();
+});
+JS);
+        ?>
         <i>* if you want to select multiple participants, but they are in different pages, flag them first to be on top of the list first.</i>
     </section>

@@ -2,6 +2,7 @@
 
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
+use app\models\JuryAssign;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $model */
@@ -33,6 +34,15 @@ use yii\helpers\Html;
         <?= $form->field($model, 'booth_number')->textInput(['placeholder' => 'Search Booth Number'])->label(false) ?>
         </div>
     </div>
+    <?php if($model->hasProperty('jury_status')): ?>
+        <div class="row">
+            <div class="col-md-4">
+                <?= $form->field($model, 'jury_status')->dropDownList(JuryAssign::getStatusArray(), [
+                    'prompt' => 'All Jury Status',
+                ])->label(false) ?>
+            </div>
+        </div>
+    <?php endif; ?>
 <br />
     <div class="form-group">
         <?= Html::submitButton('Apply Filter', ['class' => 'btn btn-primary']) ?>

@@ -658,7 +658,64 @@ class ProgramRegistrationController extends Controller
             }
             $model->stage = 0;
             //////////////////post
+                if ($this->request->isPost) {
+                    $post = Yii::$app->request->post();
+                    $action = $post['action'] ?? null;
+
+                    if($action === 'reset_judging_input'){
+                        $selection = $post['selection'] ?? [];
+                        if(!$selection){
+                            Yii::$app->session->addFlash('error', 'Please select at least one participant first.');
+                            return $this->refresh();
+                        }
+
+                        $registrations = ProgramRegistration::find()
+                            ->where(['id' => $selection, 'program_id' => $role->program_id])
+                            ->andFilterWhere(['program_sub' => $sub])
+                            ->all();
+
+                        $resetCount = 0;
+                        $transaction = Yii::$app->db->beginTransaction();
+                        try{
+                            foreach($registrations as $registration){
+                                $assignments = JuryAssign::find()
+                                    ->where(['reg_id' => $registration->id])
+                                    ->andWhere(['>', 'status', 0])
+                                    ->all();
+
+                                foreach($assignments as $assignment){
+                                    RubricAnswer::deleteAll([
+                                        'assignment_id' => $assignment->id,
+                                        'rubric_id' => $assignment->rubric_id,
+                                    ]);
+
+                                    $assignment->status = 0;
+                                    $assignment->score = null;
+                                    $assignment->is_nullified = 0;
+                                    $assignment->reason_nullified = null;
+                                    $assignment->updated_at = time();
+                                    $assignment->save(false, ['status', 'score', 'is_nullified', 'reason_nullified', 'updated_at']);
+                                    $resetCount++;
+                                }
+
+                                $registration->setScoreAndAward();
+                                $registration->save(false, ['score', 'award']);
+                            }
+
+                            $transaction->commit();
+                            Yii::$app->session->addFlash('success', 'Judging input deleted for ' . $resetCount . ' assignment(s).');
+                        }catch(\Throwable $e){
+                            $transaction->rollBack();
+                            Yii::$app->session->addFlash('error', $e->getMessage());
+                        }
+
+                        return $this->refresh();
+                    }
+                }
+
                 if ($this->request->isPost && $model->load($this->request->post())) {
+                    $post = Yii::$app->request->post();
+
                     //proses session
                     //echo $model->keep_data;die();
                     if($model->keep_data == 1){
@@ -681,8 +738,6 @@ class ProgramRegistrationController extends Controller
                     // echo '<pre>';
                     // print_r($this->request->post());die();
                     $users = $model->users;
-                    $post = Yii::$app->request->post();
-
                     if(isset($post['selection'])){
                         $kira_juri = 0;
                         $selection = $post['selection'];
@@ -743,13 +798,28 @@ class ProgramRegistrationController extends Controller
             $searchModel->program_id = $role->program_id;
             $searchModel->program_sub = $sub;
             $dataProvider = $searchModel->search($this->request->queryParams);
+
+            $juryStatusSummary = array_fill_keys(array_keys(JuryAssign::getStatusArray()), 0);
+            $summaryRows = JuryAssign::find()->alias('j')
+                ->innerJoinWith(['registration r'], false)
+                ->select(['j.status', 'total' => 'COUNT(*)'])
+                ->where(['r.program_id' => $role->program_id])
+                ->andFilterWhere(['r.program_sub' => $sub])
+                ->groupBy('j.status')
+                ->asArray()
+                ->all();
+
+            foreach($summaryRows as $summaryRow){
+                $juryStatusSummary[(int)$summaryRow['status']] = (int)$summaryRow['total'];
+            }
     
             return $this->render('manager', [
                 'searchModel' => $searchModel,
                 'dataProvider' => $dataProvider,
                 'role' => $role,
                 'model' => $model,
-                'programSub' => $programSub
+                'programSub' => $programSub,
+                'juryStatusSummary' => $juryStatusSummary,
             ]);
         }
 

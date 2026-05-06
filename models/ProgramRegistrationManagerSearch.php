@@ -13,6 +13,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
 {
     public $fullnameSearch;
     public $dateSearch;
+    public $jury_status;
    // public $programx_id;
     /**
      * {@inheritdoc}
@@ -20,7 +21,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     public function rules()
     {
         return [
-            [['program_id', 'program_sub'], 'integer'],
+            [['program_id', 'program_sub', 'jury_status'], 'integer'],
             [['fullnameSearch','dateSearch', 'group_name', 'group_code', 'booth_number'], 'string'],
         ];
     }
@@ -29,6 +30,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     {
         return [
             'fullnameSearch' => 'Participant Name',
+            'jury_status' => 'Jury Status',
         ];
     }
 
@@ -85,6 +87,12 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
         ->andFilterWhere(['like', 'a.group_name', $this->group_name])
         ->andFilterWhere(['like', 'a.booth_number', $this->group_name])
         ;
+
+        if($this->jury_status !== null && $this->jury_status !== ''){
+            $query->innerJoinWith(['juries j'], false)
+                ->andWhere(['j.status' => (int)$this->jury_status])
+                ->distinct();
+        }
 
         return $dataProvider;
     }
