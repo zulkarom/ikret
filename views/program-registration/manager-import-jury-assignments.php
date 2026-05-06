@@ -8,6 +8,7 @@ use yii\helpers\Html;
 /** @var app\models\ProgramSub|null $programSub */
 /** @var app\models\ProgramRubric[] $rubrics */
 /** @var app\models\RubricJudgingSession[] $availableSessions */
+/** @var array $sessionReferenceRows */
 /** @var array $stages */
 /** @var int $selectedStage */
 
@@ -69,6 +70,7 @@ if($stages){
                         <li>Each row must provide its own <code>rubric_id</code> and <code>session_id</code>.</li>
                         <li><code>stage</code> is still controlled by this page and applies to every imported row.</li>
                         <li>If a rubric has no sessions, leave <code>session_id</code> blank or use <code>0</code>.</li>
+                        <?php if($programSub){ ?><li>Because this page was opened from a sub program, the reference lists below include other active sibling sub programs under the same parent.</li><?php } ?>
                     </ul>
                 </div>
                 <div class="col-lg-5">
@@ -141,6 +143,7 @@ if($stages){
                     <thead>
                         <tr>
                             <th>Rubric ID</th>
+                            <th>Sub Program</th>
                             <th>Rubric Name</th>
                         </tr>
                     </thead>
@@ -148,10 +151,11 @@ if($stages){
                         <?php if($rubrics){ foreach($rubrics as $rubricLink){ ?>
                             <tr>
                                 <td><code><?= Html::encode($rubricLink->rubric_id) ?></code></td>
+                                <td><?= Html::encode($rubricLink->programSub ? $rubricLink->programSub->sub_name : ($programSub ? 'Parent Scope' : 'Program')) ?></td>
                                 <td><?= Html::encode($rubricLink->rubric ? $rubricLink->rubric->rubric_name : '') ?></td>
                             </tr>
                         <?php } }else{ ?>
-                            <tr><td colspan="2" class="text-muted">No rubric available in this scope.</td></tr>
+                            <tr><td colspan="3" class="text-muted">No rubric available in this scope.</td></tr>
                         <?php } ?>
                     </tbody>
                 </table>
@@ -168,6 +172,7 @@ if($stages){
                         <tr>
                             <th>Session ID</th>
                             <th>Rubric ID</th>
+                            <th>Sub Program</th>
                             <th>Session Name</th>
                             <th>Start</th>
                             <th>End</th>
@@ -175,17 +180,31 @@ if($stages){
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if($availableSessions){ foreach($availableSessions as $session){ ?>
+                        <?php if($sessionReferenceRows){ foreach($sessionReferenceRows as $row){ $session = $row['session']; ?>
                             <tr>
                                 <td><code><?= Html::encode($session->id) ?></code></td>
                                 <td><code><?= Html::encode($session->rubric_id) ?></code></td>
+                                <td>
+                                    <?php
+                                    $sessionSubLabel = 'Program';
+                                    if(!empty($row['program_sub_id'])){
+                                        foreach($rubrics as $rubricLink){
+                                            if((int)$rubricLink->rubric_id === (int)$session->rubric_id && (int)$rubricLink->program_sub === (int)$row['program_sub_id']){
+                                                $sessionSubLabel = $rubricLink->programSub ? $rubricLink->programSub->sub_name : ('Sub #' . (int)$row['program_sub_id']);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                    <?= Html::encode($sessionSubLabel) ?>
+                                </td>
                                 <td><?= Html::encode($session->session_name) ?></td>
                                 <td><?= Html::encode($session->datetime_start ?: '') ?></td>
                                 <td><?= Html::encode($session->datetime_end ?: '') ?></td>
                                 <td><?= Html::encode($session->location ?: '') ?></td>
                             </tr>
                         <?php } }else{ ?>
-                            <tr><td colspan="6" class="text-muted">No session available in this scope.</td></tr>
+                            <tr><td colspan="7" class="text-muted">No session available in this scope.</td></tr>
                         <?php } ?>
                     </tbody>
                 </table>

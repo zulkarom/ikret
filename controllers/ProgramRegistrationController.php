@@ -761,10 +761,38 @@ class ProgramRegistrationController extends Controller
         [$role, $program, $programSub] = $this->findManagerProgramScope($id, $sub);
 
         $rubrics = $this->getScopedProgramRubrics($program, $programSub);
+        if((int)$program->has_sub === 1 && $programSub){
+            $subQuery = ProgramSub::find()->where(['program_id' => (int)$program->id]);
+            $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+            if($subTable && $subTable->getColumn('is_active')){
+                $subQuery->andWhere(['is_active' => 1]);
+            }
+            $activeSubIds = ArrayHelper::getColumn($subQuery->all(), 'id');
+            $rubrics = [];
+            if($activeSubIds){
+                $rubrics = ProgramRubric::find()
+                    ->alias('pr')
+                    ->where(['pr.program_id' => (int)$program->id])
+                    ->andWhere(['pr.program_sub' => $activeSubIds])
+                    ->all();
+            }
+        }
         $selectedStage = (int)Yii::$app->request->post('stage', Yii::$app->request->get('stage', 0));
         $stages = $program->programStages;
 
         $rubricIds = ArrayHelper::getColumn($rubrics, 'rubric_id');
+        $rubricScopeMap = [];
+        foreach($rubrics as $rubricLink){
+            $rid = (int)$rubricLink->rubric_id;
+            if(!isset($rubricScopeMap[$rid])){
+                $rubricScopeMap[$rid] = [];
+            }
+            $sid = $rubricLink->program_sub ? (int)$rubricLink->program_sub : 0;
+            if(!in_array($sid, $rubricScopeMap[$rid], true)){
+                $rubricScopeMap[$rid][] = $sid;
+            }
+        }
+
         $availableSessions = [];
         if($rubricIds){
             $availableSessions = RubricJudgingSession::find()
@@ -773,6 +801,17 @@ class ProgramRegistrationController extends Controller
                 ->all();
         }
         $availableSessionIds = ArrayHelper::getColumn($availableSessions, 'id');
+        $sessionReferenceRows = [];
+        foreach($availableSessions as $session){
+            $sessionRubricId = (int)$session->rubric_id;
+            $scopeSubIds = $rubricScopeMap[$sessionRubricId] ?? [0];
+            foreach($scopeSubIds as $scopeSubId){
+                $sessionReferenceRows[] = [
+                    'session' => $session,
+                    'program_sub_id' => $scopeSubId ?: null,
+                ];
+            }
+        }
 
         if(Yii::$app->request->isPost){
             $csvFile = UploadedFile::getInstanceByName('csv_file');
@@ -962,13 +1001,29 @@ class ProgramRegistrationController extends Controller
                         }
                     }
 
+                    $targetProgramSubId = null;
+                    if((int)$program->has_sub === 1){
+                        $scopeSubIds = $rubricScopeMap[$rubricId] ?? [];
+                        if(!$scopeSubIds){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': rubric_id is not mapped to any active sub program.';
+                            continue;
+                        }
+                        if(count($scopeSubIds) > 1){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': rubric_id/session_id is mapped to multiple sub programs under the same parent. Please use a unique rubric/session mapping.';
+                            continue;
+                        }
+                        $targetProgramSubId = $scopeSubIds[0] ?: null;
+                    }
+
                     $registrationQuery = ProgramRegistration::find()
                         ->where(['program_id' => (int)$program->id])
                         ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
                         ->andWhere('LOWER(TRIM(group_name)) = :group_name', [':group_name' => strtolower($groupName)]);
 
-                    if($programSub){
-                        $registrationQuery->andWhere(['program_sub' => (int)$programSub->id]);
+                    if((int)$program->has_sub === 1){
+                        $registrationQuery->andWhere(['program_sub' => $targetProgramSubId]);
                     }
 
                     $registrations = $registrationQuery->all();
@@ -1063,6 +1118,7 @@ class ProgramRegistrationController extends Controller
             'programSub' => $programSub,
             'rubrics' => $rubrics,
             'availableSessions' => $availableSessions,
+            'sessionReferenceRows' => $sessionReferenceRows,
             'stages' => $stages,
             'selectedStage' => $selectedStage,
         ]);

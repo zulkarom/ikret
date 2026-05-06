@@ -12,12 +12,13 @@ class JuryApplicationSearch extends JuryApplication
     public $category;
     public $program_abbr;
     public $program_sub_abbr;
+    public $program_sub_filter;
 
     public function rules()
     {
         return [
             [['program_id', 'program_sub_id', 'judging_session_id', 'status', 'created_at'], 'integer'],
-            [['fullname', 'email', 'category', 'program_abbr', 'program_sub_abbr'], 'safe'],
+            [['fullname', 'email', 'category', 'program_abbr', 'program_sub_abbr', 'program_sub_filter'], 'safe'],
         ];
     }
 
@@ -37,6 +38,11 @@ class JuryApplicationSearch extends JuryApplication
         $programTable = \Yii::$app->db->schema->getTableSchema(Program::tableName());
         if($programTable && $programTable->getColumn('is_active')){
             $query->andWhere(['pr.is_active' => 1]);
+        }
+
+        $programSubTable = \Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($programSubTable && $programSubTable->getColumn('is_active')){
+            $query->andWhere(['or', ['a.program_sub_id' => null], ['a.program_sub_id' => 0], ['ps.is_active' => 1]]);
         }
 
         $dataProvider = new ActiveDataProvider([
@@ -81,6 +87,15 @@ class JuryApplicationSearch extends JuryApplication
         $query->andFilterWhere(['a.judging_session_id' => $this->judging_session_id]);
         $query->andFilterWhere(['a.status' => $this->status]);
         $query->andFilterWhere(['a.created_at' => $this->created_at]);
+
+        if($this->program_sub_filter){
+            if(strpos($this->program_sub_filter, 's:') === 0){
+                $query->andWhere(['a.program_sub_id' => (int)substr($this->program_sub_filter, 2)]);
+            }elseif(strpos($this->program_sub_filter, 'p:') === 0){
+                $query->andWhere(['a.program_id' => (int)substr($this->program_sub_filter, 2)])
+                    ->andWhere(['or', ['a.program_sub_id' => null], ['a.program_sub_id' => 0]]);
+            }
+        }
 
         if($this->fullname){
             $query->andWhere(['like', 'p.fullname', $this->fullname]);
