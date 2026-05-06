@@ -64,7 +64,7 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                                 <?= $pid ? Html::a((string)(int)($row['jury_applied_count'] ?? 0), ['/program-registration/admin-jury-applications', 'id' => $pid, 'sub' => $sid]) : (int)($row['jury_applied_count'] ?? 0) ?>
                             </td>
                             <td>
-                                <?= (int)($row['jury_assigned_count'] ?? 0) ?>
+                                <?= $pid ? Html::a((string)(int)($row['jury_assigned_count'] ?? 0), ['/program-registration/manager', 'id' => $pid, 'sub' => $sid]) : (int)($row['jury_assigned_count'] ?? 0) ?>
                             </td>
                         </tr>
                     <?php $i++; } ?>
