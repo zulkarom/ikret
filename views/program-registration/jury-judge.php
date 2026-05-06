@@ -230,6 +230,10 @@ $this->registerCss(<<<CSS
         font-weight: 700;
     }
 
+    .jury-judge-form .rubric-scale {
+        margin-top: 0.75rem;
+    }
+
     .jury-judge-form .rubric-scale-options {
         grid-template-columns: repeat(5, minmax(0, 1fr));
     }
