@@ -23,6 +23,7 @@ use app\models\ProgramRegistrationSearch;
 use app\models\ProgramRubric;
 use app\models\ProgramSub;
 use app\models\JuryApplication;
+use app\models\JuryRequirement;
 use app\models\QuestionnaireAnswer;
 use app\models\Rubric;
 use app\models\RubricAnswer;
