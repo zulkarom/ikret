@@ -60,6 +60,11 @@ class ProgramRubric extends \yii\db\ActiveRecord
         return $this->hasOne(Program::class, ['id' => 'program_id']);
     }
 
+    public function getProgramSub()
+    {
+        return $this->hasOne(ProgramSub::class, ['id' => 'program_sub']);
+    }
+
     /**
      * Gets query for [[Rubric]].
      *
