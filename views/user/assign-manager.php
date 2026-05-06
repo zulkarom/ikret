@@ -36,7 +36,9 @@ $this->params['breadcrumbs'][] = 'Assign Manager';
             <table class="table table-bordered table-sm">
                 <thead>
                     <tr>
-                        <th style="width: 60px;">Assign</th>
+                        <th style="width: 60px;">
+                            <input type="checkbox" class="form-check-input" id="select-all-manager">
+                        </th>
                         <th>Program</th>
                         <th>Competition</th>
                         <th>Status</th>
@@ -60,7 +62,7 @@ $this->params['breadcrumbs'][] = 'Assign Manager';
                                     <?php if($exists): ?>
                                         <input type="checkbox" class="form-check-input" checked disabled>
                                     <?php else: ?>
-                                        <input type="checkbox" class="form-check-input" name="assignments[]" value="<?= Html::encode($item['key']) ?>">
+                                        <input type="checkbox" class="form-check-input manager-assignment-check" name="assignments[]" value="<?= Html::encode($item['key']) ?>">
                                     <?php endif; ?>
                                 </td>
                                 <td><?= Html::encode($program['name']) ?></td>
@@ -94,3 +96,17 @@ $this->params['breadcrumbs'][] = 'Assign Manager';
         </div>
 
     </section>
+
+<?php
+$this->registerJs(<<<JS
+$('#select-all-manager').on('change', function(){
+    $('.manager-assignment-check').prop('checked', $(this).is(':checked'));
+});
+
+$('.manager-assignment-check').on('change', function(){
+    var total = $('.manager-assignment-check').length;
+    var checked = $('.manager-assignment-check:checked').length;
+    $('#select-all-manager').prop('checked', total > 0 && total === checked);
+});
+JS);
+?>
