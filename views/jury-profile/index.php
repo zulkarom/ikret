@@ -37,6 +37,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'attribute' => 'fullname',
+                            'format' => 'html',
+                            'value' => function($model){
+                                $email = $model->user ? $model->user->email : '';
+                                return Html::encode($model->fullname) . '<br />' . Html::encode($email);
+                            }
                         ],
                         [
                             'attribute' => 'category',
@@ -59,10 +64,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                     return '<span class="badge bg-warning">Assigned</span>';
                                 }
 
-                                return Html::a('<i class="bi bi-trash"></i> Delete', ['delete', 'id' => $model->id], [
+                                return Html::a('<i class="bi bi-trash"></i>', ['delete', 'id' => $model->id], [
                                     'class' => 'btn btn-danger btn-sm',
                                     'data-confirm' => 'Delete this jury profile? This will also remove jury applications and jury role access for this user.',
                                     'data-method' => 'post',
+                                    'title' => 'Delete',
                                 ]);
                             }
                         ],
