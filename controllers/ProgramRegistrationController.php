@@ -376,9 +376,11 @@ class ProgramRegistrationController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
-            
+            'model' => $model,
+            'canDelete' => !$this->hasJuryAssignments($model->id),
         ]);
     }
 
@@ -2507,7 +2509,31 @@ class ProgramRegistrationController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        if(!Yii::$app->user->identity->isAdmin && !Yii::$app->user->identity->isManager) return false;
+
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        $model = $this->findModel($id);
+
+        if($this->hasJuryAssignments($id)){
+            Yii::$app->session->addFlash('error', "Could not delete this registration because it has been assigned to juries");
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            Member::deleteAll(['program_reg_id' => $id]);
+            Mentor::deleteAll(['program_reg_id' => $id]);
+            $model->delete();
+            $transaction->commit();
+            Yii::$app->session->addFlash('success', "Registration Deleted");
+        } catch(\yii\db\IntegrityException $e) {
+            $transaction->rollBack();
+            Yii::$app->session->addFlash('error', "Could not delete this registration because other records are related to it");
+            return $this->redirect(['view', 'id' => $id]);
+        }
 
         return $this->redirect(['index']);
     }
@@ -2518,6 +2544,11 @@ class ProgramRegistrationController extends Controller
         $model = $this->findModel($id);
         $program_id = $model->program_id;
         $program_sub = $model->program_sub;
+
+        if($this->hasJuryAssignments($id)){
+            Yii::$app->session->addFlash('error', "Could not delete this registration because it has been assigned to juries");
+            return $this->redirect(['manager-view', 'id' => $id, 'sub' => $program_sub]);
+        }
 
         $transaction = Yii::$app->db->beginTransaction();
         try {
@@ -2534,6 +2565,11 @@ class ProgramRegistrationController extends Controller
 
         return $this->redirect(['manager', 'id' => $program_id, 'sub' => $program_sub]);
 
+    }
+
+    protected function hasJuryAssignments($id)
+    {
+        return JuryAssign::find()->where(['reg_id' => $id])->exists();
     }
 
     /**

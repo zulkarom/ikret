@@ -5,6 +5,7 @@ use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
+/** @var bool $canDelete */
 
 $this->title = 'Registration Details';
 $this->params['breadcrumbs'][] = ['label' => 'Program Registrations', 'url' => ['index']];
@@ -20,6 +21,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 </a>
               </div><!-- End Logo -->
 
+              <?php if($canDelete && (Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isManager)): ?>
+                <div class="text-end mb-3">
+                    <?= Html::a('<i class="bi bi-trash"></i> Delete Registration', ['delete', 'id' => $model->id], [
+                        'class' => 'btn btn-danger btn-sm',
+                        'data-confirm' => 'Are you sure to delete this registration? This action cannot be undone!',
+                        'data-method' => 'post',
+                    ]) ?>
+                </div>
+              <?php elseif(!$canDelete && (Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isManager)): ?>
+                <div class="alert alert-warning">
+                    This registration cannot be deleted because it has been assigned to juries.
+                </div>
+              <?php endif; ?>
 
               <?php $arr_fields = $model->getProgramFields($model->program_id);?>
 
