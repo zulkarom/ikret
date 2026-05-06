@@ -5,6 +5,7 @@ use yii\helpers\Html;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\DefaultPasswordForm */
+/* @var $returnUrl string */
 
 $this->title = 'Change Password';
 ?>
@@ -45,12 +46,9 @@ $this->title = 'Change Password';
                     <?= Html::submitButton('Save', ['class' => 'btn btn-primary w-100']) ?>
                 </div>
 
-                <div class="col-12">
-                    <?= Html::submitButton('Skip This Time', [
+                <div class="col-12 mt-2">
+                    <?= Html::a('Skip This Time', $returnUrl, [
                         'class' => 'btn btn-outline-secondary w-100',
-                        'name' => 'skip',
-                        'value' => 1,
-                        'formnovalidate' => true,
                     ]) ?>
                 </div>
 
