@@ -16,6 +16,47 @@ $formName =  $model->formName();
 $edit = $edit ?? false;
 $program = $program ?? null;
 $programSub = $programSub ?? null;
+$participantMembersHtml = '';
+
+if($register){
+    if($register->user){
+        $leaderName = trim((string)$register->user->fullname);
+        $leaderMatric = trim((string)$register->user->matric);
+    }else if(!empty($register->contact_person)){
+        $leaderName = trim((string)$register->contact_person);
+        $leaderMatric = '';
+    }else if(!empty($register->contact_email)){
+        $leaderName = trim((string)$register->contact_email);
+        $leaderMatric = '';
+    }else{
+        $leaderName = 'Participant';
+        $leaderMatric = '';
+    }
+
+    $memberItems = [];
+    foreach($register->members as $member){
+        $memberName = trim((string)$member->member_name);
+        $memberMatric = trim((string)$member->member_matric);
+        if($memberName === ''){
+            continue;
+        }
+        if($leaderMatric !== '' && $memberMatric !== '' && strcasecmp($leaderMatric, $memberMatric) === 0){
+            continue;
+        }
+        if(strcasecmp($leaderName, $memberName) === 0){
+            continue;
+        }
+        $memberLabel = $memberName;
+        if($memberMatric !== ''){
+            $memberLabel .= ' (' . $memberMatric . ')';
+        }
+        $memberItems[] = '<li>' . Html::encode($memberLabel) . '</li>';
+    }
+
+    if($memberItems){
+        $participantMembersHtml = '<div class="participant-members-title">Members</div><ul class="participant-members-list">' . implode('', $memberItems) . '</ul>';
+    }
+}
 
 if(($plain ?? false) && $program){
     $subStr = $programSub ? ' / ' . $programSub->sub_abbr : '';
@@ -61,6 +102,18 @@ $this->registerCss(<<<CSS
     color: #6c757d;
 }
 
+.jury-judge-form .rubric-question-text {
+    font-size: 1.05rem;
+    line-height: 1.45;
+}
+
+.jury-judge-form .rubric-question-desc {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
 .jury-judge-form .rubric-scale {
     min-width: 0;
 }
@@ -78,6 +131,19 @@ $this->registerCss(<<<CSS
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(3rem, 1fr));
     gap: 0.5rem;
+}
+
+.participant-members-title {
+    margin-top: 0.75rem;
+    font-weight: 700;
+}
+
+.participant-members-list {
+    margin: 0.35rem 0 0 1.1rem;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #6c757d;
 }
 
 .jury-judge-form .rubric-scale-option,
@@ -131,6 +197,18 @@ $this->registerCss(<<<CSS
 
 .jury-judge-form .rubric-choice-option label {
     min-height: 3rem;
+}
+
+@media (min-width: 992px) {
+    .jury-judge-form .rubric-scale-options {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+
+    .jury-judge-form .rubric-scale-option {
+        flex: 1 1 0;
+        min-width: 2.25rem;
+    }
 }
 
 @media (max-width: 575.98px) {
@@ -514,6 +592,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                 <div class="col-md-6">
 <h5>Participant Information</h5>
                 <?=$register->shortFieldsHtml?>
+                <?=$participantMembersHtml?>
                 </div>
                 <div class="col-md-6">
 
@@ -542,9 +621,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                   }
                   ?>
                 </ul>
-                <i>(save & preview to view score)<br />
-                * final score & award depend on average results from all juries.</i>
-                <br />GOLD:	80 - 100 | SILVER:	60 - 79 | BRONZE:	0 - 59
+                <i>(save & preview to view score)</i>
                 </div>
             </div>
                 
@@ -555,7 +632,14 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
 <?php if($assign->status <= 10 || $write == false){?>
   <div class="pagetitle"><h1>Rubric Form </h1>
-  (<?=$rubric->rubric_name?>)
+  (<?= Html::encode($rubric->rubric_name) ?>)
+  <?php
+  $rubricDesc = (string)$rubric->rubric_description;
+  if(trim($rubricDesc) !== ''){
+    $rubricDescHtml = html_entity_decode($rubricDesc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    echo '<div class="mt-2 small text-muted">' . HtmlPurifier::process($rubricDescHtml) . '</div>';
+  }
+  ?>
 </div>
 
 
@@ -588,13 +672,13 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                   $options = $item->option_number;
               echo '<tr><td class="rubric-question-no">'.$i.'. </td><td>
               <div class="row">
-                  <div class="col-md-6">'.$item->item_text.'<br />';
+                  <div class="col-md-6 col-lg-5"><div class="rubric-question-text">'.$item->item_text.'</div>';
                 
                   if($item->item_description){
                     if(strpos($item->item_description, "\n") !== FALSE) {
-                      echo '<i style="font-size:14px">'.nl2br($item->item_description).'</i>';
+                      echo '<i class="rubric-question-desc">'.nl2br($item->item_description).'</i>';
                     }else {
-                      echo '<i style="font-size:14px">('.$item->item_description.')</i>';
+                      echo '<i class="rubric-question-desc">('.$item->item_description.')</i>';
                     }
                     
                   }
@@ -602,7 +686,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                  
 
                   echo '</div>
-                  <div class="col-md-6">
+                  <div class="col-md-6 col-lg-7">
                   <div class="rubric-scale" role="radiogroup" aria-label="'.Html::encode(strip_tags($item->item_text)).'">
                   <div class="rubric-scale-labels"><span>Poor</span><span>Excellent</span></div>
                   <div class="rubric-scale-options">';
@@ -627,13 +711,13 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                  echo '<tr><td class="rubric-question-no">'.$i.'. </td><td>
                  <div class="row">
                     <div class="col-md-8">
-                        <div> '.$item->item_text.'</div>
+                        <div class="rubric-question-text">'.$item->item_text.'</div>
                         ';
                         if($item->item_description){
                           if(strpos($item->item_description, "\n") !== FALSE) {
-                            echo '<i style="font-size:14px">'.nl2br($item->item_description).'</i>';
+                            echo '<i class="rubric-question-desc">'.nl2br($item->item_description).'</i>';
                           }else {
-                            echo '<i style="font-size:14px">('.$item->item_description.')</i>';
+                            echo '<i class="rubric-question-desc">('.$item->item_description.')</i>';
                           }
                           
                         }
@@ -664,7 +748,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                 echo '<tr><td width="10">'.$i.'. </td><td>
                  <div class="row">
                     <div class="col-md-8">
-                        <label> '.$item->item_text.'</label>
+                        <label class="rubric-question-text"> '.$item->item_text.'</label>
                         ';
                     echo '<div><textarea class="form-control" name="'.$formName.'['.$item->colum_ans.']" name="">'.$model->{$item->colum_ans}.'</textarea></div>';
                     echo '</div>
@@ -681,7 +765,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                 echo '<tr><td width="10">'.$i.'. </td><td>
                  <div class="row">
                     <div class="col-md-10">
-                        <label> '.$item->item_text.'</label>
+                        <label class="rubric-question-text"> '.$item->item_text.'</label>
                         ';
                     echo '<div><textarea class="form-control" rows="6" name="'.$formName.'['.$item->colum_ans.']" name="">'.$model->{$item->colum_ans}.'</textarea></div>';
                     echo '</div>

@@ -13,16 +13,19 @@ use app\models\PasswordResetRequestForm;
 use app\models\QuestionnaireAnswer;
 use app\models\JuryApplication;
 use app\models\JuryApplyForm;
+use app\models\JuryAssign;
 use app\models\JuryRequirement;
 use app\models\AppSetting;
 use app\models\DefaultPasswordForm;
 use app\models\Program;
+use app\models\ProgramRegistration;
 use app\models\ProgramSub;
 use app\models\RubricJudgingSession;
 use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
 use app\models\Session;
 use app\models\SessionAttendance;
+use app\models\UserRole;
 use InvalidArgumentException;
 use yii\db\Expression;
 use yii\helpers\Url;
@@ -132,7 +135,7 @@ class SiteController extends Controller
     public function actionLogin($t=null)
     {
         if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+            return $this->redirect(['site/dashboard']);
         }
 
         $model = new LoginForm();
@@ -140,7 +143,7 @@ class SiteController extends Controller
             if($t){
                 $returnUrl = Url::to(['site/qr', 't' => $t]);
             }else{
-                $returnUrl = Url::to(['site/index']);
+                $returnUrl = Url::to(['site/dashboard']);
             }
 
             $user = $model->getUser();
@@ -153,7 +156,7 @@ class SiteController extends Controller
                 return $this->redirect(['site/qr', 't' => $t]);
             }else{
                 Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
-                return $this->redirect(['site/index']);
+                return $this->redirect(['site/dashboard']);
             }
             
         }
@@ -162,6 +165,51 @@ class SiteController extends Controller
         return $this->render('login', [
             'model' => $model,
             'attendanceToken' => $t
+        ]);
+    }
+
+    public function actionDashboard()
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['site/login']);
+        }
+
+        $user = Yii::$app->user->identity;
+        $roles = UserRole::find()
+            ->where(['user_id' => $user->id, 'status' => 10])
+            ->orderBy(['role_name' => SORT_ASC])
+            ->all();
+
+        $participantStats = [
+            'registrations' => (int)ProgramRegistration::find()->where(['user_id' => $user->id])->count(),
+            'complete' => (int)ProgramRegistration::find()->where(['user_id' => $user->id, 'status' => ProgramRegistration::STATUS_COMPLETE])->count(),
+        ];
+
+        $juryStats = null;
+        $juryAssignments = [];
+        if ($user->isJury) {
+            $juryQuery = JuryAssign::find()->where(['user_id' => $user->id]);
+            $juryStats = [
+                'total' => (int)(clone $juryQuery)->count(),
+                'assigned' => (int)(clone $juryQuery)->andWhere(['status' => 0])->count(),
+                'judging' => (int)(clone $juryQuery)->andWhere(['status' => 10])->count(),
+                'complete' => (int)(clone $juryQuery)->andWhere(['status' => 20])->count(),
+            ];
+
+            $juryAssignments = JuryAssign::find()
+                ->where(['user_id' => $user->id])
+                ->with(['registration.program', 'registration.programSub', 'rubric', 'judgingSession'])
+                ->orderBy(['status' => SORT_ASC, 'date_start' => SORT_ASC, 'id' => SORT_DESC])
+                ->limit(6)
+                ->all();
+        }
+
+        return $this->render('dashboard', [
+            'user' => $user,
+            'roles' => $roles,
+            'participantStats' => $participantStats,
+            'juryStats' => $juryStats,
+            'juryAssignments' => $juryAssignments,
         ]);
     }
 

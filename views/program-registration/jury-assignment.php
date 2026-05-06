@@ -9,6 +9,20 @@ use yii\grid\GridView;
 
 $this->title = 'Jury Assignments';
 $this->params['breadcrumbs'][] = $this->title;
+
+$this->registerCss(<<<CSS
+.participant-cell-main {
+    font-weight: 700;
+}
+
+.participant-cell-members {
+    margin: 0.35rem 0 0 1.1rem;
+    padding: 0;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: #6c757d;
+}
+CSS);
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1></div>
@@ -30,28 +44,77 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             [
-                'label' =>'Program',
+                'label' =>'Competition',
                 'value' => function($model){
-                    return $model->registration->program->program_abbr;
+                    $registration = $model->registration;
+                    $programText = $registration && $registration->program ? $registration->program->program_abbr : '';
+                    if($registration && $registration->programSub){
+                        $programText .= ' / ' . $registration->programSub->sub_name;
+                    }
+                    return $programText;
                 }
             ],
             [
                 'label' =>'Participants',
-                'format' => 'raw',
+                'format' => 'html',
                 'value' => function($model){
-                    return $model->registration->shortFieldsHtml;
-                }
-            ],
-            [
-                'label' =>'Jury Info',
-                'format' => 'raw',
-                'value' => function($model){
-                    $jury = $model;
+                    $registration = $model->registration;
+                    if(!$registration){
+                        return '';
+                    }
+
                     $html = '';
-                        $html .= '<ul>';
-                            $html .= $jury->infoHtml();
-                        $html .= '<ul>';
-         
+                    if($registration->flag == 1){
+                        $html .= '<i class="bi bi-flag-fill" style="color:blue"></i> ';
+                    }
+
+                    if($registration->user){
+                        $leaderName = trim((string)$registration->user->fullname);
+                        $text = $leaderName;
+                        $leaderMatric = trim((string)$registration->user->matric);
+                    }else if(!empty($registration->contact_person)){
+                        $leaderName = trim((string)$registration->contact_person);
+                        $text = $leaderName;
+                        $leaderMatric = '';
+                    }else if(!empty($registration->contact_email)){
+                        $leaderName = trim((string)$registration->contact_email);
+                        $text = $leaderName;
+                        $leaderMatric = '';
+                    }else{
+                        $leaderName = 'Participant';
+                        $text = 'Participant';
+                        $leaderMatric = '';
+                    }
+
+                    if(!empty($registration->group_name)){
+                        $text .= ' (' . $registration->group_name . ')';
+                    }
+                    $html .= '<div class="participant-cell-main">' . Html::encode($text) . '</div>';
+
+                    $memberItems = [];
+                    foreach($registration->members as $member){
+                        $memberName = trim((string)$member->member_name);
+                        $memberMatric = trim((string)$member->member_matric);
+                        if($memberName === ''){
+                            continue;
+                        }
+                        if($leaderMatric !== '' && $memberMatric !== '' && strcasecmp($leaderMatric, $memberMatric) === 0){
+                            continue;
+                        }
+                        if(strcasecmp($leaderName, $memberName) === 0){
+                            continue;
+                        }
+                        $memberLabel = $memberName;
+                        if($memberMatric !== ''){
+                            $memberLabel .= ' (' . $memberMatric . ')';
+                        }
+                        $memberItems[] = '<li>' . Html::encode($memberLabel) . '</li>';
+                    }
+
+                    if($memberItems){
+                        $html .= '<ul class="participant-cell-members">' . implode('', $memberItems) . '</ul>';
+                    }
+
                     return $html;
                 }
             ],

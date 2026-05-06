@@ -25,6 +25,7 @@ use yii\helpers\Url;
         
       }else{
 
+        $menu[] = ['name' => 'Dashboard', 'url' => ['/site/dashboard'], 'icon' => 'bi bi-speedometer2'];
         $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
      
 
