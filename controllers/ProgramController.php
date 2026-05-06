@@ -380,6 +380,146 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionAdminJudgingSessions()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) return false;
+
+        if(Yii::$app->request->isPost){
+            $ids = Yii::$app->request->post('selection', []);
+            $apply = Yii::$app->request->post('apply', []);
+            $start = trim((string)Yii::$app->request->post('datetime_start', ''));
+            $end = trim((string)Yii::$app->request->post('datetime_end', ''));
+            $location = trim((string)Yii::$app->request->post('location', ''));
+            $mode = (int)Yii::$app->request->post('mode', 0);
+
+            $ids = is_array($ids) ? array_values(array_filter(array_map('intval', $ids))) : [];
+            $apply = is_array($apply) ? $apply : [];
+
+            if(!$ids){
+                Yii::$app->session->addFlash('error', 'Please select at least one judging session.');
+                return $this->redirect(Yii::$app->request->referrer ?: ['admin-judging-sessions']);
+            }
+
+            $updates = [];
+            if(isset($apply['datetime_start'])){
+                $updates['datetime_start'] = $this->normalizeDatetimeInput($start);
+            }
+            if(isset($apply['datetime_end'])){
+                $updates['datetime_end'] = $this->normalizeDatetimeInput($end);
+            }
+            if(isset($apply['location'])){
+                $updates['location'] = $location !== '' ? $location : null;
+            }
+            if(isset($apply['mode']) && in_array($mode, [1,2], true)){
+                $updates['mode'] = $mode;
+            }
+
+            if(!$updates){
+                Yii::$app->session->addFlash('error', 'Please choose at least one field to update.');
+                return $this->redirect(Yii::$app->request->referrer ?: ['admin-judging-sessions']);
+            }
+
+            $sessionTable = Yii::$app->db->schema->getTableSchema(RubricJudgingSession::tableName());
+            if($sessionTable && $sessionTable->getColumn('updated_at')){
+                $updates['updated_at'] = time();
+            }
+
+            $count = RubricJudgingSession::updateAll($updates, ['id' => $ids]);
+            Yii::$app->session->addFlash('success', $count . ' judging session(s) updated.');
+            return $this->redirect(Yii::$app->request->referrer ?: ['admin-judging-sessions']);
+        }
+
+        $programId = (int)Yii::$app->request->get('program_id', 0);
+        $programSubId = Yii::$app->request->get('program_sub');
+        $programSubId = ($programSubId === '' || $programSubId === null) ? null : (int)$programSubId;
+
+        $programQuery = Program::find();
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programQuery->andWhere(['is_active' => 1]);
+        }else if($programTable && $programTable->getColumn('status')){
+            $programQuery->andWhere(['status' => 10]);
+        }
+        $programs = $programQuery->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+        $subQuery = ProgramSub::find();
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $subQuery->andWhere(['is_active' => 1]);
+        }
+        if($programId > 0){
+            $subQuery->andWhere(['program_id' => $programId]);
+        }
+        $subs = $subQuery->orderBy(['program_id' => SORT_ASC, 'sub_name' => SORT_ASC])->all();
+
+        $query = (new Query())
+            ->select([
+                'session_id' => 'rjs.id',
+                'session_name' => 'rjs.session_name',
+                'datetime_start' => 'rjs.datetime_start',
+                'datetime_end' => 'rjs.datetime_end',
+                'location' => 'rjs.location',
+                'mode' => 'rjs.mode',
+                'sort_order' => 'rjs.sort_order',
+                'rubric_id' => 'r.id',
+                'rubric_name' => 'r.rubric_name',
+                'program_id' => 'p.id',
+                'program_name' => 'p.program_name',
+                'program_abbr' => 'p.program_abbr',
+                'program_sub_id' => 'ps.id',
+                'sub_name' => 'ps.sub_name',
+            ])
+            ->from(['rjs' => RubricJudgingSession::tableName()])
+            ->innerJoin(['r' => Rubric::tableName()], 'r.id = rjs.rubric_id')
+            ->innerJoin(['pr' => ProgramRubric::tableName()], 'pr.rubric_id = r.id')
+            ->innerJoin(['p' => Program::tableName()], 'p.id = pr.program_id')
+            ->leftJoin(['ps' => ProgramSub::tableName()], 'ps.id = pr.program_sub');
+
+        if($programId > 0){
+            $query->andWhere(['p.id' => $programId]);
+        }
+        if($programSubId !== null){
+            if($programSubId > 0){
+                $query->andWhere(['ps.id' => $programSubId]);
+            }else{
+                $query->andWhere(['or', ['pr.program_sub' => null], ['pr.program_sub' => 0]]);
+            }
+        }
+
+        $rows = $query
+            ->orderBy([
+                'p.date_start' => SORT_ASC,
+                'p.id' => SORT_ASC,
+                'ps.sub_name' => SORT_ASC,
+                'r.rubric_name' => SORT_ASC,
+                'rjs.sort_order' => SORT_ASC,
+                'rjs.datetime_start' => SORT_ASC,
+                'rjs.id' => SORT_ASC,
+            ])
+            ->all();
+
+        return $this->render('admin_judging_sessions', [
+            'rows' => $rows,
+            'programs' => $programs,
+            'subs' => $subs,
+            'programId' => $programId,
+            'programSubId' => $programSubId,
+        ]);
+    }
+
+    protected function normalizeDatetimeInput($value)
+    {
+        $value = trim((string)$value);
+        if($value === ''){
+            return null;
+        }
+        $value = str_replace('T', ' ', $value);
+        if(strlen($value) === 16){
+            $value .= ':00';
+        }
+        return $value;
+    }
+
     protected function getProgramStatsCounts($programId, $programSubId)
     {
         $participantQuery = (new Query())

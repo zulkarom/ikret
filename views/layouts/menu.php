@@ -219,6 +219,8 @@ use yii\helpers\Url;
 
           $menu[] = ['name' => 'Program Sub Programs', 'url' => ['/program/admin-program-subs'], 'icon' => 'bi bi-diagram-3'];
 
+          $menu[] = ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions'], 'icon' => 'bi bi-calendar-event'];
+
           $menu[] = ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats'], 'icon' => 'bi bi-bar-chart'];
 
           $menu[] = ['name' => 'Settings', 'url' => ['/setting/update'], 'icon' => 'bi bi-gear'];
