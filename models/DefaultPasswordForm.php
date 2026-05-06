@@ -19,7 +19,7 @@ class DefaultPasswordForm extends Model
             throw new InvalidArgumentException('Unable to find user.');
         }
 
-        $this->email = $this->_user->email;
+        $this->email = $this->requiresEmailUpdate() ? '' : $this->_user->email;
         parent::__construct($config);
     }
 
@@ -42,7 +42,7 @@ class DefaultPasswordForm extends Model
     {
         return [
             'password' => 'New Password',
-            'email' => 'Email',
+            'email' => 'Put Your Valid Email',
         ];
     }
 

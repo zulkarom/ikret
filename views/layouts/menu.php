@@ -34,7 +34,7 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Public Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
           // $menu[] = ['name' => 'Pre-Event Questionnaire', 'url' => ['/program/prequestion'], 'icon' => 'bi bi-patch-question'];
           // $menu[] = ['name' => 'Post-Event Questionnaire', 'url' => ['/program/postquestion'], 'icon' => 'bi bi-patch-question-fill'];
-          $menu[] = ['name' => 'Certificates & Awards', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
+         // $menu[] = ['name' => 'Certificates & Awards', 'url' => ['/program/certificate'], 'icon' => 'bi bi-award'];
         }
 
         if(Yii::$app->user->identity->isJury){

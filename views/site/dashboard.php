@@ -15,8 +15,11 @@ $this->title = 'Dashboard';
 
 $roleNames = [];
 foreach ($roles as $role) {
-    $roleNames[] = $role->roleText ?: $role->role_name;
+    $name = $role->roleText ?: $role->role_name;
+    $roleNames[$name] = $name;
 }
+$roleNames = array_values($roleNames);
+$showEmail = $user->email && stripos($user->email, 'dummy') === false;
 
 $statCard = function ($label, $value, $icon, $color = 'primary') {
     return '<div class="col-md-3 col-sm-6">
@@ -56,7 +59,9 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
                             <span class="text-muted">No active role found.</span>
                         <?php endif; ?>
                     </div>
-                    <div class="text-muted"><?= Html::encode($user->email) ?></div>
+                    <?php if ($showEmail): ?>
+                        <div class="text-muted"><?= Html::encode($user->email) ?></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -65,7 +70,7 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
                 <div class="card-body pt-4">
                     <h5 class="card-title">Quick Actions</h5>
                     <div class="d-grid gap-2">
-                        <?= Html::a('<i class="bi bi-card-list"></i> Program Registration', ['/program/public-programs'], ['class' => 'btn btn-outline-primary']) ?>
+                        <?= Html::a('<i class="bi bi-upc-scan"></i> Scan Attendance Now', ['/session/qrscanner'], ['class' => 'btn btn-danger', 'target' => '_blank']) ?>
                         <?= Html::a('<i class="bi bi-upc-scan"></i> Attendance & Certificate', ['/session/participant'], ['class' => 'btn btn-outline-primary']) ?>
                         <?php if ($user->isJury): ?>
                             <?= Html::a('<i class="bi bi-file-earmark-medical"></i> Jury Assignments', ['/program-registration/jury-assignment'], ['class' => 'btn btn-primary']) ?>
@@ -77,7 +82,7 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
     </div>
 
     <div class="row">
-        <?= $statCard('Active Roles', count($roles), 'bi bi-person-badge', 'primary') ?>
+        <?= $statCard('Active Roles', count($roleNames), 'bi bi-person-badge', 'primary') ?>
         <?= $statCard('My Registrations', $participantStats['registrations'] ?? 0, 'bi bi-card-checklist', 'success') ?>
         <?= $statCard('Completed Registrations', $participantStats['complete'] ?? 0, 'bi bi-check2-circle', 'success') ?>
         <?php if ($juryStats): ?>
