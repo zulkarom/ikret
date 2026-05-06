@@ -8,6 +8,7 @@ use app\models\CertificateExcellence;
 use app\models\CertificateSession;
 use app\models\CertificateTemplate;
 use app\models\JuryAssign;
+use app\models\JuryApplication;
 use app\models\Member;
 use app\models\Mentor;
 use app\models\Model;
@@ -349,6 +350,8 @@ class ProgramController extends Controller
                     'participant_count' => $programLevelCounts['participant_count'],
                     'rubric_count' => $programLevelCounts['rubric_count'],
                     'session_count' => $programLevelCounts['session_count'],
+                    'jury_applied_count' => $programLevelCounts['jury_applied_count'],
+                    'jury_assigned_count' => $programLevelCounts['jury_assigned_count'],
                 ];
                 continue;
             }
@@ -365,6 +368,8 @@ class ProgramController extends Controller
                         'participant_count' => $counts['participant_count'],
                         'rubric_count' => $counts['rubric_count'],
                         'session_count' => $counts['session_count'],
+                        'jury_applied_count' => $counts['jury_applied_count'],
+                        'jury_assigned_count' => $counts['jury_assigned_count'],
                     ];
                 }
             }
@@ -413,11 +418,39 @@ class ProgramController extends Controller
         $rubricCount = (int)$sessionQuery->count('DISTINCT pr.rubric_id');
         $sessionCount = (int)$sessionQuery->count('rjs.id');
 
+        $juryAppliedQuery = (new Query())
+            ->from(['ja' => JuryApplication::tableName()])
+            ->where(['ja.program_id' => (int)$programId]);
+
+        if($programSubId === null){
+            $juryAppliedQuery->andWhere(['or', ['ja.program_sub_id' => null], ['ja.program_sub_id' => 0]]);
+        }else{
+            $juryAppliedQuery->andWhere(['ja.program_sub_id' => (int)$programSubId]);
+        }
+
+        $juryAppliedCount = (int)$juryAppliedQuery->count('DISTINCT ja.jury_profile_id');
+
+        $juryAssignedQuery = (new Query())
+            ->from(['j' => JuryAssign::tableName()])
+            ->innerJoin(['r' => ProgramRegistration::tableName()], 'r.id = j.reg_id')
+            ->where(['r.program_id' => (int)$programId])
+            ->andWhere(['in', 'r.status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]]);
+
+        if($programSubId === null){
+            $juryAssignedQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+        }else{
+            $juryAssignedQuery->andWhere(['r.program_sub' => (int)$programSubId]);
+        }
+
+        $juryAssignedCount = (int)$juryAssignedQuery->count('DISTINCT j.user_id');
+
         return [
             'group_count' => $groupCount,
             'participant_count' => $participantCount,
             'rubric_count' => $rubricCount,
             'session_count' => $sessionCount,
+            'jury_applied_count' => $juryAppliedCount,
+            'jury_assigned_count' => $juryAssignedCount,
         ];
     }
 

@@ -26,6 +26,8 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                         <th style="width: 180px;">Participant Count</th>
                         <th style="width: 180px;">Rubric Count</th>
                         <th style="width: 180px;">Rubrics Sessions Count</th>
+                        <th style="width: 180px;">Juries Applied Count</th>
+                        <th style="width: 180px;">Juries Assigned Count</th>
                     </tr>
                     <?php $i = 1; foreach($rows as $row){ ?>
                         <tr>
@@ -57,6 +59,12 @@ $rows = isset($rows) && is_array($rows) ? $rows : [];
                             </td>
                             <td>
                                 <?= $pid ? Html::a((string)(int)($row['session_count'] ?? 0), ['/program/rubrics', 'id' => $pid, 'sub' => $sid]) : (int)($row['session_count'] ?? 0) ?>
+                            </td>
+                            <td>
+                                <?= $pid ? Html::a((string)(int)($row['jury_applied_count'] ?? 0), ['/program-registration/admin-jury-applications', 'id' => $pid, 'sub' => $sid]) : (int)($row['jury_applied_count'] ?? 0) ?>
+                            </td>
+                            <td>
+                                <?= (int)($row['jury_assigned_count'] ?? 0) ?>
                             </td>
                         </tr>
                     <?php $i++; } ?>
