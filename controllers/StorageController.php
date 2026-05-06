@@ -50,6 +50,13 @@ class StorageController extends Controller
                         Yii::$app->request->post('program_id'),
                         Yii::$app->request->post('reg_id')
                     );
+                case 'rubric-edit':
+                    return $programController->actionRubricEdit(
+                        Yii::$app->request->post('id'),
+                        Yii::$app->request->post('sub') !== '' ? Yii::$app->request->post('sub') : null,
+                        Yii::$app->request->post('pr') !== '' ? Yii::$app->request->post('pr') : null,
+                        Yii::$app->request->post('rubric') !== '' ? Yii::$app->request->post('rubric') : null
+                    );
                 default:
                     throw new BadRequestHttpException('Invalid storage action.');
             }

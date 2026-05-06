@@ -68,8 +68,13 @@ if($programSub){
                             echo '<td>';
 
                             if($isEdit){
-                                echo '<form method="post" action="'.Url::to(['rubric-edit', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null, 'pr' => $r->id, 'rubric' => $r->rubric_id]).'">';
+                                echo '<form method="post" action="'.Url::to(['/storage/index']).'">';
                                 echo Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken);
+                                echo Html::hiddenInput('storage_action', 'rubric-edit');
+                                echo Html::hiddenInput('id', $model->id);
+                                echo Html::hiddenInput('sub', $programSub ? $programSub->id : '');
+                                echo Html::hiddenInput('pr', $r->id);
+                                echo Html::hiddenInput('rubric', $r->rubric_id);
                                 echo '<div class="row g-2 align-items-center">';
                                 echo '<div class="col-md-8">';
                                 echo '<input type="text" name="rubric_name" class="form-control" value="'.Html::encode($r->rubric->rubric_name).'" />';
@@ -262,4 +267,3 @@ JS);
 
 
     </section>
-
