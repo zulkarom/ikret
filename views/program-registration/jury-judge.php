@@ -80,17 +80,20 @@ $this->registerCss(<<<CSS
     gap: 0.5rem;
 }
 
-.jury-judge-form .rubric-scale-option {
+.jury-judge-form .rubric-scale-option,
+.jury-judge-form .rubric-choice-option {
     position: relative;
 }
 
-.jury-judge-form .rubric-scale-option input {
+.jury-judge-form .rubric-scale-option input,
+.jury-judge-form .rubric-choice-option input {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
-.jury-judge-form .rubric-scale-option label {
+.jury-judge-form .rubric-scale-option label,
+.jury-judge-form .rubric-choice-option label {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -105,16 +108,29 @@ $this->registerCss(<<<CSS
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
-.jury-judge-form .rubric-scale-option input:checked + label {
+.jury-judge-form .rubric-scale-option input:checked + label,
+.jury-judge-form .rubric-choice-option input:checked + label {
     border-color: #0d6efd;
     background: #0d6efd;
     color: #fff;
     box-shadow: 0 0.35rem 0.9rem rgba(13, 110, 253, 0.22);
 }
 
-.jury-judge-form .rubric-scale-option input:focus + label {
+.jury-judge-form .rubric-scale-option input:focus + label,
+.jury-judge-form .rubric-choice-option input:focus + label {
     outline: 2px solid rgba(13, 110, 253, 0.35);
     outline-offset: 2px;
+}
+
+.jury-judge-form .rubric-choice-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 10rem));
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.jury-judge-form .rubric-choice-option label {
+    min-height: 3rem;
 }
 
 @media (max-width: 575.98px) {
@@ -138,6 +154,10 @@ $this->registerCss(<<<CSS
 
     .jury-judge-form .rubric-scale-options {
         grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .jury-judge-form .rubric-choice-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 CSS);
@@ -604,7 +624,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
               echo '</td></tr>';
               $i++;
               }else if($item->item_type == 2){
-                 echo '<tr><td width="10">'.$i.'. </td><td>
+                 echo '<tr><td class="rubric-question-no">'.$i.'. </td><td>
                  <div class="row">
                     <div class="col-md-8">
                         <div> '.$item->item_text.'</div>
@@ -621,12 +641,14 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                         
 
 
+                        echo '<div class="rubric-choice-options" role="radiogroup" aria-label="'.Html::encode(strip_tags($item->item_text)).'">';
                         $arr = [1=>'Yes', 2 => 'No'];
                         foreach($arr as $key => $val){
                           $qn = $item->colum_ans;
                           $check = $model->$qn == $key ? 'checked' : '';
-                          echo '<div class="form-group"><label style="cursor:pointer;" for="r'.$item->id.'-'.$key.'"><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$key.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$key.'" '.$check.'> '.$val.'</label></div>';
+                          echo '<div class="rubric-choice-option"><input type="radio" id="r'.$item->id.'-'.$key.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$key.'" '.$check.'><label for="r'.$item->id.'-'.$key.'">'.$val.'</label></div>';
                         }
+                        echo '</div>';
                         
                     echo '</div>
          
