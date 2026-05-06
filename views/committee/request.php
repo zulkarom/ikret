@@ -48,8 +48,9 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'label' =>'Name',
                 'attribute' => 'fullname',
+                'format' => 'html',
                 'value' => function($model){
-                    return $model->user->fullname;
+                    return Html::encode($model->user->fullname) . '<br />' . Html::encode($model->user->email);
                 }
             ],
             [

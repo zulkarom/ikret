@@ -57,8 +57,9 @@ $col_role = 20;
                 'label' =>'Name',
                 'attribute' => 'fullname',
                 'contentOptions' => ['style' => 'width: '.$col_name.'%'],
+                'format' => 'html',
                 'value' => function($model){
-                    return $model->user->fullname;
+                    return Html::encode($model->user->fullname) . '<br />' . Html::encode($model->user->email);
                 }
             ],
             [
@@ -149,8 +150,9 @@ $col_role = 20;
                 'label' =>'Name',
                 'attribute' => 'fullname',
                 'contentOptions' => ['style' => 'width: '.$col_name.'%'],
+                'format' => 'html',
                 'value' => function($model){
-                    return $model->user->fullname;
+                    return Html::encode($model->user->fullname) . '<br />' . Html::encode($model->user->email);
                 }
             ],
             [

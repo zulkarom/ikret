@@ -4,10 +4,13 @@ namespace app\controllers;
 
 use app\models\JuryProfile;
 use app\models\JuryProfileSearch;
+use app\models\JuryApplication;
+use app\models\JuryAssign;
 use app\models\User;
 use app\models\UserRole;
 use Yii;
 use yii\db\Expression;
+use yii\db\IntegrityException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
@@ -214,5 +217,49 @@ class JuryProfileController extends Controller
         }
 
         return $this->redirect(['index']);
+    }
+
+    public function actionDelete($id)
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        if(!Yii::$app->request->isPost){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $model = $this->findModel($id);
+
+        if($this->hasJuryAssignments($model->user_id)){
+            Yii::$app->session->addFlash('error', 'Could not delete this jury profile because the user has jury assignments.');
+            return $this->redirect(['index']);
+        }
+
+        $tx = Yii::$app->db->beginTransaction();
+        try{
+            JuryApplication::deleteAll(['jury_profile_id' => $model->id]);
+            UserRole::deleteAll(['user_id' => $model->user_id, 'role_name' => 'jury']);
+            $model->delete();
+            $tx->commit();
+            Yii::$app->session->addFlash('success', 'Jury profile deleted.');
+        }catch(IntegrityException $e){
+            $tx->rollBack();
+            Yii::$app->session->addFlash('error', 'Could not delete this jury profile because related records exist.');
+        }
+
+        return $this->redirect(['index']);
+    }
+
+    protected function hasJuryAssignments($userId)
+    {
+        return JuryAssign::find()->where(['user_id' => $userId])->exists();
+    }
+
+    protected function findModel($id)
+    {
+        if(($model = JuryProfile::findOne((int)$id)) !== null){
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

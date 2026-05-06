@@ -2,6 +2,7 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
+use app\models\JuryAssign;
 
 /** @var yii\web\View $this */
 /** @var app\models\JuryProfileSearch $searchModel */
@@ -48,6 +49,22 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                         [
                             'attribute' => 'designation',
+                        ],
+                        [
+                            'label' => 'Action',
+                            'format' => 'html',
+                            'value' => function($model){
+                                $hasAssignment = JuryAssign::find()->where(['user_id' => $model->user_id])->exists();
+                                if($hasAssignment){
+                                    return '<span class="badge bg-warning">Assigned</span>';
+                                }
+
+                                return Html::a('<i class="bi bi-trash"></i> Delete', ['delete', 'id' => $model->id], [
+                                    'class' => 'btn btn-danger btn-sm',
+                                    'data-confirm' => 'Delete this jury profile? This will also remove jury applications and jury role access for this user.',
+                                    'data-method' => 'post',
+                                ]);
+                            }
                         ],
                     ],
                 ]); ?>
