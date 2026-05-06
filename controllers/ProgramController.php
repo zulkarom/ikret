@@ -1347,7 +1347,7 @@ class ProgramController extends Controller
         if(!Yii::$app->user->identity->isManager) return false;
 
         if(!Yii::$app->request->isPost){
-            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+            return $this->redirect(['/program/rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
         $program = Program::findOne((int)$id);
@@ -1458,17 +1458,17 @@ class ProgramController extends Controller
         $rubricModel->rubric_description = Yii::$app->request->post('rubric_description', $rubricModel->rubric_description);
         if($rubricModel->rubric_name === null || trim($rubricModel->rubric_name) === ''){
             Yii::$app->session->addFlash('error', 'Rubric name cannot be blank.');
-            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+            return $this->redirect(['/program/rubrics', 'id' => $id, 'sub' => $sub]);
         }
         if(!$rubricModel->save()){
             Yii::$app->session->addFlash('error', 'Failed to update rubric.');
-            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+            return $this->redirect(['/program/rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
         $this->saveRubricJudgingSessions($rubricModel);
 
         Yii::$app->session->addFlash('success', 'Rubric updated.');
-        return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
+        return $this->redirect(['/program/rubrics', 'id' => $id, 'sub' => $sub]);
     }
 
     public function actionRubricDelete($id, $sub = null, $pr)
