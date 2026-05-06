@@ -1374,49 +1374,41 @@ class ProgramRegistrationController extends Controller
                     }
                 }
 
-                $juryProfile = JuryProfile::find()->where(['user_id' => $user->id])->one();
-                if(!$juryProfile){
-                    $juryProfile = new JuryProfile();
-                    $juryProfile->user_id = (int)$user->id;
-                    $juryProfile->fullname = (string)($user->fullname ?? '');
-                    $juryProfile->category = isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '';
-                    $juryProfile->phone = isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null;
-                    $juryProfile->institution = isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null;
-                    $juryProfile->designation = isset($idx['designation']) ? trim((string)($row[$idx['designation']] ?? '')) : null;
-                    $juryProfile->address = isset($idx['address']) ? trim((string)($row[$idx['address']] ?? '')) : null;
-                    $juryProfile->created_at = time();
-                    $juryProfile->updated_at = time();
-
-                    if(!$juryProfile->save()){
-                        $errors++;
+                try{
+                    $existingApp = JuryApplication::find()->where([
+                        'program_id' => $programId,
+                        'program_sub_id' => $programSubId ?: null,
+                        'judging_session_id' => $sessionId,
+                    ])->innerJoin('jury_profiles jp', 'jp.id = jury_applications.jury_profile_id')
+                    ->andWhere(['jp.user_id' => (int)$user->id])
+                    ->exists();
+                    if($existingApp){
+                        $skipped++;
                         continue;
                     }
-                }
 
-                $exists = JuryApplication::find()->where([
-                    'jury_profile_id' => $juryProfile->id,
-                    'program_id' => $programId,
-                    'program_sub_id' => $programSubId,
-                    'judging_session_id' => $sessionId,
-                ])->exists();
-                if($exists){
-                    $skipped++;
-                    continue;
-                }
-
-                $app = new JuryApplication();
-                $app->jury_profile_id = (int)$juryProfile->id;
-                $app->program_id = $programId;
-                $app->program_sub_id = $programSubId ?: null;
-                $app->judging_session_id = $sessionId;
-                $app->declaration_accepted = 1;
-                $app->status = 0;
-                $app->created_at = time();
-
-                if($app->save()){
-                    $created++;
-                }else{
+                    $app = $this->ensureJuryPipelineForUser(
+                        $user,
+                        (int)$programId,
+                        $programSubId ?: null,
+                        $sessionId,
+                        0,
+                        [
+                            'category' => isset($idx['category']) ? trim((string)($row[$idx['category']] ?? '')) : '',
+                            'phone' => isset($idx['phone']) ? trim((string)($row[$idx['phone']] ?? '')) : null,
+                            'institution' => isset($idx['institution']) ? trim((string)($row[$idx['institution']] ?? '')) : null,
+                            'designation' => isset($idx['designation']) ? trim((string)($row[$idx['designation']] ?? '')) : null,
+                            'address' => isset($idx['address']) ? trim((string)($row[$idx['address']] ?? '')) : null,
+                        ]
+                    );
+                    if($app && (int)$app->status === 0){
+                        $created++;
+                    }else{
+                        $errors++;
+                    }
+                }catch(\Throwable $e){
                     $errors++;
+                    continue;
                 }
             }
 
@@ -2157,8 +2149,31 @@ class ProgramRegistrationController extends Controller
 
     protected function ensureApprovedJuryApplicationForUser($user, $programId, $programSubId = null, $judgingSessionId = null)
     {
+        return $this->ensureJuryPipelineForUser($user, $programId, $programSubId, $judgingSessionId, 10);
+    }
+
+    protected function ensureJuryPipelineForUser($user, $programId, $programSubId = null, $judgingSessionId = null, $applicationStatus = 10, array $profileData = [])
+    {
         if(!$user || !$user->id){
             throw new \RuntimeException('Jury user not found.');
+        }
+
+        $role = UserRole::find()->where([
+            'user_id' => (int)$user->id,
+            'role_name' => 'jury',
+        ])->one();
+        if(!$role){
+            $role = new UserRole();
+            $role->user_id = (int)$user->id;
+            $role->role_name = 'jury';
+            $role->status = 10;
+            $role->approve_at = new Expression('NOW()');
+        }else if((int)$role->status !== 10){
+            $role->status = 10;
+            $role->approve_at = new Expression('NOW()');
+        }
+        if(!$role->save()){
+            throw new \RuntimeException('Unable to save jury role: ' . implode('; ', $role->getFirstErrors()));
         }
 
         $profile = JuryProfile::find()->where(['user_id' => (int)$user->id])->one();
@@ -2166,12 +2181,24 @@ class ProgramRegistrationController extends Controller
             $profile = new JuryProfile();
             $profile->user_id = (int)$user->id;
             $profile->fullname = (string)$user->fullname;
-            $profile->category = 'General';
+            $profile->category = !empty($profileData['category']) ? (string)$profileData['category'] : 'General';
             $profile->created_at = time();
         }
         $profile->fullname = (string)$user->fullname;
         if(!$profile->category){
-            $profile->category = 'General';
+            $profile->category = !empty($profileData['category']) ? (string)$profileData['category'] : 'General';
+        }
+        if(array_key_exists('phone', $profileData) && $profile->phone === null){
+            $profile->phone = $profileData['phone'] !== '' ? $profileData['phone'] : null;
+        }
+        if(array_key_exists('institution', $profileData) && $profile->institution === null){
+            $profile->institution = $profileData['institution'] !== '' ? $profileData['institution'] : null;
+        }
+        if(array_key_exists('designation', $profileData) && $profile->designation === null){
+            $profile->designation = $profileData['designation'] !== '' ? $profileData['designation'] : null;
+        }
+        if(array_key_exists('address', $profileData) && $profile->address === null){
+            $profile->address = $profileData['address'] !== '' ? $profileData['address'] : null;
         }
         $profile->updated_at = time();
         if(!$profile->save()){
@@ -2228,7 +2255,7 @@ class ProgramRegistrationController extends Controller
         }
 
         $app->declaration_accepted = 1;
-        $app->status = 10;
+        $app->status = (int)$applicationStatus;
 
         if(!$app->save()){
             throw new \RuntimeException('Unable to save jury application: ' . implode('; ', $app->getFirstErrors()));
