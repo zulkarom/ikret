@@ -41,6 +41,106 @@ if($plain && $edit){
         }
     }
 }
+
+$this->registerCss(<<<CSS
+.jury-judge-form .jury-category-title {
+    display: block;
+    margin: 1.25rem 0 0.5rem;
+    letter-spacing: 0.02em;
+}
+
+.jury-judge-form .rubric-form-table > tbody > tr > td {
+    vertical-align: top;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.jury-judge-form .rubric-question-no {
+    width: 2.25rem;
+    white-space: nowrap;
+    color: #6c757d;
+}
+
+.jury-judge-form .rubric-scale {
+    min-width: 0;
+}
+
+.jury-judge-form .rubric-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.jury-judge-form .rubric-scale-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(3rem, 1fr));
+    gap: 0.5rem;
+}
+
+.jury-judge-form .rubric-scale-option {
+    position: relative;
+}
+
+.jury-judge-form .rubric-scale-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.jury-judge-form .rubric-scale-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    margin: 0;
+    border: 1px solid #ced4da;
+    border-radius: 0.75rem;
+    background: #fff;
+    color: #212529;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.jury-judge-form .rubric-scale-option input:checked + label {
+    border-color: #0d6efd;
+    background: #0d6efd;
+    color: #fff;
+    box-shadow: 0 0.35rem 0.9rem rgba(13, 110, 253, 0.22);
+}
+
+.jury-judge-form .rubric-scale-option input:focus + label {
+    outline: 2px solid rgba(13, 110, 253, 0.35);
+    outline-offset: 2px;
+}
+
+@media (max-width: 575.98px) {
+    .jury-judge-form .card-body {
+        padding-left: 0.875rem;
+        padding-right: 0.875rem;
+    }
+
+    .jury-judge-form .rubric-form-table,
+    .jury-judge-form .rubric-form-table > tbody,
+    .jury-judge-form .rubric-form-table > tbody > tr,
+    .jury-judge-form .rubric-form-table > tbody > tr > td {
+        display: block;
+        width: 100%;
+    }
+
+    .jury-judge-form .rubric-question-no {
+        padding-bottom: 0;
+        font-weight: 700;
+    }
+
+    .jury-judge-form .rubric-scale-options {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+CSS);
 ?>
 
 <div class="pagetitle">
@@ -442,12 +542,12 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
     <?php $form = ActiveForm::begin(); 
     $hide_form = $assign->is_nullified == 1 ? 'style="display: none;"' : '';
     ?>
-    <div id="con-form" <?=$hide_form?>>
+    <div id="con-form" class="jury-judge-form" <?=$hide_form?>>
     <?php  
     $i = 1;
     if($rubric && $rubric->categories){
       foreach($rubric->categories as $cat){
-        echo '<b>'.strtoupper($cat->category_name).'</b>';
+        echo '<b class="jury-category-title">'.strtoupper($cat->category_name).'</b>';
         $catDesc = (string)$cat->category_description;
         if(trim($catDesc) !== ''){
           $descHtml = html_entity_decode($catDesc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -457,7 +557,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
 <div class="card">
             <div class="card-body pt-4">
-        <table class="table">
+        <table class="table rubric-form-table">
             <tbody>
                 
                 <?php 
@@ -466,7 +566,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
               foreach($cat->items as $item){
                 if($item->item_type == 1){
                   $options = $item->option_number;
-              echo '<tr><td width="10">'.$i.'. </td><td>
+              echo '<tr><td class="rubric-question-no">'.$i.'. </td><td>
               <div class="row">
                   <div class="col-md-6">'.$item->item_text.'<br />';
                 
@@ -483,23 +583,16 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
                   echo '</div>
                   <div class="col-md-6">
-                  <table border="0" cellpadding="7">';
+                  <div class="rubric-scale" role="radiogroup" aria-label="'.Html::encode(strip_tags($item->item_text)).'">
+                  <div class="rubric-scale-labels"><span>Poor</span><span>Excellent</span></div>
+                  <div class="rubric-scale-options">';
 
-              echo '<tr><td></td>';
-                  for($x=1;$x<=$options;$x++){
-                    echo '<td>'.$x.'</td>';
-                  }
-                echo '<td></td></tr>';
-
-                echo '<tr><td>Poor</td>';
                 for($x=1;$x<=$options;$x++){
                   $qn = $item->colum_ans;
                   $check = $model->$qn == $x ? 'checked' : '';
-                  echo '<td><input type="radio" style="cursor:pointer;" id="r'.$item->id.'-'.$x.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$x.'" '.$check.'></td>';
+                  echo '<div class="rubric-scale-option"><input type="radio" id="r'.$item->id.'-'.$x.'" name="'.$formName.'['.$item->colum_ans.']" value="'.$x.'" '.$check.'><label for="r'.$item->id.'-'.$x.'">'.$x.'</label></div>';
                 }
-              echo '<td>Excellent</td></tr>';
-              
-                echo '</table>';
+              echo '</div></div>';
 
                
 

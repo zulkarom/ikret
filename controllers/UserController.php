@@ -566,6 +566,29 @@ class UserController extends Controller
 
     }
 
+    public function actionRemoveSelectedRoles($id)
+    {
+        if(!Yii::$app->user->identity->isAdmin) return false;
+
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        $model = $this->findModel($id);
+        $roleIds = (array)$this->request->post('role_ids', []);
+        $roleIds = array_filter(array_map('intval', $roleIds));
+
+        if(!$roleIds){
+            Yii::$app->session->addFlash('warning', "Please select at least one role to remove");
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $deleted = UserRole::deleteAll(['and', ['user_id' => $model->id], ['id' => $roleIds]]);
+        Yii::$app->session->addFlash('success', $deleted . " user role access removed");
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     protected function findUserRole($id)
     {
         if (($model = UserRole::findOne($id)) !== null) {

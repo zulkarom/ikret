@@ -76,34 +76,46 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php if(empty($userRoles)): ?>
         <p>No role access found.</p>
     <?php else: ?>
+        <?= Html::beginForm(['remove-selected-roles', 'id' => $model->id], 'post') ?>
         <div class="table-responsive">
             <table class="table table-bordered table-sm">
                 <thead>
                     <tr>
+                        <?php if(Yii::$app->user->identity->isAdmin): ?>
+                            <th style="width: 60px;">
+                                <input type="checkbox" class="form-check-input" id="select-all-user-roles">
+                            </th>
+                        <?php endif; ?>
                         <th>Role</th>
                         <th>Status</th>
                         <th>Program</th>
                         <th>Competition</th>
-                        <th>Committee</th>
-                        <th>Requested</th>
-                        <th>Approved</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach($userRoles as $role): ?>
                         <tr>
+                            <?php if(Yii::$app->user->identity->isAdmin): ?>
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input user-role-check" name="role_ids[]" value="<?= (int)$role->id ?>">
+                                </td>
+                            <?php endif; ?>
                             <td><?= Html::encode($role->roleText) ?></td>
                             <td><?= $role->statusLabel ?></td>
                             <td><?= Html::encode($role->program ? $role->program->program_name : '') ?></td>
                             <td><?= Html::encode($role->programSub ? $role->programSub->sub_name : '') ?></td>
-                            <td><?= Html::encode($role->committee ? $role->committee->com_name_en : '') ?></td>
-                            <td><?= Html::encode($role->request_at) ?></td>
-                            <td><?= Html::encode($role->approve_at) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
+        <?php if(Yii::$app->user->identity->isAdmin): ?>
+            <?= Html::submitButton('Remove Selected', [
+                'class' => 'btn btn-danger btn-sm',
+                'data-confirm' => 'Remove selected user role access?',
+            ]) ?>
+        <?php endif; ?>
+        <?= Html::endForm() ?>
     <?php endif; ?>
 
     <h5 class="mt-4">Committee</h5>
@@ -257,3 +269,17 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
     </section>
+
+<?php
+$this->registerJs(<<<JS
+$('#select-all-user-roles').on('change', function(){
+    $('.user-role-check').prop('checked', $(this).is(':checked'));
+});
+
+$('.user-role-check').on('change', function(){
+    var total = $('.user-role-check').length;
+    var checked = $('.user-role-check:checked').length;
+    $('#select-all-user-roles').prop('checked', total > 0 && total === checked);
+});
+JS);
+?>
