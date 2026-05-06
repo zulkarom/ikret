@@ -15,6 +15,7 @@ use app\models\JuryApplication;
 use app\models\JuryApplyForm;
 use app\models\JuryRequirement;
 use app\models\AppSetting;
+use app\models\DefaultPasswordForm;
 use app\models\Program;
 use app\models\ProgramSub;
 use app\models\RubricJudgingSession;
@@ -136,9 +137,18 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            if($model->password === $model->username){
-                Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
+            if($t){
+                $returnUrl = Url::to(['site/qr', 't' => $t]);
+            }else{
+                $returnUrl = Url::to(['site/index']);
             }
+
+            $user = $model->getUser();
+            if($user && $model->password === $user->username){
+                Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
+                return $this->redirect(['site/change-default-password', 'returnUrl' => $returnUrl]);
+            }
+
             if($t){
                 return $this->redirect(['site/qr', 't' => $t]);
             }else{
@@ -153,6 +163,45 @@ class SiteController extends Controller
             'model' => $model,
             'attendanceToken' => $t
         ]);
+    }
+
+    public function actionChangeDefaultPassword($returnUrl = null)
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['site/login']);
+        }
+
+        $returnUrl = $this->normalizeReturnUrl($returnUrl);
+
+        try {
+            $model = new DefaultPasswordForm(Yii::$app->user->id);
+        } catch (\InvalidArgumentException $e) {
+            throw new BadRequestHttpException($e->getMessage());
+        }
+
+        if (Yii::$app->request->isPost && Yii::$app->request->post('skip')) {
+            Yii::$app->session->addFlash('info', 'You can change your password later from your account page.');
+            return $this->redirect($returnUrl);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->session->addFlash('success', 'Password updated successfully.');
+            return $this->redirect($returnUrl);
+        }
+
+        return $this->render('change-default-password', [
+            'model' => $model,
+            'returnUrl' => $returnUrl,
+        ]);
+    }
+
+    private function normalizeReturnUrl($returnUrl)
+    {
+        if (!$returnUrl || strpos($returnUrl, '//') === 0 || preg_match('/^[a-z][a-z0-9+.-]*:/i', $returnUrl)) {
+            return Url::to(['site/index']);
+        }
+
+        return $returnUrl;
     }
 
     public function actionJuryApply()

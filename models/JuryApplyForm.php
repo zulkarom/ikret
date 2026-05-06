@@ -22,7 +22,7 @@ class JuryApplyForm extends Model
     public function rules()
     {
         return [
-            [['email', 'fullname', 'category', 'phone', 'institution', 'designation', 'requirement_ids'], 'required'],
+            [['email', 'fullname', 'category', 'phone', 'institution', 'designation', 'address', 'requirement_ids'], 'required'],
             [['email'], 'email'],
             [['address'], 'string'],
             [['requirement_ids'], 'validateRequirementIds'],

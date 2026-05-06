@@ -62,6 +62,3 @@ use yii\helpers\Url;
 </div>
 <?php } ?>
 <?php ActiveForm::end(); ?>
-
-
-?>
