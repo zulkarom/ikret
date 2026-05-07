@@ -14,6 +14,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     public $fullnameSearch;
     public $dateSearch;
     public $jury_status;
+    public $jurySearch;
    // public $programx_id;
     /**
      * {@inheritdoc}
@@ -22,7 +23,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     {
         return [
             [['program_id', 'program_sub', 'jury_status'], 'integer'],
-            [['fullnameSearch','dateSearch', 'group_name', 'group_code', 'booth_number'], 'string'],
+            [['fullnameSearch','dateSearch', 'group_name', 'jurySearch'], 'string'],
         ];
     }
 
@@ -31,6 +32,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
         return [
             'fullnameSearch' => 'Participant Name',
             'jury_status' => 'Jury Status',
+            'jurySearch' => 'Jury Name',
         ];
     }
 
@@ -83,14 +85,18 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
 
         $query->andFilterWhere(['like', 'a.submitted_at', $this->submitted_at])
         ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch])
-        ->andFilterWhere(['like', 'a.group_code', $this->group_code])
         ->andFilterWhere(['like', 'a.group_name', $this->group_name])
-        ->andFilterWhere(['like', 'a.booth_number', $this->group_name])
         ;
 
-        if($this->jury_status !== null && $this->jury_status !== ''){
+        if(($this->jury_status !== null && $this->jury_status !== '') || trim((string)$this->jurySearch) !== ''){
             $query->innerJoinWith(['juries j'], false)
-                ->andWhere(['j.status' => (int)$this->jury_status])
+                ->leftJoin(['ju' => User::tableName()], 'ju.id = j.user_id');
+
+            if($this->jury_status !== null && $this->jury_status !== ''){
+                $query->andWhere(['j.status' => (int)$this->jury_status]);
+            }
+
+            $query->andFilterWhere(['like', 'ju.fullname', $this->jurySearch])
                 ->distinct();
         }
 

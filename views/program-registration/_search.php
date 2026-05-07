@@ -24,15 +24,14 @@ use app\models\JuryAssign;
     ]); ?>
     <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
     <div class="row">
-        <div class="col-md-4">
-        <?= $form->field($model, 'group_code')->textInput(['placeholder' => 'Search Group ID'])->label(false) ?>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
         <?= $form->field($model, 'group_name')->textInput(['placeholder' => 'Search Group Name'])->label(false) ?>
         </div>
-        <div class="col-md-4">
-        <?= $form->field($model, 'booth_number')->textInput(['placeholder' => 'Search Booth Number'])->label(false) ?>
-        </div>
+        <?php if($model->hasProperty('jurySearch')): ?>
+            <div class="col-md-6">
+            <?= $form->field($model, 'jurySearch')->textInput(['placeholder' => 'Search Jury Name'])->label(false) ?>
+            </div>
+        <?php endif; ?>
     </div>
     <?php if($model->hasProperty('jury_status')): ?>
         <div class="row">
