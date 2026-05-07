@@ -82,6 +82,7 @@ foreach($extraColumns as $column){
                     <input type="file" class="form-control mb-3" id="csv_file" name="csv_file" accept=".csv,text/csv">
                     <div class="d-flex gap-2">
                         <?= Html::submitButton('Upload CSV', ['class' => 'btn btn-primary']) ?>
+                        <?= Html::a('Delete Participants', ['program-registration/cleanup-participants', 'id' => $program->id, 'sub' => $managerSub ? $managerSub->id : null], ['class' => 'btn btn-outline-danger']) ?>
                         <?= Html::a('Back', $breadcrumbUrl, ['class' => 'btn btn-outline-secondary']) ?>
                     </div>
                     <?= Html::endForm() ?>

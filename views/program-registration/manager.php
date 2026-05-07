@@ -137,6 +137,7 @@ CSS);
 
         <div class="form-group"><?=Html::button('Filter Form',['id' => 'btn-filter-form','class' => 'btn btn-info'])?> 
         <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
+        <?=Html::a('<i class="bi bi-download"></i> Export Excel', ['manager-export-assignments', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-success'])?> 
     </div> 
 
         <?php

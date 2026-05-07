@@ -32,6 +32,8 @@ use app\models\User;
 use app\models\UserRole;
 use app\models\JuryProfile;
 use app\models\RubricJudgingSession;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Yii;
 use yii\db\Expression;
 use yii\db\Query;
@@ -868,6 +870,93 @@ class ProgramRegistrationController extends Controller
         }
 
         
+    }
+
+    public function actionManagerExportAssignments($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $program = $role->program;
+        $programSub = null;
+        if($program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        $registrations = ProgramRegistration::find()
+            ->where(['program_id' => (int)$program->id])
+            ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
+            ->andFilterWhere(['program_sub' => $sub])
+            ->with(['user', 'members', 'juries.user', 'juries.judgingSession'])
+            ->orderBy(['group_name' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Assignments');
+        $sheet->fromArray([
+            'group name',
+            'names',
+            'matric',
+            'jury name',
+            'jury email',
+            'session',
+            'session_id',
+        ], null, 'A1');
+
+        $rowNo = 2;
+        foreach($registrations as $registration){
+            $participantRows = $this->buildRegistrationParticipantExportRows($registration);
+            $juries = $registration->juries ?: [null];
+
+            foreach($participantRows as $participantRow){
+                foreach($juries as $jury){
+                    $session = $jury ? $jury->judgingSession : null;
+                    $juryUser = $jury ? $jury->user : null;
+                    $sheet->fromArray([
+                        $registration->group_name,
+                        $participantRow['name'],
+                        $participantRow['matric'],
+                        $juryUser ? $juryUser->fullname : '',
+                        $juryUser ? $juryUser->email : '',
+                        $session ? $this->formatJudgingSessionExportText($session) : '',
+                        $session ? $session->id : '',
+                    ], null, 'A' . $rowNo);
+                    $rowNo++;
+                }
+            }
+        }
+
+        foreach(range('A', 'G') as $column){
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        $sheet->getStyle('A1:G1')->getFont()->setBold(true);
+
+        $filenameParts = ['I-CREATE_ASSIGNMENTS', $program->program_abbr];
+        if($programSub){
+            $filenameParts[] = $programSub->sub_abbr ?: ('SUB' . $programSub->id);
+        }
+        $filenameParts[] = date('Y-m-d');
+        $filename = preg_replace('/[^A-Za-z0-9_\-]+/', '_', implode('_', $filenameParts)) . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+        $spreadsheet->disconnectWorksheets();
+
+        return Yii::$app->response->sendContentAsFile($content, $filename, [
+            'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'inline' => false,
+        ]);
     }
 
     public function actionManagerImportJuryAssignments($id, $sub = null)
@@ -2197,6 +2286,86 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
+    public function actionCleanupParticipants($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $roleQuery = UserRole::find()->where([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'status' => 10,
+        ]);
+        if($sub !== null){
+            $roleQuery->andWhere(['program_sub' => $sub]);
+        }
+        $role = $roleQuery->one();
+
+        if(!$role){
+            return;
+        }
+
+        $program = $role->program;
+        $managerSub = null;
+        if($program->has_sub == 1 && $sub){
+            $managerSub = $role->programSub;
+        }
+
+        $subQuery = ProgramSub::find()->where(['program_id' => $program->id]);
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $subQuery->andWhere(['is_active' => 1]);
+        }
+        $availableProgramSubs = $subQuery->orderBy('id')->all();
+
+        $selectedSub = $sub !== null ? (string)(int)$sub : 'all';
+        if(Yii::$app->request->isPost){
+            $selectedSub = (string)Yii::$app->request->post('program_sub', $selectedSub);
+        }elseif(Yii::$app->request->get('program_sub') !== null){
+            $selectedSub = (string)Yii::$app->request->get('program_sub');
+        }
+
+        if((int)$program->has_sub !== 1){
+            $selectedSub = 'all';
+        }
+
+        $selectedSubId = $selectedSub === 'all' || $selectedSub === '' ? null : (int)$selectedSub;
+        $stats = $this->buildParticipantCleanupStats((int)$program->id, $selectedSubId);
+
+        if(Yii::$app->request->isPost && Yii::$app->request->post('cleanup_confirm') === 'DELETE'){
+            if((int)$stats['registrations'] <= 0){
+                Yii::$app->session->addFlash('error', 'No participant registrations found for the selected scope.');
+                return $this->refresh();
+            }
+            if((int)$stats['jury_assignments'] > 0){
+                Yii::$app->session->addFlash('error', 'Cannot delete participants because this scope has jury assignments. Remove jury assignments first.');
+                return $this->refresh();
+            }
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try{
+                $deleted = $this->deleteParticipantRegistrationsForScope((int)$program->id, $selectedSubId);
+                $transaction->commit();
+                Yii::$app->session->addFlash('success', 'Deleted ' . $deleted['registrations'] . ' participant registration(s). User accounts were not deleted.');
+                return $this->redirect(['cleanup-participants', 'id' => $program->id, 'sub' => $managerSub ? $managerSub->id : null, 'program_sub' => $selectedSub]);
+            }catch(\Throwable $e){
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+        }elseif(Yii::$app->request->isPost){
+            Yii::$app->session->addFlash('error', 'Type DELETE to confirm participant cleanup.');
+        }
+
+        return $this->render('cleanup-participants', [
+            'role' => $role,
+            'program' => $program,
+            'managerSub' => $managerSub,
+            'availableProgramSubs' => $availableProgramSubs,
+            'selectedSub' => $selectedSub,
+            'stats' => $stats,
+        ]);
+    }
+
     protected function buildDashboardStats($program, $programSub = null)
     {
         $programId = (int)$program->id;
@@ -2807,6 +2976,112 @@ class ProgramRegistrationController extends Controller
         fwrite($handle, $content);
         rewind($handle);
         return $handle;
+    }
+
+    protected function findParticipantRegistrationIdsForScope($programId, $programSubId = null)
+    {
+        $query = ProgramRegistration::find()
+            ->select(['id'])
+            ->where(['program_id' => (int)$programId]);
+
+        if($programSubId !== null){
+            $query->andWhere(['program_sub' => (int)$programSubId]);
+        }
+
+        return array_map('intval', $query->column());
+    }
+
+    protected function buildParticipantCleanupStats($programId, $programSubId = null)
+    {
+        $registrationIds = $this->findParticipantRegistrationIdsForScope($programId, $programSubId);
+        if(!$registrationIds){
+            return [
+                'registrations' => 0,
+                'members' => 0,
+                'mentors' => 0,
+                'jury_assignments' => 0,
+                'achievements' => 0,
+            ];
+        }
+
+        return [
+            'registrations' => count($registrationIds),
+            'members' => (int)Member::find()->where(['program_reg_id' => $registrationIds])->count(),
+            'mentors' => (int)Mentor::find()->where(['program_reg_id' => $registrationIds])->count(),
+            'jury_assignments' => (int)JuryAssign::find()->where(['reg_id' => $registrationIds])->count(),
+            'achievements' => (int)ParticipantAchieve::find()->where(['program_reg_id' => $registrationIds])->count(),
+        ];
+    }
+
+    protected function deleteParticipantRegistrationsForScope($programId, $programSubId = null)
+    {
+        $registrationIds = $this->findParticipantRegistrationIdsForScope($programId, $programSubId);
+        if(!$registrationIds){
+            return [
+                'registrations' => 0,
+            ];
+        }
+
+        if(JuryAssign::find()->where(['reg_id' => $registrationIds])->exists()){
+            throw new \RuntimeException('Cannot delete participants because this scope has jury assignments. Remove jury assignments first.');
+        }
+
+        ParticipantAchieve::deleteAll(['program_reg_id' => $registrationIds]);
+        Member::deleteAll(['program_reg_id' => $registrationIds]);
+        Mentor::deleteAll(['program_reg_id' => $registrationIds]);
+        ProgramRegistration::deleteAll(['id' => $registrationIds]);
+
+        return [
+            'registrations' => count($registrationIds),
+        ];
+    }
+
+    protected function buildRegistrationParticipantExportRows(ProgramRegistration $registration)
+    {
+        $rows = [];
+        foreach($registration->members as $member){
+            $name = trim((string)$member->member_name);
+            $matric = trim((string)$member->member_matric);
+            if($name === '' && $matric === ''){
+                continue;
+            }
+            $rows[] = [
+                'name' => $name,
+                'matric' => $matric,
+            ];
+        }
+
+        if($rows){
+            return $rows;
+        }
+
+        return [[
+            'name' => $registration->user ? trim((string)$registration->user->fullname) : trim((string)$registration->contact_person),
+            'matric' => $registration->user ? trim((string)$registration->user->matric) : '',
+        ]];
+    }
+
+    protected function formatJudgingSessionExportText(RubricJudgingSession $session)
+    {
+        $parts = [];
+        if($session->session_name !== ''){
+            $parts[] = $session->session_name;
+        }
+        if($session->datetime_start){
+            $parts[] = 'Start: ' . $session->datetime_start;
+        }
+        if($session->datetime_end){
+            $parts[] = 'End: ' . $session->datetime_end;
+        }
+        if($session->location){
+            $parts[] = 'Location: ' . $session->location;
+        }
+        $modes = RubricJudgingSession::listMode();
+        if($session->mode && isset($modes[(int)$session->mode])){
+            $parts[] = 'Mode: ' . $modes[(int)$session->mode];
+        }
+
+        return implode(' | ', $parts);
     }
 
     protected function cleanExistingUserFullname(User $user, $matric)
