@@ -2001,7 +2001,7 @@ class ProgramRegistrationController extends Controller
                 $rowNo++;
                 $rowAssoc = [];
                 foreach($headers as $index => $header){
-                    $rowAssoc[$header] = array_key_exists($index, $row) ? trim((string)$row[$index]) : '';
+                    $rowAssoc[$header] = array_key_exists($index, $row) ? $this->normalizeImportedCsvValue($row[$index]) : '';
                 }
 
                 $hasContent = false;
@@ -2049,7 +2049,7 @@ class ProgramRegistrationController extends Controller
 
                     // Create user account for the first member
                     $firstMemberMatric = isset($firstRow['member_matrics']) ? trim((string)$firstRow['member_matrics']) : '';
-                    $firstMemberName = isset($firstRow['member_names']) ? trim((string)$firstRow['member_names']) : '';
+                    $firstMemberName = isset($firstRow['member_names']) ? $this->removeLeadingNameNumbering($firstRow['member_names']) : '';
 
                     if($firstMemberMatric === '' || $firstMemberName === ''){
                         throw new \RuntimeException('First member must have matric and name for group: ' . $groupName);
@@ -2059,6 +2059,7 @@ class ProgramRegistrationController extends Controller
                     $existingUser = User::findByUsername($firstMemberMatric);
                     if($existingUser){
                         $user = $existingUser;
+                        $this->cleanExistingUserFullname($user, $firstMemberMatric);
                     }else{
                         // Create new user
                         $user = new User();
@@ -2075,6 +2076,18 @@ class ProgramRegistrationController extends Controller
 
                         if(!$user->save(false)){
                             throw new \RuntimeException('Failed to create user account for matric: ' . $firstMemberMatric . '. Database error.');
+                        }
+                    }
+
+                    foreach($groupRows as $memberRow){
+                        $memberMatric = isset($memberRow['member_matrics']) ? trim((string)$memberRow['member_matrics']) : '';
+                        if($memberMatric === ''){
+                            continue;
+                        }
+
+                        $memberUser = User::findByUsername($memberMatric);
+                        if($memberUser){
+                            $this->cleanExistingUserFullname($memberUser, $memberMatric);
                         }
                     }
 
@@ -2136,7 +2149,7 @@ class ProgramRegistrationController extends Controller
                     // Create member records for all members in the group
                     foreach($groupRows as $memberRow){
                         $memberMatric = isset($memberRow['member_matrics']) ? trim((string)$memberRow['member_matrics']) : '';
-                        $memberName = isset($memberRow['member_names']) ? trim((string)$memberRow['member_names']) : '';
+                        $memberName = isset($memberRow['member_names']) ? $this->removeLeadingNameNumbering($memberRow['member_names']) : '';
 
                         if($memberName === ''){
                             continue; // Skip empty member names
@@ -2717,6 +2730,37 @@ class ProgramRegistrationController extends Controller
     protected function hasJuryAssignments($id)
     {
         return JuryAssign::find()->where(['reg_id' => $id])->exists();
+    }
+
+    protected function removeLeadingNameNumbering($name)
+    {
+        $name = $this->normalizeImportedCsvValue($name);
+        return trim(preg_replace('/^(?:\d+\s*(?:[\.\)\-:]\s*|\s+))+/', '', $name));
+    }
+
+    protected function normalizeImportedCsvValue($value)
+    {
+        $value = trim((string)$value);
+        return str_replace([
+            "\xEF\xBF\xBD",
+            "\xE2\x80\x98",
+            "\xE2\x80\x99",
+            "\x91",
+            "\x92",
+        ], "'", $value);
+    }
+
+    protected function cleanExistingUserFullname(User $user, $matric)
+    {
+        $cleanFullname = $this->removeLeadingNameNumbering($user->fullname);
+        if($cleanFullname === (string)$user->fullname){
+            return;
+        }
+
+        $user->fullname = $cleanFullname;
+        if(!$user->save(false)){
+            throw new \RuntimeException('Failed to update user fullname for matric: ' . $matric . '. Database error.');
+        }
     }
 
     /**
