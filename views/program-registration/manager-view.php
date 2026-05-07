@@ -65,4 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 
+<div class="d-flex gap-2">
+<a href="<?=Url::to(['manager-members', 'id' => $model->id, 'sub' => $model->program_sub])?>" class="btn btn-primary btn-sm"><i class="bi bi-people"></i> Edit Group Members</a>
 <a href="<?=Url::to(['delete-registration', 'id' => $model->id])?>" class="btn btn-danger btn-sm" data-confirm="Are you sure to delete this registration? This action cannot be undone!"><i class="bi bi-trash"></i></a>
+</div>

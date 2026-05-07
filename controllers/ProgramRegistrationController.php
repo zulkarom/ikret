@@ -11,6 +11,7 @@ use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
 use app\models\ManagerSessionSearch;
 use app\models\Member;
+use app\models\Model;
 use app\models\Mentor;
 use app\models\MentorMenteesSearch;
 use app\models\ParticipantAchieve;
@@ -578,6 +579,75 @@ class ProgramRegistrationController extends Controller
             Yii::$app->session->addFlash('success', "Flagged Participants Updated");
         }
         return $this->redirect(['manager', 'id' => $reg->program_id, 'sub' => $sub]);
+    }
+
+    public function actionManagerMembers($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $registration = $this->findModel($id);
+        $role = UserRole::findOne([
+            'program_id' => $registration->program_id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub,
+            'status' => 10,
+        ]);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+        if((int)$registration->program->has_sub === 1 && (int)$registration->program_sub !== (int)$sub){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $members = $registration->members;
+        if(empty($members)){
+            $members = [new Member()];
+        }
+
+        if(Yii::$app->request->isPost){
+            $oldIDs = ArrayHelper::map($registration->members, 'id', 'id');
+            $members = Model::createMultiple(Member::class, $registration->members);
+            Model::loadMultiple($members, Yii::$app->request->post());
+            $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($members, 'id', 'id')));
+
+            $valid = Model::validateMultiple($members);
+            if($valid){
+                $transaction = Yii::$app->db->beginTransaction();
+                try{
+                    if($deletedIDs){
+                        Member::deleteAll(['id' => $deletedIDs, 'program_reg_id' => $registration->id]);
+                    }
+
+                    foreach($members as $member){
+                        $member->program_reg_id = $registration->id;
+                        $member->member_name = strtoupper(trim((string)$member->member_name));
+                        $member->member_matric = strtoupper(trim((string)$member->member_matric));
+                        if(!$member->save(false)){
+                            throw new \RuntimeException('Unable to save group member.');
+                        }
+                    }
+
+                    $registration->updated_at = time();
+                    $registration->save(false, ['updated_at']);
+                    $transaction->commit();
+                    Yii::$app->session->addFlash('success', 'Group members updated.');
+                    return $this->redirect(['manager-view', 'id' => $registration->id, 'sub' => $sub]);
+                }catch(\Throwable $e){
+                    $transaction->rollBack();
+                    Yii::$app->session->addFlash('error', $e->getMessage());
+                }
+            }else{
+                Yii::$app->session->addFlash('error', 'Please correct the highlighted member fields.');
+            }
+        }
+
+        return $this->render('manager-members', [
+            'registration' => $registration,
+            'members' => $members,
+            'programSub' => $registration->programSub,
+            'sub' => $sub,
+        ]);
     }
 
     public function actionManagerClearForm($id, $sub = null){
