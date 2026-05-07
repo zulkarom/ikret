@@ -17,7 +17,7 @@ class UserSearch extends User
     {
         return [
             [['is_internal', 'is_student'], 'integer'],
-            [['fullname','email'], 'string'],
+            [['fullname', 'username', 'matric', 'email'], 'string'],
         ];
     }
 
@@ -62,6 +62,8 @@ class UserSearch extends User
         ]);
 
         $query->andFilterWhere(['like', 'fullname', $this->fullname]);
+        $query->andFilterWhere(['like', 'username', $this->username]);
+        $query->andFilterWhere(['like', 'matric', $this->matric]);
         
         $query->andFilterWhere(['or', 
             ['like', 'email', $this->email],

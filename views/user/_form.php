@@ -14,6 +14,8 @@ use yii\helpers\Html;
 
     <?= $form->field($model, 'fullname')->textInput() ?>
 
+    <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'email')->textInput() ?>
 
     <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>

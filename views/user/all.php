@@ -45,6 +45,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
+                'attribute' => 'username',
+                'format' => 'text',
+            ],
+            [
                 'attribute' => 'email',
                 'label' => 'Email /Phone',
                 'format' => 'html',
@@ -65,6 +69,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                     return $str;
                 }
+            ],
+            [
+                'attribute' => 'matric',
+                'format' => 'text',
             ],
             [
                 'attribute' => 'is_student',
