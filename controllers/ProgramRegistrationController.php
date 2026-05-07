@@ -1166,23 +1166,21 @@ class ProgramRegistrationController extends Controller
                         $targetProgramSubId = $scopeSubIds[0] ?: null;
                     }
 
-                    $registrationQuery = ProgramRegistration::find()
-                        ->where(['program_id' => (int)$program->id])
-                        ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
-                        ->andWhere('LOWER(TRIM(group_name)) = :group_name', [':group_name' => strtolower($groupName)]);
-
-                    if((int)$program->has_sub === 1){
-                        $registrationQuery->andWhere(['program_sub' => $targetProgramSubId]);
-                    }
-
-                    $registrations = $registrationQuery->all();
+                    $registrations = $this->findRegistrationsByImportedGroupName(
+                        (int)$program->id,
+                        (int)$program->has_sub === 1 ? $targetProgramSubId : null,
+                        $groupName
+                    );
                     if(count($registrations) !== 1){
                         $skipped++;
-                        $messages[] = 'Row ' . $rowNo . ': group_name must match exactly one participant group in this scope - ' . $groupName;
+                        $messages[] = 'Row ' . $rowNo . ': group_name must match exactly one participant group in this scope after normalizing spaces/punctuation - ' . $groupName;
                         continue;
                     }
 
                     $registration = $registrations[0];
+                    if(strcasecmp(trim((string)$registration->group_name), $groupName) !== 0){
+                        $warnings[] = 'Row ' . $rowNo . ': matched CSV group_name "' . $groupName . '" to participant group "' . $registration->group_name . '".';
+                    }
 
                     try{
                         $this->ensureApprovedJuryApplicationForUser(
@@ -2730,6 +2728,49 @@ class ProgramRegistrationController extends Controller
     protected function hasJuryAssignments($id)
     {
         return JuryAssign::find()->where(['reg_id' => $id])->exists();
+    }
+
+    protected function findRegistrationsByImportedGroupName($programId, $programSubId, $groupName)
+    {
+        $baseQuery = ProgramRegistration::find()
+            ->where(['program_id' => (int)$programId])
+            ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]]);
+
+        if($programSubId !== null){
+            $baseQuery->andWhere(['program_sub' => (int)$programSubId]);
+        }
+
+        $exactQuery = clone $baseQuery;
+        $exactMatches = $exactQuery
+            ->andWhere('LOWER(TRIM(group_name)) = :group_name', [':group_name' => strtolower(trim((string)$groupName))])
+            ->all();
+
+        if($exactMatches){
+            return $exactMatches;
+        }
+
+        $normalizedGroupName = $this->normalizeGroupNameForImportMatch($groupName);
+        if($normalizedGroupName === ''){
+            return [];
+        }
+
+        $candidates = $baseQuery
+            ->andWhere(['not', ['group_name' => null]])
+            ->all();
+        $matches = [];
+        foreach($candidates as $candidate){
+            if($this->normalizeGroupNameForImportMatch($candidate->group_name) === $normalizedGroupName){
+                $matches[] = $candidate;
+            }
+        }
+
+        return $matches;
+    }
+
+    protected function normalizeGroupNameForImportMatch($groupName)
+    {
+        $groupName = strtolower(trim((string)$groupName));
+        return preg_replace('/[^a-z0-9]+/', '', $groupName);
     }
 
     protected function removeLeadingNameNumbering($name)

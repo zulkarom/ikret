@@ -66,7 +66,7 @@ if($stages){
                         <li>Newly created users use the email string as their default password.</li>
                         <li>Auto-created jury profiles use category <code>General</code>.</li>
                         <li><code>jury_name</code> must match the existing jury full name when that user already has a name.</li>
-                        <li><code>group_name</code> must match exactly one participant group in this scope.</li>
+                        <li><code>group_name</code> must match exactly one participant group in this scope. Spaces and punctuation are ignored, so <code>NW 1</code> can match <code>NW1</code>.</li>
                         <li>Blank <code>jury_name</code>, <code>jury_email</code>, <code>rubric_id</code>, or <code>session_id</code> cells reuse the previous non-empty value.</li>
                         <li>Each row must provide its own <code>group_name</code>.</li>
                         <li><code>stage</code> is still controlled by this page and applies to every imported row.</li>
