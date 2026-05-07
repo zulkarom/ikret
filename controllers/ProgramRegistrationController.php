@@ -936,7 +936,7 @@ class ProgramRegistrationController extends Controller
                 return $this->refresh();
             }
 
-            $handle = fopen($csvFile->tempName, 'r');
+            $handle = $this->openImportedCsvFile($csvFile->tempName);
             if($handle === false){
                 Yii::$app->session->addFlash('error', 'Unable to read the uploaded CSV file.');
                 return $this->refresh();
@@ -1481,7 +1481,7 @@ class ProgramRegistrationController extends Controller
             return $this->redirect(['jury-application-import']);
         }
 
-        $handle = fopen($file->tempName, 'r');
+        $handle = $this->openImportedCsvFile($file->tempName);
         if(!$handle){
             Yii::$app->session->addFlash('error', 'Could not read uploaded file.');
             return $this->redirect(['jury-application-import']);
@@ -1966,7 +1966,7 @@ class ProgramRegistrationController extends Controller
                 return $this->refresh();
             }
 
-            $handle = fopen($csvFile->tempName, 'r');
+            $handle = $this->openImportedCsvFile($csvFile->tempName);
             if($handle === false){
                 Yii::$app->session->addFlash('error', 'Unable to read the uploaded CSV file.');
                 return $this->refresh();
@@ -2789,6 +2789,24 @@ class ProgramRegistrationController extends Controller
             "\x91",
             "\x92",
         ], "'", $value);
+    }
+
+    protected function openImportedCsvFile($path)
+    {
+        $content = file_get_contents($path);
+        if($content === false){
+            return false;
+        }
+
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
+        $handle = fopen('php://temp', 'r+');
+        if($handle === false){
+            return false;
+        }
+
+        fwrite($handle, $content);
+        rewind($handle);
+        return $handle;
     }
 
     protected function cleanExistingUserFullname(User $user, $matric)
