@@ -86,6 +86,10 @@ class ProgramRegistrationController extends Controller
     }
 
     public function actionJuryCertPdf($p, $s = null, $u = null){
+        if(!$this->ensureCertificatesReleased(true)){
+            return $this->render('empty');
+        }
+
         //$u = Yii::$app->user->identity->id;
         if($u){
             $u = $this->findUser($u);
@@ -115,12 +119,29 @@ class ProgramRegistrationController extends Controller
         return false;
     }
 
+    private function ensureCertificatesReleased($allowPrivileged = true)
+    {
+        if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
+            return true;
+        }
+
+        if(Setting::areCertificatesReleased()){
+            return true;
+        }
+
+        $releaseDate = Setting::certificateReleaseText();
+        $message = $releaseDate
+            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+            : 'Certificates have not been published.';
+        Yii::$app->session->addFlash('info', $message);
+
+        return false;
+    }
+
     public function actionJuryCertPage($u=null)
     {
-        $setting = Setting::findOne(1);
         $admin = $u && Yii::$app->user->identity->isManager;
-        if(time() < strtotime($setting->allow_cert_from) && !$admin){
-            Yii::$app->session->addFlash('info', "Certificates have not been published.");
+        if(!$this->ensureCertificatesReleased($admin)){
             return $this->render("empty");
         }
         if($u){
@@ -166,10 +187,8 @@ class ProgramRegistrationController extends Controller
 
     public function actionMentorMentees($u = null)
     {
-        $setting = Setting::findOne(1);
         $admin = $u && Yii::$app->user->identity->isManager;
-        if(time() < strtotime($setting->allow_cert_from) && !$admin){
-            Yii::$app->session->addFlash('info', "Certificates have not been published.");
+        if(!$this->ensureCertificatesReleased($admin)){
             return $this->render("empty");
         }
         if($u){

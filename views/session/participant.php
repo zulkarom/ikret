@@ -1,5 +1,6 @@
 <?php
 
+use app\models\Setting;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -7,6 +8,7 @@ use yii\helpers\Url;
 /** @var app\models\Session $model */
 
 $this->title = 'Attendance & Certificate';
+$certificatesReleased = Setting::areCertificatesReleased();
 $this->params['breadcrumbs'][] = ['label' => 'Sessions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -17,7 +19,10 @@ $this->params['breadcrumbs'][] = $this->title;
 <h1><?= Html::encode($this->title) ?></h1>
 
 <div>
-                <button class="btn btn-primary" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button> <a href="<?=Url::to(['cert-qr'])?>" class="btn btn-warning" style="margin-top: 20px; margin-bottom:20px" target="_blank"><i class="bi bi-award"></i>  CERTIFICATE</a>
+                <button class="btn btn-primary" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
+                <?php if ($certificatesReleased) { ?>
+                    <a href="<?=Url::to(['cert-qr'])?>" class="btn btn-warning" style="margin-top: 20px; margin-bottom:20px" target="_blank"><i class="bi bi-award"></i>  CERTIFICATE</a>
+                <?php } ?>
               </div>
 
 <?php

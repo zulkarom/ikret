@@ -46,7 +46,8 @@ $this->title = 'Settings';
 
                     <?= $form->field($model, 'date_start')->textInput(['type' => 'date']) ?>
                     <?= $form->field($model, 'date_end')->textInput(['type' => 'date']) ?>
-                    <?= $form->field($model, 'allow_cert_from')->textInput(['type' => 'date']) ?>
+                    <?= $form->field($model, 'allow_cert_from')->textInput(['type' => 'date'])
+                        ->hint('Participant certificates, awards, jury certificates, mentor certificates, committee certificates, and certificate menu links will be released from this date.') ?>
                     <?= $form->field($model, 'allow_edit_reg_until')->textInput(['type' => 'date']) ?>
 
                     <div class="form-group">

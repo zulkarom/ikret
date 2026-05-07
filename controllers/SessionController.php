@@ -155,10 +155,12 @@ class SessionController extends Controller
         if(Yii::$app->user->identity->isManager && $u){
             $user = User::findOne($u);
         }else{
-            $setting = Setting::findOne(1);
-            $allow_from = $setting->allow_cert_from;
-            if(time() < strtotime($allow_from)){
-                Yii::$app->session->addFlash('info', "The certificates are expected to be released soon.");
+            if(!Setting::areCertificatesReleased()){
+                $releaseDate = Setting::certificateReleaseText();
+                $message = $releaseDate
+                    ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+                    : 'The certificates are expected to be released soon.';
+                Yii::$app->session->addFlash('info', $message);
                 return $this->render('empty');
             }
             $user = Yii::$app->user->identity;

@@ -31,16 +31,6 @@ $this->title = 'Available Programs';
                                     <?php if(!empty($program->program_abbr)){ ?>
                                         <div class="text-muted small mb-2"><?= Html::encode($program->program_abbr) ?></div>
                                     <?php } ?>
-                                    <?php if(!empty($program->date_start) || !empty($program->date_end)){ ?>
-                                        <div class="small mb-2">
-                                            <?php if(!empty($program->date_start)){ ?>
-                                                <strong>Start:</strong> <?= date('d/m/Y', strtotime($program->date_start)) ?>
-                                            <?php } ?>
-                                            <?php if(!empty($program->date_end)){ ?>
-                                                <span class="ms-3"><strong>End:</strong> <?= date('d/m/Y', strtotime($program->date_end)) ?></span>
-                                            <?php } ?>
-                                        </div>
-                                    <?php } ?>
                                     <div class="small text-muted">
                                         <?= StringHelper::truncateWords(strip_tags((string)$program->reg_info), 30) ?>
                                     </div>

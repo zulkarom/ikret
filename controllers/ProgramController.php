@@ -2022,10 +2022,7 @@ class ProgramController extends Controller
 
     public function actionCertificate() //program
     {
-        $setting = Setting::findOne(1);
-        $allow_from = $setting->allow_cert_from;
-        if(time() < strtotime($allow_from)){
-            Yii::$app->session->addFlash('info', "The certificates are expected to be released soon.");
+        if(!$this->ensureCertificatesReleased(false)){
             return $this->render('empty');
         }
 
@@ -2791,7 +2788,30 @@ class ProgramController extends Controller
         return $mentor;
     }
 
+    private function ensureCertificatesReleased($allowPrivileged = true)
+    {
+        if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
+            return true;
+        }
+
+        if(Setting::areCertificatesReleased()){
+            return true;
+        }
+
+        $releaseDate = Setting::certificateReleaseText();
+        $message = $releaseDate
+            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+            : 'The certificates are expected to be released soon.';
+        Yii::$app->session->addFlash('info', $message);
+
+        return false;
+    }
+
     public function actionCertParticipation($reg){
+        if(!$this->ensureCertificatesReleased()){
+            return $this->render('empty');
+        }
+
         $pdf = new Certificate;
         
         $reg = $this->findRegistration($reg);
@@ -2807,6 +2827,10 @@ class ProgramController extends Controller
     }
 
     public function actionCertParticipationSession($reg, $s, $u){
+        if(!$this->ensureCertificatesReleased()){
+            return $this->render('empty');
+        }
+
         $pdf = new CertificateSession;
         $session = $this->findSessionReg($s, $reg, $u);
         
@@ -2819,6 +2843,10 @@ class ProgramController extends Controller
     }
 
     public function actionCertAchievement($reg){
+        if(!$this->ensureCertificatesReleased()){
+            return $this->render('empty');
+        }
+
         $pdf = new CertificateAchievement;
         $reg = $this->findRegistrationAchievement($reg);
         $mentor = $this->meAsMentor($reg);
@@ -2831,6 +2859,10 @@ class ProgramController extends Controller
     }
 
     public function actionCertExcellence($reg){
+        if(!$this->ensureCertificatesReleased()){
+            return $this->render('empty');
+        }
+
         $pdf = new CertificateExcellence;
         $reg = $this->findRegistrationExcellence($reg);
         $mentor = $this->meAsMentor($reg);

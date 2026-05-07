@@ -8,6 +8,7 @@ use app\models\Committee;
 use app\models\CommitteeRequestSearch;
 use app\models\CommitteeStudentSearch;
 use app\models\ProgramRegistration;
+use app\models\Setting;
 use app\models\UserRole;
 use app\models\LetterPdf;
 use app\models\RoleRequestSearch;
@@ -205,6 +206,10 @@ class CommitteeController extends Controller
     }
 
     public function actionCertificate($id){
+        if(!$this->ensureCertificatesReleased()){
+            return $this->render('empty');
+        }
+
         if(!$this->canAccessDoc($id)) return false;
 
         $pdf = new CertificateCommittee;
@@ -227,9 +232,31 @@ class CommitteeController extends Controller
         return false;
     }
 
+    private function ensureCertificatesReleased($allowPrivileged = true)
+    {
+        if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
+            return true;
+        }
+
+        if(Setting::areCertificatesReleased()){
+            return true;
+        }
+
+        $releaseDate = Setting::certificateReleaseText();
+        $message = $releaseDate
+            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+            : 'Certificates have not been published.';
+        Yii::$app->session->addFlash('info', $message);
+
+        return false;
+    }
+
     public function actionCertificatePage()
     {
         if(!Yii::$app->user->identity->isCommittee) return false;
+        if(!$this->ensureCertificatesReleased(false)){
+            return $this->render('empty');
+        }
 
         $list = UserRole::find()
         ->where([

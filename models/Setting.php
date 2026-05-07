@@ -43,7 +43,7 @@ class Setting extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'allow_cert_from' => 'Allow Cert From',
+            'allow_cert_from' => 'Certificate Release Date',
             'allow_edit_reg_until' => 'Allow Edit Registration Until',
             'date_start' => 'Event Start Date',
             'date_end' => 'Event End Date',
@@ -55,5 +55,42 @@ class Setting extends \yii\db\ActiveRecord
             'programme_book_qr_file' => 'Programme Book QR',
             'program_description' => 'Program Description',
         ];
+    }
+
+    public static function certificateReleaseDate()
+    {
+        $setting = static::findOne(1);
+
+        return $setting ? $setting->allow_cert_from : null;
+    }
+
+    public static function areCertificatesReleased($date = null)
+    {
+        if ($date === null) {
+            $date = static::certificateReleaseDate();
+        }
+
+        if (empty($date)) {
+            return true;
+        }
+
+        $releaseTime = strtotime($date . ' 00:00:00');
+
+        return $releaseTime === false || time() >= $releaseTime;
+    }
+
+    public static function certificateReleaseText($date = null)
+    {
+        if ($date === null) {
+            $date = static::certificateReleaseDate();
+        }
+
+        if (empty($date)) {
+            return null;
+        }
+
+        $releaseTime = strtotime($date);
+
+        return $releaseTime === false ? $date : date('d M Y', $releaseTime);
     }
 }
