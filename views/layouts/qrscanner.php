@@ -2,7 +2,7 @@
 use app\assets\ScannerAsset;
 use yii\helpers\Url;
 
-$url_result = Url::to(['/session/qrscanner-result', 't' => '']);
+$url_result = Url::to(['/session/qrscanner-result']);
 
 ScannerAsset::register($this);
 $directoryAsset = Yii::$app->assetManager->getPublishedUrl('@app/assets/qrscanner');
@@ -49,7 +49,7 @@ $directoryAsset = Yii::$app->assetManager->getPublishedUrl('@app/assets/qrscanne
 
 <script>
 (function () {
-    var resultUrl = <?= json_encode($url_result) ?>;
+    var resultUrl = <?= json_encode(rtrim($url_result, '/')) ?>;
     var decoderUrl = <?= json_encode($directoryAsset . '/decoder.js') ?>;
     var video = document.querySelector('video');
     var scannerLine = document.querySelector('.custom-scanner');
@@ -98,14 +98,37 @@ $directoryAsset = Yii::$app->assetManager->getPublishedUrl('@app/assets/qrscanne
         }
     }
 
+    function extractToken(value) {
+        var text = String(value || '').trim();
+
+        if (!text) {
+            return '';
+        }
+
+        try {
+            var parsedUrl = new URL(text);
+            text = parsedUrl.searchParams.get('t') || text;
+        } catch (error) {
+            var match = text.match(/[?&]t=([^&]+)/);
+            if (match) {
+                text = decodeURIComponent(match[1].replace(/\+/g, ' '));
+            }
+        }
+
+        return /^[A-Za-z0-9_-]+$/.test(text) ? text : '';
+    }
+
     function goToResult(value) {
-        if (redirected || !value) {
+        var token = extractToken(value);
+
+        if (redirected || !token) {
+            showMessage('Invalid attendance QR code.', 5000);
             return;
         }
 
         redirected = true;
         stopCamera();
-        window.location.href = resultUrl + encodeURIComponent(value);
+        window.location.href = resultUrl + '/' + encodeURIComponent(token);
     }
 
     function getScanCrop() {

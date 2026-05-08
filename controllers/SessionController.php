@@ -124,7 +124,7 @@ class SessionController extends Controller
     {
         date_default_timezone_set("Asia/Kuala_Lumpur");
         $this->layout = '//plain';
-        $t = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr?t=', '', $t);
+        $t = $this->extractSessionQrToken($t);
 
         return $this->render('qrscanner-result',[
             't' => $t,
@@ -333,5 +333,28 @@ class SessionController extends Controller
         }
 
         throw new NotFoundHttpException('The requested attendance record does not exist.');
+    }
+
+    protected function extractSessionQrToken($value)
+    {
+        $value = trim((string)$value);
+
+        if($value === ''){
+            return '';
+        }
+
+        $decoded = urldecode($value);
+        $query = parse_url($decoded, PHP_URL_QUERY);
+
+        if($query){
+            parse_str($query, $params);
+            if(isset($params['t'])){
+                $token = trim((string)$params['t']);
+                return preg_match('/^[A-Za-z0-9_-]+$/', $token) ? $token : '';
+            }
+        }
+
+        $token = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr?t=', '', $decoded);
+        return preg_match('/^[A-Za-z0-9_-]+$/', $token) ? $token : '';
     }
 }

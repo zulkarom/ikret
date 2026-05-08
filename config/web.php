@@ -53,6 +53,7 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'session/qrscanner-result/<t:[A-Za-z0-9_-]+>' => 'session/qrscanner-result',
             ],
         ],
     ],
