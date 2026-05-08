@@ -242,15 +242,11 @@ use yii\helpers\Url;
 
         if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminJury || Yii::$app->user->identity->isAdminRegistration){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
-          if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminRegistration){
+          if(Yii::$app->user->identity->isAdmin){
             $userAccessMenu = [];
-            if(Yii::$app->user->identity->isAdmin){
-              $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
-              $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
-            }
-            if(Yii::$app->user->identity->isAdminRegistration){
-              $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];
-            }
+            $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
+            $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
+            $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];
 
             $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => $userAccessMenu];
           }
