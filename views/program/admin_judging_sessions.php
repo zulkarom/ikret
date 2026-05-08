@@ -17,6 +17,26 @@ $formatDatetime = function($value){
     return Html::encode(date('d M Y, h:i A', strtotime($value)));
 };
 
+$formatDatetimeRange = function($startValue, $endValue) use ($formatDatetime){
+    if(!$startValue && !$endValue){
+        return '<span class="text-muted">-</span>';
+    }
+    if(!$startValue){
+        return $formatDatetime($endValue);
+    }
+    if(!$endValue){
+        return $formatDatetime($startValue);
+    }
+
+    $startTime = strtotime($startValue);
+    $endTime = strtotime($endValue);
+    if(date('Y-m-d', $startTime) === date('Y-m-d', $endTime)){
+        return Html::encode(date('d M Y, h:i A', $startTime) . ' - ' . date('h:i A', $endTime));
+    }
+
+    return Html::encode(date('d M Y, h:i A', $startTime) . ' - ' . date('d M Y, h:i A', $endTime));
+};
+
 ?>
 <div class="pagetitle">
 <h1><?=$this->title?></h1></div>
@@ -118,23 +138,19 @@ $formatDatetime = function($value){
                         <th style="width: 42px;">
                             <input type="checkbox" class="form-check-input" id="select-all-sessions">
                         </th>
-                        <th style="width: 60px;">ID</th>
+                        <th style="width: 70px;">No.</th>
+                        <th>Session / Date Time</th>
                         <th>Program / Sub</th>
-                        <th>Rubric</th>
-                        <th>Session</th>
-                        <th style="width: 170px;">Start</th>
-                        <th style="width: 170px;">End</th>
-                        <th>Location</th>
-                        <th style="width: 110px;">Mode</th>
+                        <th>Location / Mode</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if(!$rows){ ?>
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">No judging sessions found.</td>
+                            <td colspan="5" class="text-center text-muted py-4">No judging sessions found.</td>
                         </tr>
                     <?php } ?>
-                    <?php foreach($rows as $row){ ?>
+                    <?php foreach($rows as $index => $row){ ?>
                         <?php
                         $programLabel = ($row['program_abbr'] ?: $row['program_name']);
                         if($row['sub_name']){
@@ -145,16 +161,18 @@ $formatDatetime = function($value){
                             <td>
                                 <input type="checkbox" class="form-check-input session-check" name="selection[]" value="<?= (int)$row['session_id'] ?>">
                             </td>
-                            <td><?= (int)$row['session_id'] ?></td>
+                            <td><?= $index + 1 ?></td>
+                            <td>
+                                <?= Html::encode($row['session_name']) ?> - 
+                                <?= $formatDatetimeRange($row['datetime_start'], $row['datetime_end']) ?>
+                            </td>
                             <td>
                                 <?= Html::a(Html::encode($programLabel), ['/program/rubrics', 'id' => (int)$row['program_id'], 'sub' => $row['program_sub_id'] ? (int)$row['program_sub_id'] : null]) ?>
                             </td>
-                            <td><?= Html::encode($row['rubric_name']) ?></td>
-                            <td><?= Html::encode($row['session_name']) ?></td>
-                            <td><?= $formatDatetime($row['datetime_start']) ?></td>
-                            <td><?= $formatDatetime($row['datetime_end']) ?></td>
-                            <td><?= $row['location'] ? Html::encode($row['location']) : '<span class="text-muted">-</span>' ?></td>
-                            <td><?= Html::encode($modeList[(int)$row['mode']] ?? '-') ?></td>
+                            <td>
+                                <?= $row['location'] ? Html::encode($row['location']) : '<span class="text-muted">-</span>' ?>
+                                <div>(<?= Html::encode($modeList[(int)$row['mode']] ?? '-') ?>)</div>
+                            </td>
                         </tr>
                     <?php } ?>
                 </tbody>

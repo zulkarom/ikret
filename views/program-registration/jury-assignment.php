@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\grid\GridView;
+use app\models\RubricJudgingSession;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
@@ -9,6 +10,27 @@ use yii\grid\GridView;
 
 $this->title = 'Jury Assignments';
 $this->params['breadcrumbs'][] = $this->title;
+
+$modeList = RubricJudgingSession::listMode();
+$formatDatetimeRange = function($startValue, $endValue){
+    if(!$startValue && !$endValue){
+        return '';
+    }
+    if(!$startValue){
+        return date('d M Y, h:i A', strtotime($endValue));
+    }
+    if(!$endValue){
+        return date('d M Y, h:i A', strtotime($startValue));
+    }
+
+    $startTime = strtotime($startValue);
+    $endTime = strtotime($endValue);
+    if(date('Y-m-d', $startTime) === date('Y-m-d', $endTime)){
+        return date('d M Y, h:i A', $startTime) . ' - ' . date('h:i A', $endTime);
+    }
+
+    return date('d M Y, h:i A', $startTime) . ' - ' . date('d M Y, h:i A', $endTime);
+};
 
 $this->registerCss(<<<CSS
 .participant-cell-main {
@@ -18,13 +40,25 @@ $this->registerCss(<<<CSS
 .participant-cell-group {
     display: inline-block;
     margin-bottom: 0.35rem;
-    padding: 0.2rem 0.55rem;
+    padding: 0.28rem 0.65rem;
     border-radius: 999px;
-    background: #e7f1ff;
-    color: #0d6efd;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     line-height: 1.2;
+    color: #fff;
+    background: #198754;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.session-cell-main {
+    font-weight: 700;
+}
+
+.session-cell-detail {
+    margin-top: 0.2rem;
+    color: #6c757d;
+    font-size: 0.88rem;
+    line-height: 1.35;
 }
 
 @media (min-width: 768px) {
@@ -58,7 +92,7 @@ $this->registerCss(<<<CSS
 
     .jury-assignment-grid tbody td {
         display: grid;
-        grid-template-columns: 7.5rem minmax(0, 1fr);
+        grid-template-columns: 9.5rem minmax(0, 1fr);
         gap: 0.75rem;
         border: 0;
         border-bottom: 1px solid #f1f3f5;
@@ -72,10 +106,22 @@ $this->registerCss(<<<CSS
 
     .jury-assignment-grid tbody td::before {
         content: attr(data-label);
+        grid-column: 1;
         color: #6c757d;
         font-size: 0.78rem;
         font-weight: 700;
         text-transform: uppercase;
+    }
+
+    .jury-assignment-grid tbody td > * {
+        grid-column: 2;
+    }
+
+    .jury-assignment-grid .participant-cell-group,
+    .jury-assignment-grid .badge,
+    .jury-assignment-grid .btn {
+        width: auto;
+        justify-self: start;
     }
 
     .jury-assignment-grid tbody td[data-label="#"] {
@@ -153,6 +199,38 @@ CSS);
                 }
             ],
             [
+                'label' => 'Session',
+                'format' => 'html',
+                'contentOptions' => ['data-label' => 'Session'],
+                'value' => function($model) use ($formatDatetimeRange, $modeList){
+                    $session = $model->judgingSession;
+                    if(!$session){
+                        return '<span class="text-muted">No session assigned</span>';
+                    }
+
+                    $range = $formatDatetimeRange($session->datetime_start, $session->datetime_end);
+                    $location = trim((string)$session->location);
+                    $mode = $modeList[(int)$session->mode] ?? '';
+                    $details = [];
+
+                    if($range !== ''){
+                        $details[] = Html::encode($range);
+                    }
+                    if($location !== ''){
+                        $details[] = Html::encode($location);
+                    }
+                    if($mode !== ''){
+                        $details[] = '(' . Html::encode($mode) . ')';
+                    }
+
+                    $html = '<div class="session-cell-main">' . Html::encode($session->session_name) . '</div>';
+                    if($details){
+                        $html .= '<div class="session-cell-detail">' . implode('<br>', $details) . '</div>';
+                    }
+                    return $html;
+                },
+            ],
+            [
                 'attribute' => 'statusLabel',
                 'label' => 'Status',
                 'format' => 'html',
@@ -176,7 +254,7 @@ CSS);
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
-                    return Html::a('Judge',['jury-judge', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                    return Html::a('<i class="bi bi-pencil-square"></i> Judge',['jury-judge', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
                 },
             ],
         

@@ -63,7 +63,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
             $query = $query->andWhere(['a.program_sub' => $this->program_sub]);
         }
 
-        $query = $query->orderBy('a.flag DESC, a.submitted_at DESC');
+        $query = $query->orderBy(['a.group_name' => SORT_ASC, 'a.id' => SORT_ASC]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

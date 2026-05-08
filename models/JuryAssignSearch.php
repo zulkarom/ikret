@@ -42,7 +42,14 @@ class JuryAssignSearch extends User
     {
         $query = JuryAssign::find()->alias('a')
         ->innerJoin('user u','u.id = a.user_id')
-        ->where(['a.user_id' => Yii::$app->user->identity->id])->orderBy('status ASC');
+        ->leftJoin(['js' => RubricJudgingSession::tableName()], 'js.id = a.judging_session_id')
+        ->with(['registration.program', 'registration.programSub', 'judgingSession'])
+        ->where(['a.user_id' => Yii::$app->user->identity->id])
+        ->orderBy([
+            'a.status' => SORT_ASC,
+            'js.datetime_start' => SORT_ASC,
+            'a.id' => SORT_ASC,
+        ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

@@ -16,9 +16,24 @@ $formName =  $model->formName();
 $edit = $edit ?? false;
 $program = $program ?? null;
 $programSub = $programSub ?? null;
+$groupBadgeHtml = '';
+$participantInfoHtml = $register ? $register->shortFieldsHtml : '';
 $participantMembersHtml = '';
 
 if($register){
+    $groupName = trim((string)$register->group_name);
+    if($groupName !== ''){
+        $colorClass = 'c' . ((crc32($groupName) % 6) + 1);
+        $groupBadgeHtml = '<div><span class="participant-cell-group ' . $colorClass . '">' . Html::encode($groupName) . '</span></div>';
+        $participantInfoHtml = preg_replace('~<li><i>Group Name:</i>.*?</li>~', '', $participantInfoHtml);
+        $participantInfoHtml = preg_replace(
+            '~<li><i>Program:</i>.*?</li>~',
+            '',
+            $participantInfoHtml,
+            1
+        );
+    }
+
     if($register->user){
         $leaderName = trim((string)$register->user->fullname);
         $leaderMatric = trim((string)$register->user->matric);
@@ -32,6 +47,17 @@ if($register){
         $leaderName = 'Participant';
         $leaderMatric = '';
     }
+
+    $leaderDisplay = $leaderName;
+    if($leaderMatric !== ''){
+        $leaderDisplay .= ' (' . $leaderMatric . ')';
+    }
+    $participantInfoHtml = preg_replace(
+        '~^.*?<ul>~s',
+        Html::encode($leaderDisplay) . '<ul>',
+        $participantInfoHtml,
+        1
+    );
 
     $memberItems = [];
     foreach($register->members as $member){
@@ -138,12 +164,32 @@ $this->registerCss(<<<CSS
     font-weight: 700;
 }
 
+.participant-cell-group {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #fff;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.participant-cell-group.c1 { background: #0d6efd; }
+.participant-cell-group.c2 { background: #198754; }
+.participant-cell-group.c3 { background: #6f42c1; }
+.participant-cell-group.c4 { background: #d63384; }
+.participant-cell-group.c5 { background: #0f766e; }
+.participant-cell-group.c6 { background: #b45309; }
+
 .participant-members-list {
-    margin: 0.35rem 0 0 1.1rem;
+    margin: 0.25rem 0 0 0.35rem;
     padding: 0;
     font-size: 0.9rem;
     line-height: 1.4;
     color: #6c757d;
+    list-style-position: inside;
 }
 
 .jury-judge-form .rubric-scale-option,
@@ -597,7 +643,8 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
             <div class="row">
                 <div class="col-md-6">
 <h5>Participant Information</h5>
-                <?=$register->shortFieldsHtml?>
+                <?=$groupBadgeHtml?>
+                <?=$participantInfoHtml?>
                 <?=$participantMembersHtml?>
                 </div>
                 <div class="col-md-6">
@@ -809,7 +856,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
     <div>
     <label for="nullify" id="lbl-nullify"> 
-      <input type="checkbox" name="nullify" id="nullify" value="1" <?=$check?>> Mark this participant as nullified (e.g. in case of absent, non-compliant etc.)
+      <input type="checkbox" name="nullify" id="nullify" value="1" <?=$check?>> <i class="bi bi-exclamation-triangle-fill text-warning"></i> Mark this participant as nullified (e.g. in case of absent, non-compliant etc.)
   </label>
   
 </div><br />

@@ -72,6 +72,18 @@ $this->registerCss(<<<CSS
     font-weight: 700;
 }
 
+.participant-cell-group {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
 .participant-cell-members {
     margin: 0.35rem 0 0 1.1rem;
     padding: 0;
@@ -233,26 +245,26 @@ CSS);
 
                 if($model->user){
                     $leaderName = trim((string)$model->user->fullname);
-                    $text = $leaderName;
                     $leaderMatric = trim((string)$model->user->matric);
                 }else if(!empty($model->contact_person)){
                     $leaderName = trim((string)$model->contact_person);
-                    $text = $leaderName;
                     $leaderMatric = '';
                 }else if(!empty($model->contact_email)){
                     $leaderName = trim((string)$model->contact_email);
-                    $text = $leaderName;
                     $leaderMatric = '';
                 }else{
                     $leaderName = 'Participant';
-                    $text = 'Participant';
                     $leaderMatric = '';
                 }
 
                 if(!empty($model->group_name)){
-                    $text .= ' (' . $model->group_name . ')';
+                    $html .= '<div><span class="participant-cell-group">' . Html::encode($model->group_name) . '</span></div>';
                 }
-                $html .= '<div class="participant-cell-main">' . Html::encode($text) . '</div>';
+                $leaderText = $leaderName;
+                if($leaderMatric !== ''){
+                    $leaderText .= ' (' . $leaderMatric . ')';
+                }
+                $html .= '<div class="participant-cell-main">' . Html::encode($leaderText) . '</div>';
 
                 $memberItems = [];
                 foreach($model->members as $member){

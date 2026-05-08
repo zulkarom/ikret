@@ -488,12 +488,12 @@ class ProgramController extends Controller
 
         $rows = $query
             ->orderBy([
+                'rjs.datetime_start' => SORT_ASC,
+                'rjs.datetime_end' => SORT_ASC,
                 'p.date_start' => SORT_ASC,
                 'p.id' => SORT_ASC,
                 'ps.sub_name' => SORT_ASC,
-                'r.rubric_name' => SORT_ASC,
                 'rjs.sort_order' => SORT_ASC,
-                'rjs.datetime_start' => SORT_ASC,
                 'rjs.id' => SORT_ASC,
             ])
             ->all();
