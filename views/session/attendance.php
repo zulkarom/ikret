@@ -46,6 +46,42 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             'scanned_at',
+            [
+                'class' => ActionColumn::class,
+                'template' => '{view} {delete}',
+                'urlCreator' => function ($action, SessionAttendance $model, $key, $index, $column) {
+                    if ($action === 'view') {
+                        return Url::to(['attendance-view', 'id' => $model->id]);
+                    }
+
+                    if ($action === 'delete') {
+                        return Url::to(['attendance-delete', 'id' => $model->id]);
+                    }
+
+                    return '#';
+                },
+                'buttons' => [
+                    'view' => function ($url, $model, $key) {
+                        return Html::a('<i class="bi bi-eye"></i>', $url, [
+                            'title' => 'View',
+                            'aria-label' => 'View',
+                            'class' => 'btn btn-sm btn-outline-primary',
+                        ]);
+                    },
+                    'delete' => function ($url, $model, $key) {
+                        return Html::a('<i class="bi bi-trash"></i>', $url, [
+                            'title' => 'Delete',
+                            'aria-label' => 'Delete',
+                            'class' => 'btn btn-sm btn-outline-danger',
+                            'data' => [
+                                'confirm' => 'Delete this attendance record?',
+                                'method' => 'post',
+                            ],
+                        ]);
+                    },
+                ],
+                'contentOptions' => ['class' => 'text-nowrap'],
+            ],
 
         ],
     ]); ?>

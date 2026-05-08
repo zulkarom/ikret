@@ -13,6 +13,7 @@ use app\models\Setting;
 use app\models\User;
 use Yii;
 use yii\db\Expression;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 
@@ -34,6 +35,13 @@ class SessionController extends Controller
                         'allow' => true,
                         'roles' => ['@'],
                     ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                    'attendance-delete' => ['POST'],
                 ],
             ],
         ];
@@ -80,6 +88,30 @@ class SessionController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    public function actionAttendanceView($id)
+    {
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
+
+        return $this->render('attendance-view', [
+            'model' => $this->findAttendanceModel($id),
+        ]);
+    }
+
+    public function actionAttendanceDelete($id)
+    {
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
+
+        $model = $this->findAttendanceModel($id);
+
+        if($model->delete()){
+            Yii::$app->session->addFlash('success', 'Attendance record deleted.');
+        }else{
+            Yii::$app->session->addFlash('error', 'Failed to delete attendance record.');
+        }
+
+        return $this->redirect(['attendance']);
     }
 
     public function actionQrscanner()
@@ -292,5 +324,14 @@ class SessionController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function findAttendanceModel($id)
+    {
+        if (($model = SessionAttendance::findOne(['id' => $id])) !== null) {
+            return $model;
+        }
+
+        throw new NotFoundHttpException('The requested attendance record does not exist.');
     }
 }
