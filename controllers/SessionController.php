@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use app\models\CertificateQr;
 use app\models\CertificateTemplate;
+use app\models\ProgramRegistration;
 use app\models\Session;
 use app\models\SessionAttendance;
 use app\models\SessionAttendanceSearch;
@@ -72,9 +73,18 @@ class SessionController extends Controller
         ->where(['user_id' => Yii::$app->user->identity->id])
         ->orderBy('id DESC')
         ->all();
+        $certificateRegistrations = $this->findSessionCertificateRegistrations(
+            Yii::$app->user->identity->id,
+            array_map(function($attendance){
+                return $attendance->session_id;
+            }, $list)
+        );
 
         return $this->render('participant', [
             'list' => $list,
+            'certificateRegistrations' => $certificateRegistrations,
+            'certificatesReleased' => Setting::areCertificatesReleased(),
+            'certificateReleaseText' => Setting::certificateReleaseText(),
         ]);
     }
 
@@ -356,5 +366,35 @@ class SessionController extends Controller
 
         $token = str_replace('https://fkp-portal.umk.edu.my/icreate/site/qr?t=', '', $decoded);
         return preg_match('/^[A-Za-z0-9_-]+$/', $token) ? $token : '';
+    }
+
+    protected function findSessionCertificateRegistrations($userId, $sessionIds)
+    {
+        $sessionIds = array_values(array_unique(array_filter($sessionIds)));
+
+        if(!$sessionIds){
+            return [];
+        }
+
+        $rows = Session::find()->alias('a')
+            ->select(['session_id' => 'a.id', 'reg_id' => 'r.id'])
+            ->joinWith(['program p', 'sessionAttendances t'])
+            ->innerJoin(ProgramRegistration::tableName() . ' r', 'r.program_id = p.id')
+            ->where([
+                'a.id' => $sessionIds,
+                'r.user_id' => $userId,
+                'r.status' => 10,
+                'p.program_type' => 2,
+                't.user_id' => $userId,
+            ])
+            ->asArray()
+            ->all();
+
+        $registrations = [];
+        foreach($rows as $row){
+            $registrations[(int)$row['session_id']] = (int)$row['reg_id'];
+        }
+
+        return $registrations;
     }
 }

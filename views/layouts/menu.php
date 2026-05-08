@@ -19,7 +19,7 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Call for Juries', 'url' => ['/site/jury-apply'], 'icon' => 'bi bi-person-plus'];
         }
 
-      $menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
+      //$menu[] = ['name' => 'Program Registration', 'url' => ['/program/public-programs'], 'icon' => 'bi bi-card-list'];
 
       if(Yii::$app->user->isGuest){
         

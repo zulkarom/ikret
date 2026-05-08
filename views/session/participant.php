@@ -1,14 +1,16 @@
 <?php
 
-use app\models\Setting;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var app\models\Session $model */
+/** @var app\models\SessionAttendance[] $list */
+/** @var array $certificateRegistrations */
+/** @var bool $certificatesReleased */
+/** @var string|null $certificateReleaseText */
 
 $this->title = 'Attendance & Certificate';
-$certificatesReleased = Setting::areCertificatesReleased();
 $this->params['breadcrumbs'][] = ['label' => 'Sessions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
@@ -20,9 +22,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div>
                 <button class="btn btn-primary" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
-                <?php if ($certificatesReleased) { ?>
-                    <a href="<?=Url::to(['cert-qr'])?>" class="btn btn-warning" style="margin-top: 20px; margin-bottom:20px" target="_blank"><i class="bi bi-award"></i>  CERTIFICATE</a>
-                <?php } ?>
               </div>
 
 <?php
@@ -49,16 +48,33 @@ $("#scanner").click(function(){
          <div class="card-body pt-4">
 <table class="table">
             <tbody>
-                <tr><th>No.</th><th>Session</th><th>Date Time</th></tr>
+                <tr><th>No.</th><th>Session</th><th>Date Time</th><th>Certificate</th></tr>
                 <?php 
                 if($list){
                     $i=1;
                     foreach($list as $r){
-                        echo '<tr><td>'.$i.'. </td><td>'.$r->session->session_name.'</td><td>'.date("d M Y h:i:s A", strtotime($r->scanned_at)).'</td></tr>';
+                        $sessionId = (int)$r->session_id;
+                        $certificate = '<span class="text-muted">N/A</span>';
+
+                        if(!$certificatesReleased){
+                            $certificate = '<span class="text-muted">' . Html::encode($certificateReleaseText ?: 'Not released') . '</span>';
+                        }elseif(isset($certificateRegistrations[$sessionId])){
+                            $certificate = Html::a('<i class="bi bi-download"></i> DOWNLOAD', [
+                                '/program/cert-participation-session',
+                                'reg' => $certificateRegistrations[$sessionId],
+                                's' => $sessionId,
+                                'u' => Yii::$app->user->identity->id,
+                            ], [
+                                'class' => 'btn btn-sm btn-primary',
+                                'target' => '_blank',
+                            ]);
+                        }
+
+                        echo '<tr><td>'.$i.'. </td><td>'.Html::encode($r->session->session_name).'</td><td>'.date("d M Y h:i:s A", strtotime($r->scanned_at)).'</td><td>'.$certificate.'</td></tr>';
                         $i++;
                     }
                 }else{
-                    echo '<tr><td colspan="3">You do not have any recorded attendance.</td></tr>';
+                    echo '<tr><td colspan="4">You do not have any recorded attendance.</td></tr>';
                      }
                 ?> 
             </tbody>
