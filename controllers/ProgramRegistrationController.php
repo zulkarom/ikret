@@ -1325,64 +1325,65 @@ class ProgramRegistrationController extends Controller
                         $targetProgramSubId = $scopeSubIds[0] ?: null;
                     }
 
-                    $registrations = $this->findRegistrationsByImportedGroupName(
+                    $registrations = $this->findRegistrationsByImportedGroupNameOrRange(
                         (int)$program->id,
                         (int)$program->has_sub === 1 ? $targetProgramSubId : null,
                         $groupName
                     );
-                    if(count($registrations) !== 1){
+                    if(!$registrations){
                         $skipped++;
-                        $messages[] = 'Row ' . $rowNo . ': group_name must match exactly one participant group in this scope after normalizing spaces/punctuation - ' . $groupName;
+                        $messages[] = 'Row ' . $rowNo . ': group_name did not match any participant group in this scope after normalizing spaces/punctuation/leading zeroes - ' . $groupName;
                         continue;
                     }
 
-                    $registration = $registrations[0];
-                    if(strcasecmp(trim((string)$registration->group_name), $groupName) !== 0){
-                        $warnings[] = 'Row ' . $rowNo . ': matched CSV group_name "' . $groupName . '" to participant group "' . $registration->group_name . '".';
+                    foreach($registrations as $registration){
+                        if(count($registrations) === 1 && strcasecmp(trim((string)$registration->group_name), $groupName) !== 0){
+                            $warnings[] = 'Row ' . $rowNo . ': matched CSV group_name "' . $groupName . '" to participant group "' . $registration->group_name . '".';
+                        }
+
+                        try{
+                            $this->ensureApprovedJuryApplicationForUser(
+                                $jury,
+                                (int)$registration->program_id,
+                                $registration->program_sub ? (int)$registration->program_sub : null,
+                                $sessionId ?: null
+                            );
+                        }catch(\Throwable $e){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': failed to prepare approved jury application for group ' . $registration->group_name . ' - ' . $e->getMessage();
+                            continue;
+                        }
+
+                        $existingAssign = JuryAssign::findOne([
+                            'user_id' => (int)$jury->id,
+                            'reg_id' => (int)$registration->id,
+                            'stage' => $selectedStage,
+                        ]);
+                        if($existingAssign){
+                            $skipped++;
+                            $messages[] = 'Row ' . $rowNo . ': jury already assigned to group - ' . $registration->group_name;
+                            continue;
+                        }
+
+                        $assign = new JuryAssign([
+                            'user_id' => (int)$jury->id,
+                            'reg_id' => (int)$registration->id,
+                            'stage' => $selectedStage,
+                            'rubric_id' => $rubricId,
+                            'judging_session_id' => $sessionId ?: null,
+                            'created_at' => time(),
+                            'updated_at' => time(),
+                        ]);
+
+                        if(!$assign->save()){
+                            $skipped++;
+                            $firstErrors = $assign->getFirstErrors();
+                            $messages[] = 'Row ' . $rowNo . ': failed to save assignment for group ' . $registration->group_name . ($firstErrors ? ' - ' . implode('; ', $firstErrors) : '');
+                            continue;
+                        }
+
+                        $created++;
                     }
-
-                    try{
-                        $this->ensureApprovedJuryApplicationForUser(
-                            $jury,
-                            (int)$registration->program_id,
-                            $registration->program_sub ? (int)$registration->program_sub : null,
-                            $sessionId ?: null
-                        );
-                    }catch(\Throwable $e){
-                        $skipped++;
-                        $messages[] = 'Row ' . $rowNo . ': failed to prepare approved jury application - ' . $e->getMessage();
-                        continue;
-                    }
-
-                    $existingAssign = JuryAssign::findOne([
-                        'user_id' => (int)$jury->id,
-                        'reg_id' => (int)$registration->id,
-                        'stage' => $selectedStage,
-                    ]);
-                    if($existingAssign){
-                        $skipped++;
-                        $messages[] = 'Row ' . $rowNo . ': jury already assigned to group - ' . $groupName;
-                        continue;
-                    }
-
-                    $assign = new JuryAssign([
-                        'user_id' => (int)$jury->id,
-                        'reg_id' => (int)$registration->id,
-                        'stage' => $selectedStage,
-                        'rubric_id' => $rubricId,
-                        'judging_session_id' => $sessionId ?: null,
-                        'created_at' => time(),
-                        'updated_at' => time(),
-                    ]);
-
-                    if(!$assign->save()){
-                        $skipped++;
-                        $firstErrors = $assign->getFirstErrors();
-                        $messages[] = 'Row ' . $rowNo . ': failed to save assignment' . ($firstErrors ? ' - ' . implode('; ', $firstErrors) : '');
-                        continue;
-                    }
-
-                    $created++;
                 }
 
                 fclose($handle);
@@ -3016,10 +3017,94 @@ class ProgramRegistrationController extends Controller
         return $matches;
     }
 
+    protected function findRegistrationsByImportedGroupNameOrRange($programId, $programSubId, $groupName)
+    {
+        $range = $this->parseImportedGroupNameRange($groupName);
+        if(!$range){
+            return $this->findRegistrationsByImportedGroupName($programId, $programSubId, $groupName);
+        }
+
+        $baseQuery = ProgramRegistration::find()
+            ->where(['program_id' => (int)$programId])
+            ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
+            ->andWhere(['not', ['group_name' => null]]);
+
+        if($programSubId !== null){
+            $baseQuery->andWhere(['program_sub' => (int)$programSubId]);
+        }
+
+        $matches = [];
+        foreach($baseQuery->all() as $candidate){
+            $candidateParts = $this->parseImportedGroupNameEndpoint($candidate->group_name);
+            if(!$candidateParts){
+                continue;
+            }
+            if($candidateParts['prefix'] !== $range['prefix'] || $candidateParts['suffix'] !== $range['suffix']){
+                continue;
+            }
+            if($candidateParts['number'] < $range['start'] || $candidateParts['number'] > $range['end']){
+                continue;
+            }
+            $matches[] = $candidate;
+        }
+
+        usort($matches, function($a, $b){
+            $aParts = $this->parseImportedGroupNameEndpoint($a->group_name);
+            $bParts = $this->parseImportedGroupNameEndpoint($b->group_name);
+            return ($aParts['number'] ?? 0) <=> ($bParts['number'] ?? 0);
+        });
+
+        return $matches;
+    }
+
+    protected function parseImportedGroupNameRange($groupName)
+    {
+        $parts = preg_split('/\s*-\s*/', trim((string)$groupName));
+        if(!$parts || count($parts) !== 2 || trim($parts[0]) === '' || trim($parts[1]) === ''){
+            return null;
+        }
+
+        $start = $this->parseImportedGroupNameEndpoint($parts[0]);
+        $end = $this->parseImportedGroupNameEndpoint($parts[1]);
+        if(!$start || !$end){
+            return null;
+        }
+        if($start['prefix'] !== $end['prefix'] || $start['suffix'] !== $end['suffix']){
+            return null;
+        }
+        if($start['number'] > $end['number']){
+            return null;
+        }
+
+        return [
+            'prefix' => $start['prefix'],
+            'suffix' => $start['suffix'],
+            'start' => $start['number'],
+            'end' => $end['number'],
+        ];
+    }
+
+    protected function parseImportedGroupNameEndpoint($groupName)
+    {
+        $normalized = $this->normalizeGroupNameForImportMatch($groupName);
+        if(!preg_match('/^([a-z]*)(\d+)([a-z]*)$/', $normalized, $matches)){
+            return null;
+        }
+
+        return [
+            'prefix' => $matches[1],
+            'number' => (int)$matches[2],
+            'suffix' => $matches[3],
+        ];
+    }
+
     protected function normalizeGroupNameForImportMatch($groupName)
     {
         $groupName = strtolower(trim((string)$groupName));
-        return preg_replace('/[^a-z0-9]+/', '', $groupName);
+        $normalized = preg_replace('/[^a-z0-9]+/', '', $groupName);
+        return preg_replace_callback('/\d+/', function($matches){
+            return (string)(int)$matches[0];
+        }, $normalized);
     }
 
     protected function removeLeadingNameNumbering($name)

@@ -26,14 +26,49 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $sampleHeaders = ['jury_name', 'jury_email', 'group_name', 'rubric_id', 'session_id'];
 $sampleRows = [
-    ['Dr. Jury One', 'jury1@example.com', 'Team Alpha', '12', '31'],
-    ['Dr. Jury Two', 'jury2@example.com', 'Team Beta', '12', '32'],
+    ['Dr. Jury One', 'jury1@example.com', 'AL01 - AL04', '12', '31'],
+    ['Dr. Jury Two', 'jury2@example.com', 'AL05', '12', '32'],
 ];
 $sampleCsv = implode(',', $sampleHeaders) . "\n";
 foreach($sampleRows as $row){
     $sampleCsv .= implode(',', $row) . "\n";
 }
 $sampleCsv = rtrim($sampleCsv, "\n");
+
+$csvTableRows = [
+    [
+        'jury_name' => 'DR ZAMINOR BINTI ZAMZAMIR',
+        'jury_email' => 'zaminor@umk.edu.my',
+        'group_name' => 'AL01 - AL04',
+        'rubric_id' => '24',
+        'session_id' => '13',
+        'behavior' => 'Creates one assignment for every existing group from AL01 through AL04.',
+    ],
+    [
+        'jury_name' => '',
+        'jury_email' => '',
+        'group_name' => 'AL05 - AL08',
+        'rubric_id' => '',
+        'session_id' => '',
+        'behavior' => 'Reuses the previous jury, rubric, and session; assigns AL05 through AL08.',
+    ],
+    [
+        'jury_name' => 'DR SITI FARIHA BINTI MUHAMAD',
+        'jury_email' => 'fariha@umk.edu.my',
+        'group_name' => 'AL 09',
+        'rubric_id' => '24',
+        'session_id' => '13',
+        'behavior' => 'Single group row. AL 09, AL09, and AL9 are treated as the same group.',
+    ],
+    [
+        'jury_name' => 'DR MUHAMMAD FIRDAUS BIN ZAKARIA',
+        'jury_email' => 'mfirdaus.z@umk.edu.my',
+        'group_name' => 'Next-Gen',
+        'rubric_id' => '24',
+        'session_id' => '13',
+        'behavior' => 'Not a range because both sides do not share a numbered pattern; matched as one group name.',
+    ],
+];
 
 $stageOptions = [0 => 'Not Applicable'];
 if($stages){
@@ -61,14 +96,16 @@ if($stages){
                         and the participant group must already exist in <?= Html::encode($program->program_name) ?><?= $programSub ? ' / ' . Html::encode($programSub->sub_name) : '' ?>.
                     </p>
                     <ul class="mb-0 text-muted">
-                        <li>Use the same email stored in the jury user account.</li>
-                        <li>If the email does not exist yet, the import will create the user, jury role, and jury profile automatically.</li>
+                        <li>CSV header names must be <code>jury_name</code>, <code>jury_email</code>, <code>group_name</code>, <code>rubric_id</code>, and <code>session_id</code>.</li>
+                        <li>Use the same email stored in the jury user account. If the email does not exist yet, the import will create the user, jury role, and jury profile automatically.</li>
                         <li>Newly created users use the email string as their default password.</li>
                         <li>Auto-created jury profiles use category <code>General</code>.</li>
                         <li><code>jury_name</code> must match the existing jury full name when that user already has a name.</li>
-                        <li><code>group_name</code> must match exactly one participant group in this scope. Spaces and punctuation are ignored, so <code>NW 1</code> can match <code>NW1</code>.</li>
+                        <li><code>group_name</code> can be one group or a range such as <code>AL01 - AL04</code>. Spaces, punctuation, and number leading zeroes are ignored, so <code>AL1</code>, <code>AL01</code>, and <code>AL 01</code> match the same group.</li>
+                        <li>A dash is treated as a range only when both sides have the same prefix/suffix and valid numbers, for example <code>AL01 - AL04</code> or <code>20 - 30</code>. A name like <code>Next-Gen</code> remains a single group name.</li>
                         <li>Blank <code>jury_name</code>, <code>jury_email</code>, <code>rubric_id</code>, or <code>session_id</code> cells reuse the previous non-empty value.</li>
-                        <li>Each row must provide its own <code>group_name</code>.</li>
+                        <li>Each row must provide its own <code>group_name</code> or group range.</li>
+                        <li>If a group or range does not match any participant registration in this scope, that CSV row is skipped and reported after import.</li>
                         <li><code>stage</code> is still controlled by this page and applies to every imported row.</li>
                         <li>If a rubric has no sessions, leave <code>session_id</code> blank or use <code>0</code>.</li>
                         <?php if($programSub){ ?><li>Because this page was opened from a sub program, the reference lists below include other active sibling sub programs under the same parent.</li><?php } ?>
@@ -117,7 +154,7 @@ if($stages){
                         </tr>
                         <tr>
                             <td><code>group_name</code></td>
-                            <td>Used to find the participant registration in the current program/sub scope.</td>
+                            <td>Used to find participant registrations in the current program/sub scope. Accepts one group or a range such as <code>AL01 - AL04</code>.</td>
                             <td><span class="badge bg-danger">Yes</span></td>
                         </tr>
                         <tr>
@@ -132,6 +169,34 @@ if($stages){
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">CSV Format Guide</div>
+        <div class="card-body pt-4">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <h6 class="fw-semibold">How Group Matching Works</h6>
+                    <ul class="text-muted mb-0">
+                        <li>Single group: <code>AL01</code> assigns only the matched participant group.</li>
+                        <li>Range group: <code>AL01 - AL04</code> assigns all existing groups from <code>AL01</code> until <code>AL04</code>.</li>
+                        <li>Flexible spelling: <code>AL1</code>, <code>AL01</code>, and <code>AL 01</code> are treated as the same group.</li>
+                        <li>Numeric range: <code>20 - 30</code> matches numeric group names only, not <code>AL20</code>.</li>
+                        <li>Non-range dash: <code>Next-Gen</code> is treated as one group name.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="fw-semibold">How Blank Cells Work</h6>
+                    <ul class="text-muted mb-0">
+                        <li>Blank <code>jury_name</code> reuses the previous jury name.</li>
+                        <li>Blank <code>jury_email</code> reuses the previous jury email.</li>
+                        <li>Blank <code>rubric_id</code> reuses the previous rubric.</li>
+                        <li>Blank <code>session_id</code> reuses the previous session.</li>
+                        <li><code>group_name</code> is never carried forward; every row must set a group or range.</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -207,6 +272,37 @@ if($stages){
                         <?php } }else{ ?>
                             <tr><td colspan="7" class="text-muted">No session available in this scope.</td></tr>
                         <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">CSV Table Representation</div>
+        <div class="card-body pt-4">
+            <p class="text-muted">
+                This table shows how a CSV can be prepared. Empty cells shown below can be left blank in the file when you want to reuse the previous jury, rubric, or session value.
+            </p>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <?php foreach($sampleHeaders as $header): ?>
+                                <th><code><?= Html::encode($header) ?></code></th>
+                            <?php endforeach; ?>
+                            <th>Importer Behavior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($csvTableRows as $row): ?>
+                            <tr>
+                                <?php foreach($sampleHeaders as $header): ?>
+                                    <td><?= $row[$header] === '' ? '<span class="text-muted">(empty)</span>' : Html::encode($row[$header]) ?></td>
+                                <?php endforeach; ?>
+                                <td class="text-muted"><?= Html::encode($row['behavior']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
