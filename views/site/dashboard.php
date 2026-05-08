@@ -38,6 +38,24 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
         </div>
     </div>';
 };
+
+$sessionText = function (JuryAssign $assignment) {
+    $session = $assignment->judgingSession;
+    if(!$session){
+        return $assignment->rubric ? $assignment->rubric->rubric_name : '';
+    }
+
+    $parts = [$session->session_name];
+    if($session->datetime_start && $session->datetime_end){
+        $parts[] = date('d M Y h:i A', strtotime($session->datetime_start)) . ' - ' . date('h:i A', strtotime($session->datetime_end));
+    }else if($session->datetime_start){
+        $parts[] = date('d M Y h:i A', strtotime($session->datetime_start));
+    }else if($session->datetime_end){
+        $parts[] = date('d M Y h:i A', strtotime($session->datetime_end));
+    }
+
+    return implode(' - ', $parts);
+};
 ?>
 
 <div class="pagetitle">
@@ -109,7 +127,7 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
                         <thead>
                             <tr>
                                 <th>Program</th>
-                                <th>Participant</th>
+                                <th>Group Name</th>
                                 <th>Session</th>
                                 <th>Status</th>
                                 <th></th>
@@ -122,11 +140,11 @@ $statCard = function ($label, $value, $icon, $color = 'primary') {
                                     <tr>
                                         <td><?= Html::encode($registration && $registration->program ? $registration->programNameShort : '') ?></td>
                                         <td><?= Html::encode($registration ? ($registration->group_name ?: $registration->project_name) : '') ?></td>
-                                        <td><?= Html::encode($assignment->judgingSession ? $assignment->judgingSession->session_name : ($assignment->rubric ? $assignment->rubric->rubric_name : '')) ?></td>
+                                        <td><?= Html::encode($sessionText($assignment)) ?></td>
                                         <td><?= $assignment->statusLabel ?></td>
                                         <td class="text-end">
                                             <?php if ((int)$assignment->status < 20): ?>
-                                                <?= Html::a('Judge', ['/program-registration/jury-judge', 'id' => $assignment->id], ['class' => 'btn btn-primary btn-sm']) ?>
+                                                <?= Html::a('<i class="bi bi-pencil-square"></i> Judge', ['/program-registration/jury-judge', 'id' => $assignment->id], ['class' => 'btn btn-primary btn-sm']) ?>
                                             <?php else: ?>
                                                 <?= Html::a('View', ['/program-registration/view-result', 'id' => $assignment->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
                                             <?php endif; ?>
