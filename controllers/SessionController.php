@@ -119,7 +119,7 @@ class SessionController extends Controller
      */
     public function actionCreate()
     {
-        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
         $model = new Session();
 
         if ($this->request->isPost) {

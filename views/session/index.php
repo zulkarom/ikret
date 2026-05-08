@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="pagetitle" >
 <h1><?= Html::encode($this->title) ?></h1>
 
-    <?php if(Yii::$app->user->identity->isManager): ?>
+    <?php if(Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdminRegistration): ?>
         <p>
             <?= Html::a('Create Session', ['create'], ['class' => 'btn btn-success']) ?>
         </p>
