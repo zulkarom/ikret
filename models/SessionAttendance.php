@@ -40,6 +40,8 @@ class SessionAttendance extends \yii\db\ActiveRecord
 
             [['user_matric'], 'string'],
 
+            [['session_id'], 'validateSessionTime'],
+            [['user_id'], 'validateUniqueAttendance'],
             [['session_id'], 'exist', 'skipOnError' => true, 'targetClass' => Session::class, 'targetAttribute' => ['session_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['user_id' => 'id']],
         ];
@@ -85,23 +87,65 @@ class SessionAttendance extends \yii\db\ActiveRecord
 
     public function validateAttendance($session, $user_id){
         date_default_timezone_set("Asia/Kuala_Lumpur");
+        $this->session_id = $session ? $session->id : null;
+        $this->user_id = $user_id;
+
+        if($this->validate(['session_id', 'user_id'])){
+            return true;
+        }
+
+        foreach($this->getFirstErrors() as $message){
+            Yii::$app->session->addFlash('error', $message);
+            break;
+        }
+
+        return false;
+    }
+
+    public function validateSessionTime($attribute)
+    {
+        if($this->hasErrors($attribute)){
+            return;
+        }
+
+        date_default_timezone_set("Asia/Kuala_Lumpur");
+        $session = $this->session_id ? Session::findOne($this->session_id) : null;
+
+        if(!$session){
+            $this->addError($attribute, 'Invalid Session Code');
+            return;
+        }
+
+        if((int)$session->allow_scan_outside_duration === 1){
+            return;
+        }
+
         $start = strtotime($session->datetime_start);
-    $end = strtotime($session->datetime_end);
-    $valid = time() >= $start && time() <= $end;
-    if($session){
-        if($valid){
-            $ada = SessionAttendance::find()->alias('a')
-            ->where(['a.session_id' => $session->id, 'a.user_id' => $user_id])
-            ->one();
-            if($ada){
-                Yii::$app->session->addFlash('error', "Already Recorded");
-            }else{
-                return true;
-            }
-        }else{
-            Yii::$app->session->addFlash('error', "Invalid Session Time");
+        $end = strtotime($session->datetime_end);
+        if((int)$session->allow_scan_1_hour_after_event === 1 && $end !== false){
+            $end += 3600;
+        }
+
+        if($start === false || $end === false || time() < $start || time() > $end){
+            $this->addError($attribute, 'Invalid Session Time');
         }
     }
-    return false;
+
+    public function validateUniqueAttendance($attribute)
+    {
+        if($this->hasErrors($attribute) || $this->hasErrors('session_id')){
+            return;
+        }
+
+        $query = static::find()
+            ->where(['session_id' => $this->session_id, 'user_id' => $this->user_id]);
+
+        if(!$this->isNewRecord){
+            $query->andWhere(['<>', 'id', $this->id]);
+        }
+
+        if($query->exists()){
+            $this->addError($attribute, 'Already Recorded');
+        }
     }
 }

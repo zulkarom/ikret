@@ -171,7 +171,7 @@ class CommitteeController extends Controller
 
     public function actionIndex()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminRegistration) return false;
         $list = Committee::find()->all();
         return $this->render('list', [
             'list' => $list,

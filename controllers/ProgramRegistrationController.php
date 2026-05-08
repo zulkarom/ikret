@@ -75,7 +75,7 @@ class ProgramRegistrationController extends Controller
      */
     public function actionIndex()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminRegistration) return false;
         $searchModel = new ProgramRegistrationSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -217,7 +217,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerViewCerts($id, $sub = null)
     {
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
 
         if(!$role){
             throw new ForbiddenHttpException('No access');
@@ -267,7 +267,7 @@ class ProgramRegistrationController extends Controller
         $assign = $this->findAssignment($id);
         $reg = $assign->registration;
 
-        $role = UserRole::findOne(['program_id' => $p, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10]);
+        $role = $this->findManagerRole($p, $s);
 
         if($role && $role->program){
             
@@ -439,7 +439,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerView($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
-        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($model->program_id, $sub);
 
         if(!$role){
             return;
@@ -466,7 +466,7 @@ class ProgramRegistrationController extends Controller
     public function actionManagerAward($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findModel($id);
-        $role = UserRole::findOne(['program_id' => $model->program_id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10]);
+        $role = $this->findManagerRole($model->program_id, $sub);
 
         if(!$role){
             return;
@@ -586,13 +586,7 @@ class ProgramRegistrationController extends Controller
         if(!Yii::$app->user->identity->isManager) return false;
 
         $registration = $this->findModel($id);
-        $role = UserRole::findOne([
-            'program_id' => $registration->program_id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'program_sub' => $sub,
-            'status' => 10,
-        ]);
+        $role = $this->findManagerRole($registration->program_id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -664,7 +658,7 @@ class ProgramRegistrationController extends Controller
     public function actionJuryResult($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -712,7 +706,7 @@ class ProgramRegistrationController extends Controller
         //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -946,7 +940,7 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -1435,13 +1429,7 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'program_sub' => $sub,
-            'status' => 10,
-        ]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -1470,7 +1458,7 @@ class ProgramRegistrationController extends Controller
 
     public function actionAdminJuryApplications($id, $sub = null)
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         $program = Program::findOne((int)$id);
         if(!$program){
@@ -1505,7 +1493,7 @@ class ProgramRegistrationController extends Controller
 
     public function actionAdminJuryApplicationsAll()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         $searchModel = new JuryApplicationSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -1526,7 +1514,7 @@ class ProgramRegistrationController extends Controller
             throw new NotFoundHttpException('Application not found.');
         }
 
-        if(Yii::$app->user->identity->isAdmin){
+        if(Yii::$app->user->identity->isAdminJury){
             return $this->render('jury-application-view', [
                 'model' => $model,
             ]);
@@ -1572,7 +1560,7 @@ class ProgramRegistrationController extends Controller
             return $this->redirect(Yii::$app->request->referrer ?: ['admin-jury-applications-all']);
         }
 
-        $isAdmin = !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin;
+        $isAdmin = !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdminJury;
         $isManager = !Yii::$app->user->isGuest && Yii::$app->user->identity->isManager;
 
         if(!$isAdmin && !$isManager){
@@ -1622,14 +1610,14 @@ class ProgramRegistrationController extends Controller
 
     public function actionJuryApplicationImport()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         return $this->render('jury-application-import');
     }
 
     public function actionJuryApplicationImportCsv()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         if(!Yii::$app->request->isPost){
             throw new NotFoundHttpException('The requested page does not exist.');
@@ -1813,20 +1801,11 @@ class ProgramRegistrationController extends Controller
             throw new NotFoundHttpException('Program not found.');
         }
 
-        $roleQuery = UserRole::find()->where([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'status' => 10,
-        ]);
-        if((int)$program->has_sub === 1){
-            if(!$sub){
-                throw new NotFoundHttpException('Please provide sub program.');
-            }
-            $roleQuery->andWhere(['program_sub' => $sub]);
+        if((int)$program->has_sub === 1 && !$sub){
+            throw new NotFoundHttpException('Please provide sub program.');
         }
 
-        $role = $roleQuery->one();
+        $role = $this->findManagerRole($id, $sub);
 
         if(!$role){
             return;
@@ -1850,11 +1829,20 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::find()->where([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-        ])->andWhere(['not', ['status' => null]])->andWhere(['status' => 10])->one();
+        if(Yii::$app->user->identity->isSuperadmin){
+            $role = new UserRole([
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+                'program_id' => (int)$id,
+                'status' => 10,
+            ]);
+        }else{
+            $role = UserRole::find()->where([
+                'program_id' => $id,
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+            ])->andWhere(['not', ['status' => null]])->andWhere(['status' => 10])->one();
+        }
 
         if(!$role){
             return;
@@ -1876,12 +1864,21 @@ class ProgramRegistrationController extends Controller
                 $activeSubIds[(int)$sp->id] = true;
             }
 
-            $roles = UserRole::find()->where([
-                'program_id' => $id,
-                'user_id' => Yii::$app->user->identity->id,
-                'role_name' => 'manager',
-                'status' => 10,
-            ])->all();
+            if(Yii::$app->user->identity->isSuperadmin){
+                $roles = [new UserRole([
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'program_id' => (int)$id,
+                    'status' => 10,
+                ])];
+            }else{
+                $roles = UserRole::find()->where([
+                    'program_id' => $id,
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'status' => 10,
+                ])->all();
+            }
 
             $hasProgramLevel = false;
             $allowedSubs = [];
@@ -1944,16 +1941,7 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $roleQuery = UserRole::find()->where([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'status' => 10,
-        ]);
-        if($sub !== null){
-            $roleQuery->andWhere(['program_sub' => $sub]);
-        }
-        $role = $roleQuery->one();
+        $role = $this->findManagerRole($id, $sub);
 
         if(!$role){
             return;
@@ -2371,16 +2359,7 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $roleQuery = UserRole::find()->where([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'status' => 10,
-        ]);
-        if($sub !== null){
-            $roleQuery->andWhere(['program_sub' => $sub]);
-        }
-        $role = $roleQuery->one();
+        $role = $this->findManagerRole($id, $sub);
 
         if(!$role){
             return;
@@ -2540,7 +2519,7 @@ class ProgramRegistrationController extends Controller
         //print_r($session->get('keep-data'));die();
         if(!Yii::$app->user->identity->isManager) return false;
 
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -2575,13 +2554,7 @@ class ProgramRegistrationController extends Controller
 
     protected function findManagerProgramScope($id, $sub = null)
     {
-        $role = UserRole::findOne([
-            'program_id' => $id,
-            'user_id' => Yii::$app->user->identity->id,
-            'role_name' => 'manager',
-            'program_sub' => $sub,
-            'status' => 10,
-        ]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }
@@ -2597,6 +2570,53 @@ class ProgramRegistrationController extends Controller
         }
 
         return [$role, $program, $programSub];
+    }
+
+    protected function findManagerRole($id, $sub = null)
+    {
+        if(!Yii::$app->user->isGuest && Yii::$app->user->identity->isSuperadmin){
+            $program = Program::findOne((int)$id);
+            if(!$program || !$this->isActiveModel($program)){
+                return null;
+            }
+
+            if((int)$program->has_sub === 1){
+                if(!$sub){
+                    return null;
+                }
+                $programSub = ProgramSub::findOne(['id' => (int)$sub, 'program_id' => (int)$program->id]);
+                if(!$programSub || !$this->isActiveModel($programSub)){
+                    return null;
+                }
+            }
+
+            return new UserRole([
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'manager',
+                'program_id' => (int)$program->id,
+                'program_sub' => $sub ? (int)$sub : null,
+                'status' => 10,
+            ]);
+        }
+
+        return UserRole::findOne([
+            'program_id' => $id,
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'manager',
+            'program_sub' => $sub,
+            'status' => 10,
+        ]);
+    }
+
+    protected function isActiveModel($model)
+    {
+        if($model->hasAttribute('is_active')){
+            return (int)$model->getAttribute('is_active') === 1;
+        }
+        if($model->hasAttribute('status')){
+            return (int)$model->getAttribute('status') === 10;
+        }
+        return true;
     }
 
     protected function getScopedProgramRubrics($program, $programSub = null)
@@ -2807,7 +2827,7 @@ class ProgramRegistrationController extends Controller
 
     public function actionManagerAnalysis($id, $sub = null){
         if(!Yii::$app->user->identity->isManager) return false;
-        $role = UserRole::findOne(['program_id' => $id, 'user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'program_sub' => $sub, 'status' => 10]);
+        $role = $this->findManagerRole($id, $sub);
         if(!$role){
             throw new ForbiddenHttpException('No access');
         }

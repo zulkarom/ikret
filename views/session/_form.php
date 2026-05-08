@@ -39,6 +39,14 @@ use yii\helpers\Url;
     ]);
     ?>
 
+<?= $form->field($model, 'allow_scan_outside_duration')->checkbox([
+    'label' => 'Allow scan outside the event duration',
+]) ?>
+
+<?= $form->field($model, 'allow_scan_1_hour_after_event')->checkbox([
+    'label' => 'Allow scan up to 1 hour after event ends',
+]) ?>
+
 <?= $form->field($model, 'program_id')->dropDownList(Program::listPrograms(), ['prompt' => 'Select Program','onchange'=>'
                          $.get("'.Url::to(['/user/sub-program-options', 'program' => '']).
                        '"+$(this).val(),function( data ) 
@@ -60,5 +68,4 @@ use yii\helpers\Url;
 </div>
         </div>
     </div>
-
 

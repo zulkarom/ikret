@@ -18,9 +18,11 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="pagetitle" >
 <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>
-        <?= Html::a('Create Session', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?php if(Yii::$app->user->identity->isManager): ?>
+        <p>
+            <?= Html::a('Create Session', ['create'], ['class' => 'btn btn-success']) ?>
+        </p>
+    <?php endif; ?>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
 
@@ -38,6 +40,18 @@ $this->params['breadcrumbs'][] = $this->title;
             'datetime_start',
             'datetime_end',
             [
+                'label' => 'Scan Window',
+                'value' => function($model){
+                    if((int)$model->allow_scan_outside_duration === 1){
+                        return 'Any time';
+                    }
+                    if((int)$model->allow_scan_1_hour_after_event === 1){
+                        return 'Until 1 hour after end';
+                    }
+                    return 'Event duration only';
+                },
+            ],
+            [
                 'label' =>'Program',
                 'value' => function($model){
                     if($model->program){
@@ -51,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\ActionColumn',
             //'format' => 'raw',
             'contentOptions' => ['style' => 'width: 15%'],
-                            'template' => '{view} {update}',
+                            'template' => Yii::$app->user->identity->isManager ? '{view} {update}' : '{view}',
                             
                             //'visible' => false,
                             'buttons'=>[

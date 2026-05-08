@@ -35,6 +35,14 @@ $this->params['breadcrumbs'][] = $this->title;
             'program_sub',
             'datetime_start',
             'datetime_end',
+            [
+                'attribute' => 'allow_scan_outside_duration',
+                'value' => $model->allow_scan_outside_duration ? 'Yes' : 'No',
+            ],
+            [
+                'attribute' => 'allow_scan_1_hour_after_event',
+                'value' => $model->allow_scan_1_hour_after_event ? 'Yes' : 'No',
+            ],
             'token:ntext',
         ],
     ]) ?>

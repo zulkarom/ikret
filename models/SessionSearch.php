@@ -17,7 +17,7 @@ class SessionSearch extends Session
     public function rules()
     {
         return [
-            [['id', 'session_name', 'program_id', 'program_sub'], 'integer'],
+            [['id', 'session_name', 'program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
             [['datetime_start', 'datetime_end', 'token'], 'safe'],
         ];
     }
@@ -62,6 +62,8 @@ class SessionSearch extends Session
             'session_name' => $this->session_name,
             'program_id' => $this->program_id,
             'program_sub' => $this->program_sub,
+            'allow_scan_outside_duration' => $this->allow_scan_outside_duration,
+            'allow_scan_1_hour_after_event' => $this->allow_scan_1_hour_after_event,
             'datetime_start' => $this->datetime_start,
             'datetime_end' => $this->datetime_end,
         ]);

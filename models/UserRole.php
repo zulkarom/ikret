@@ -99,7 +99,9 @@ class UserRole extends \yii\db\ActiveRecord
             'jury' => 'Jury',
             'committee' => 'Committee',
             'mentor' => 'Mentor',
-            'admin' => 'Administrator'//
+            'admin-jury' => 'Admin Jury',
+            'admin-registration' => 'Admin Registration',
+            'superadmin' => 'Super Administrator',
         ];
     }
 
@@ -136,7 +138,7 @@ class UserRole extends \yii\db\ActiveRecord
     }
 
     public function getRoleText(){
-        $text = '';
+        $text = $this->role_name;
         if(array_key_exists($this->role_name, $this->listRoles())){
             $text = $this->listRoles()[$this->role_name];
         }

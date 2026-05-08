@@ -46,7 +46,7 @@ class SessionController extends Controller
      */
     public function actionIndex()
     {
-        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
         $searchModel = new SessionSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -72,7 +72,7 @@ class SessionController extends Controller
 
     public function actionAttendance()
     {
-        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
         $searchModel = new SessionAttendanceSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 

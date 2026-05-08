@@ -309,13 +309,30 @@ class User extends ActiveRecord implements IdentityInterface
         
     }
 
+    public function hasActiveRole($roleName){
+        return UserRole::find()
+            ->where([
+                'user_id' => $this->id,
+                'role_name' => (array)$roleName,
+                'status' => 10,
+            ])
+            ->exists();
+    }
+
+    public function getIsSuperadmin(){
+        return $this->hasActiveRole('superadmin');
+    }
+
     public function getIsAdmin(){
-        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'admin', 'status' => 10]);
-        if($role){
-            return true;
-        }else{
-            return false;
-        }
+        return $this->isSuperadmin;
+    }
+
+    public function getIsAdminJury(){
+        return $this->hasActiveRole(['admin-jury', 'superadmin']);
+    }
+
+    public function getIsAdminRegistration(){
+        return $this->hasActiveRole(['admin-registration', 'superadmin']);
     }
 
     public function getIsCommittee(){
@@ -328,12 +345,7 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     public function getIsManager(){
-        $role = UserRole::findOne(['user_id' => $this->id, 'role_name' => 'manager', 'status' => 10]);
-        if($role){
-            return true;
-        }else{
-            return false;
-        }
+        return $this->hasActiveRole(['manager', 'superadmin']);
     }
 
     public function getIsMentor(){

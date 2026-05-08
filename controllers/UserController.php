@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\ChangePasswordForm;
+use app\models\Committee;
 use app\models\JuryApplication;
 use app\models\JuryAssign;
 use app\models\JuryProfile;
@@ -19,6 +20,7 @@ use app\models\UserSearch;
 use yii\db\Expression;
 use yii\db\IntegrityException;
 use yii\db\Query;
+use yii\helpers\ArrayHelper;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -85,7 +87,7 @@ class UserController extends Controller
     }
 
     public function actionJury(){
-        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminJury) return false;
 
         $userRole = new UserRole();
 
@@ -192,9 +194,16 @@ class UserController extends Controller
         if(!Yii::$app->user->identity->isAdmin && !Yii::$app->user->identity->isManager) return false;
 
         $model = $this->findModel($id);
+        $roleModel = new UserRole(['user_id' => $model->id, 'status' => 10]);
 
         return $this->render('view', [
             'model' => $model,
+            'roleModel' => $roleModel,
+            'roleOptions' => $this->assignableRoleOptions(),
+            'programOptions' => $this->programOptions(),
+            'programSubOptions' => $this->programSubOptions(),
+            'programSubOptionAttributes' => $this->programSubOptionAttributes(),
+            'committeeOptions' => $this->committeeOptions(),
             'deleteBlockers' => $this->findUserDeleteBlockers($model->id),
             'userRoles' => $this->findUserRoles($model->id),
             'committeeRoles' => $this->findUserCommitteeRoles($model->id),
@@ -203,6 +212,61 @@ class UserController extends Controller
             'juryAssignments' => $this->findUserJuryAssignments($model->id),
             'relatedData' => $this->findUserRelatedData($model->id),
         ]);
+    }
+
+    public function actionAssignRole($id)
+    {
+        if(!Yii::$app->user->identity->isSuperadmin) return false;
+
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        $user = $this->findModel($id);
+        $role = new UserRole(['user_id' => $user->id]);
+
+        if(!$role->load($this->request->post())){
+            Yii::$app->session->addFlash('error', "Invalid role data");
+            return $this->redirect(['view', 'id' => $user->id]);
+        }
+
+        $allowedRoles = $this->assignableRoleOptions();
+        if(!array_key_exists($role->role_name, $allowedRoles)){
+            Yii::$app->session->addFlash('error', "Invalid role selected");
+            return $this->redirect(['view', 'id' => $user->id]);
+        }
+
+        $role->user_id = $user->id;
+        $role->status = 10;
+        $role->approve_at = new Expression('NOW()');
+        $role->request_at = new Expression('NOW()');
+
+        if($role->program_sub == -1 || $role->program_sub === ''){
+            $role->program_sub = null;
+        }
+        if($role->program_id === ''){
+            $role->program_id = null;
+        }
+        if($role->committee_id === ''){
+            $role->committee_id = null;
+        }
+
+        if(!$this->prepareAssignedRole($role)){
+            return $this->redirect(['view', 'id' => $user->id]);
+        }
+
+        if($this->roleAlreadyAssigned($role)){
+            Yii::$app->session->addFlash('warning', "This role access already exists");
+            return $this->redirect(['view', 'id' => $user->id]);
+        }
+
+        if($role->save()){
+            Yii::$app->session->addFlash('success', $role->roleText . " access assigned");
+        }else{
+            $role->flashError();
+        }
+
+        return $this->redirect(['view', 'id' => $user->id]);
     }
 
     public function actionAssignManager($id)
@@ -355,6 +419,126 @@ class UserController extends Controller
             ->andWhere(['is not', 'committee_id', null])
             ->orderBy(['is_leader' => SORT_ASC, 'id' => SORT_DESC])
             ->all();
+    }
+
+    protected function assignableRoleOptions()
+    {
+        return UserRole::listRoles();
+    }
+
+    protected function programOptions()
+    {
+        return ArrayHelper::map(
+            Program::find()->orderBy(['program_name' => SORT_ASC])->all(),
+            'id',
+            'program_name'
+        );
+    }
+
+    protected function programSubOptions()
+    {
+        $subs = ProgramSub::find()
+            ->with('program')
+            ->orderBy(['program_id' => SORT_ASC, 'sub_name' => SORT_ASC])
+            ->all();
+
+        $options = [];
+        foreach($subs as $sub){
+            $programName = $sub->program ? $sub->program->program_name : 'Program ' . $sub->program_id;
+            $options[$sub->id] = $programName . ' / ' . $sub->sub_name;
+        }
+
+        return $options;
+    }
+
+    protected function programSubOptionAttributes()
+    {
+        $subs = ProgramSub::find()->select(['id', 'program_id'])->all();
+        $options = [];
+        foreach($subs as $sub){
+            $options[$sub->id] = ['data-program' => (string)$sub->program_id];
+        }
+
+        return $options;
+    }
+
+    protected function committeeOptions()
+    {
+        return ArrayHelper::map(
+            Committee::find()->orderBy(['com_name_en' => SORT_ASC])->all(),
+            'id',
+            'com_name_en'
+        );
+    }
+
+    protected function prepareAssignedRole(UserRole $role)
+    {
+        if($role->role_name === 'manager'){
+            if(!$role->program_id){
+                Yii::$app->session->addFlash('error', "Please select a program for manager access");
+                return false;
+            }
+
+            $program = Program::findOne((int)$role->program_id);
+            if(!$program){
+                Yii::$app->session->addFlash('error', "Program not found");
+                return false;
+            }
+
+            if((int)$program->has_sub === 1){
+                if(!$role->program_sub){
+                    Yii::$app->session->addFlash('error', "Please select a competition for this manager access");
+                    return false;
+                }
+                $programSub = ProgramSub::findOne(['id' => (int)$role->program_sub, 'program_id' => (int)$program->id]);
+                if(!$programSub){
+                    Yii::$app->session->addFlash('error', "Competition does not belong to the selected program");
+                    return false;
+                }
+            }else{
+                $role->program_sub = null;
+            }
+
+            $role->committee_id = null;
+            return true;
+        }
+
+        if($role->role_name === 'committee'){
+            if(!$role->committee_id){
+                Yii::$app->session->addFlash('error', "Please select a committee");
+                return false;
+            }
+            $role->program_id = null;
+            $role->program_sub = null;
+            return true;
+        }
+
+        $role->program_id = null;
+        $role->program_sub = null;
+        $role->committee_id = null;
+        $role->is_leader = null;
+
+        return true;
+    }
+
+    protected function roleAlreadyAssigned(UserRole $role)
+    {
+        $query = UserRole::find()->where([
+            'user_id' => $role->user_id,
+            'role_name' => $role->role_name,
+            'status' => 10,
+        ]);
+
+        if($role->role_name === 'manager'){
+            $query->andWhere([
+                'program_id' => $role->program_id,
+                'program_sub' => $role->program_sub,
+            ]);
+        }else if($role->role_name === 'committee'){
+            $query->andWhere(['committee_id' => $role->committee_id]);
+        }
+
+        return $query->exists();
     }
 
     protected function managerAssignmentOptions()

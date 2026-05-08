@@ -238,8 +238,12 @@ CSS);
             ],
             [
                 'label' =>'Result',
+                'format' => 'html',
                 'contentOptions' => ['data-label' => 'Result'],
                 'value' => function($model){
+                    if((int)$model->is_nullified === 1){
+                        return '<span class="badge bg-danger">Nullified</span>';
+                    }
                     if($model->score){
                         return $model->score;
                     }else{

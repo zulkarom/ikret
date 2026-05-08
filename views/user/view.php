@@ -2,9 +2,16 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\models\User $model */
+/** @var app\models\UserRole $roleModel */
+/** @var array $roleOptions */
+/** @var array $programOptions */
+/** @var array $programSubOptions */
+/** @var array $programSubOptionAttributes */
+/** @var array $committeeOptions */
 /** @var array $deleteBlockers */
 /** @var app\models\UserRole[] $userRoles */
 /** @var app\models\UserRole[] $committeeRoles */
@@ -70,6 +77,52 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="alert alert-success">
             No related records found. This user can be deleted from the update page.
         </div>
+    <?php endif; ?>
+
+    <?php if(Yii::$app->user->identity->isSuperadmin): ?>
+        <h5 class="mt-4">Assign Role Access</h5>
+        <?php $form = ActiveForm::begin([
+            'action' => ['assign-role', 'id' => $model->id],
+            'method' => 'post',
+            'options' => ['class' => 'row g-3 align-items-end mb-4', 'id' => 'assign-role-form'],
+        ]); ?>
+            <div class="col-md-3">
+                <?= $form->field($roleModel, 'role_name')->dropDownList($roleOptions, [
+                    'prompt' => 'Select Role',
+                    'id' => 'assign-role-name',
+                ]) ?>
+            </div>
+            <div class="col-md-3 role-scope role-scope-manager">
+                <?= $form->field($roleModel, 'program_id')->dropDownList($programOptions, [
+                    'prompt' => 'Select Program',
+                    'id' => 'assign-role-program',
+                ]) ?>
+            </div>
+            <div class="col-md-3 role-scope role-scope-manager">
+                <?= $form->field($roleModel, 'program_sub')->dropDownList($programSubOptions, [
+                    'prompt' => 'Program Level / N/A',
+                    'id' => 'assign-role-program-sub',
+                    'options' => $programSubOptionAttributes,
+                ])->label('Competition') ?>
+            </div>
+            <div class="col-md-3 role-scope role-scope-committee">
+                <?= $form->field($roleModel, 'committee_id')->dropDownList($committeeOptions, [
+                    'prompt' => 'Select Committee',
+                ]) ?>
+            </div>
+            <div class="col-md-2 role-scope role-scope-committee">
+                <?= $form->field($roleModel, 'is_leader')->dropDownList([
+                    1 => 'Leader',
+                    2 => 'Member',
+                ], ['prompt' => 'Select Role'])->label('Committee Role') ?>
+            </div>
+            <div class="col-md-2">
+                <?= Html::submitButton('Assign Role', [
+                    'class' => 'btn btn-success w-100',
+                    'data-confirm' => 'Assign this role access to the user?',
+                ]) ?>
+            </div>
+        <?php ActiveForm::end(); ?>
     <?php endif; ?>
 
     <h5 class="mt-4">User Role Access</h5>
@@ -281,5 +334,38 @@ $('.user-role-check').on('change', function(){
     var checked = $('.user-role-check:checked').length;
     $('#select-all-user-roles').prop('checked', total > 0 && total === checked);
 });
+
+function updateAssignRoleScope(){
+    var role = $('#assign-role-name').val();
+    $('.role-scope').hide();
+    if(role === 'manager'){
+        $('.role-scope-manager').show();
+        updateAssignProgramSubs();
+    }
+    if(role === 'committee'){
+        $('.role-scope-committee').show();
+    }
+}
+
+function updateAssignProgramSubs(){
+    var program = $('#assign-role-program').val();
+    var current = $('#assign-role-program-sub').val();
+    var currentVisible = false;
+    $('#assign-role-program-sub option').each(function(){
+        var optionProgram = $(this).data('program');
+        var visible = !optionProgram || !program || String(optionProgram) === String(program);
+        $(this).toggle(visible);
+        if(visible && $(this).val() === current){
+            currentVisible = true;
+        }
+    });
+    if(!currentVisible){
+        $('#assign-role-program-sub').val('');
+    }
+}
+
+$('#assign-role-name').on('change', updateAssignRoleScope);
+$('#assign-role-program').on('change', updateAssignProgramSubs);
+updateAssignRoleScope();
 JS);
 ?>

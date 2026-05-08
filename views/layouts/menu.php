@@ -104,7 +104,42 @@ use yii\helpers\Url;
         }
 
         if(Yii::$app->user->identity->isManager){
-          $pro = UserRole::find()->where(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10])->all();
+          if(Yii::$app->user->identity->isSuperadmin){
+            $programQuery = Program::find()->with('programSubs')->orderBy(['id' => SORT_ASC]);
+            $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+            if($programTable && $programTable->getColumn('is_active')){
+              $programQuery->andWhere(['is_active' => 1]);
+            }else if($programTable && $programTable->getColumn('status')){
+              $programQuery->andWhere(['status' => 10]);
+            }
+            $pro = [];
+            foreach($programQuery->all() as $program){
+              if((int)$program->has_sub === 1){
+                foreach($program->programSubs as $sub){
+                  $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+                  if($subTable && $subTable->getColumn('is_active') && (int)$sub->getAttribute('is_active') !== 1){
+                    continue;
+                  }
+                  $pro[] = new UserRole([
+                    'user_id' => Yii::$app->user->identity->id,
+                    'role_name' => 'manager',
+                    'program_id' => $program->id,
+                    'program_sub' => $sub->id,
+                    'status' => 10,
+                  ]);
+                }
+              }else{
+                $pro[] = new UserRole([
+                  'user_id' => Yii::$app->user->identity->id,
+                  'role_name' => 'manager',
+                  'program_id' => $program->id,
+                  'status' => 10,
+                ]);
+              }
+            }
+          }else{
+            $pro = UserRole::find()->where(['user_id' => Yii::$app->user->identity->id, 'role_name' => 'manager', 'status' => 10])->all();
+          }
           if($pro){
             $menu[] = ['name' => 'Manager Menu', 'heading' => true];
             $byProgram = [];
@@ -196,15 +231,7 @@ use yii\helpers\Url;
               }
             }
 
-            $menu[] = ['name' => 'List of Juries', 'url' => ['/user/jury'], 'icon' => 'bi bi-person-badge'];
            // $menu[] = ['name' => 'List of Mentors', 'url' => ['/user/mentor'], 'icon' => 'bi bi-person-badge'];
-            $menu[] = ['name' => 'All Users', 'url' => ['/user/all'], 'icon' => 'bi bi-person-lines-fill'];
-
-            $menu[] = ['name' => 'Session Attendance', 'url' => ['/'], 'icon' => 'bi bi-upc-scan', 'children' => [
-              ['name' => 'Session List', 'url' => ['/session/index']],
-              ['name' => 'Attendance List', 'url' => ['/session/attendance']],
-          ]];
-
 
           }
           
@@ -213,34 +240,52 @@ use yii\helpers\Url;
         }
         
 
-        if(Yii::$app->user->identity->isAdmin){
+        if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminJury || Yii::$app->user->identity->isAdminRegistration){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
-          $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => [
-            ['name' => 'All Users', 'url' => ['/user/all']],
-            ['name' => 'User Role Request', 'url' => ['/committee/request']],
-          ]];
+          if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminRegistration){
+            $userAccessMenu = [];
+            if(Yii::$app->user->identity->isAdmin){
+              $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
+              $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
+            }
+            if(Yii::$app->user->identity->isAdminRegistration){
+              $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];
+            }
 
-          $menu[] = ['name' => 'Jury Management', 'url' => ['/'], 'icon' => 'bi bi-person-badge', 'children' => [
-            ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index']],
-            ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all']],
-            ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
-            ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
-          ]];
+            $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => $userAccessMenu];
+          }
 
-          $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
-            ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
-            ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
-            ['name' => 'Settings', 'url' => ['/setting/update']],
-          ]];
+          if(Yii::$app->user->identity->isAdminJury){
+            $menu[] = ['name' => 'Jury Management', 'url' => ['/'], 'icon' => 'bi bi-person-badge', 'children' => [
+              ['name' => 'List of Juries', 'url' => ['/user/jury']],
+              ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index']],
+              ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all']],
+              ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
+              ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
+            ]];
+          }
 
-          $menu[] = ['name' => 'Registration & Committees', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
-            ['name' => 'All Registration', 'url' => ['/program-registration/index']],
-            ['name' => 'List of Committees', 'url' => ['/committee/index']],
-          ]];
+          if(Yii::$app->user->identity->isAdmin){
+            $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
+              ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
+              ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
+              ['name' => 'Settings', 'url' => ['/setting/update']],
+            ]];
+          }
 
-          $menu[] = ['name' => 'Reports & Analytics', 'url' => ['/'], 'icon' => 'bi bi-bar-chart', 'children' => [
-            ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats']],
-          ]];
+          if(Yii::$app->user->identity->isAdminRegistration){
+            $menu[] = ['name' => 'Registration', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
+              ['name' => 'All Registration', 'url' => ['/program-registration/index']],
+              ['name' => 'Event Session List', 'url' => ['/session/index']],
+              ['name' => 'Event Attendance List', 'url' => ['/session/attendance']],
+            ]];
+          }
+
+          if(Yii::$app->user->identity->isAdmin){
+            $menu[] = ['name' => 'Reports & Analytics', 'url' => ['/'], 'icon' => 'bi bi-bar-chart', 'children' => [
+              ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats']],
+            ]];
+          }
 
           
           

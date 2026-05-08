@@ -34,7 +34,7 @@ class JuryProfileController extends Controller
 
     public function actionIndex()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         $searchModel = new JuryProfileSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
@@ -50,14 +50,14 @@ class JuryProfileController extends Controller
 
     public function actionImport()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         return $this->render('import');
     }
 
     public function actionImportCsv()
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         if(!Yii::$app->request->isPost){
             throw new NotFoundHttpException('The requested page does not exist.');
@@ -221,7 +221,7 @@ class JuryProfileController extends Controller
 
     public function actionDelete($id)
     {
-        if(!Yii::$app->user->identity->isAdmin) return false;
+        if(!Yii::$app->user->identity->isAdminJury) return false;
 
         $model = $this->findModel($id);
 

@@ -13,6 +13,8 @@ use Yii;
  * @property int|null $program_sub
  * @property string|null $datetime_start
  * @property string|null $datetime_end
+ * @property int $allow_scan_outside_duration
+ * @property int $allow_scan_1_hour_after_event
  * @property string|null $token
  *
  * @property Program $program
@@ -41,9 +43,10 @@ class Session extends \yii\db\ActiveRecord
     {
         return [
             [['session_name', 'datetime_start', 'datetime_end'], 'required'],
-            [['program_id', 'program_sub'], 'integer'],
+            [['program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
             [['datetime_start', 'datetime_end'], 'safe'],
             [['token', 'session_name'], 'string'],
+            [['allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'default', 'value' => 0],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
             [['program_sub'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramSub::class, 'targetAttribute' => ['program_sub' => 'id']],
         ];
@@ -61,6 +64,8 @@ class Session extends \yii\db\ActiveRecord
             'program_sub' => 'Program Sub',
             'datetime_start' => 'Start',
             'datetime_end' => 'End',
+            'allow_scan_outside_duration' => 'Allow scan outside duration',
+            'allow_scan_1_hour_after_event' => 'Allow scan 1 hour after event',
             'token' => 'Token',
         ];
     }

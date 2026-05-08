@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="mb-3">
                 <?= Html::submitButton('Approve Selected', ['class' => 'btn btn-success', 'name' => 'bulk_action', 'value' => 'approve']) ?>
                 <?= Html::submitButton('Reject Selected', ['class' => 'btn btn-danger', 'name' => 'bulk_action', 'value' => 'reject', 'data' => ['confirm' => 'Reject selected applications?']]) ?>
-                <?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin): ?>
+                <?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->isAdminJury): ?>
                     <?= Html::a('Import CSV', ['/program-registration/jury-application-import'], ['class' => 'btn btn-outline-primary']) ?>
                 <?php endif; ?>
             </div>

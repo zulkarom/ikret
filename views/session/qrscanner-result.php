@@ -15,32 +15,16 @@ function record($t, $user_id){
     $msg = '';
     //pastikan kelas wujud
     $session = Session::find()->where(['token' => $t])->one();
-    $start = strtotime($session->datetime_start);
-    $end = strtotime($session->datetime_end);
-    $valid = time() >= $start && time() <= $end;
     if($session){
-        if($valid){
-            $ada = SessionAttendance::find()->alias('a')
-            ->where(['a.session_id' => $session->id, 'a.user_id' => $user_id])
-            ->one();
-            if($ada){
-                $msg = 'Attendance had been recorded already';
-                return [true, $msg, $ada];
-            }else{
-                
-                $att = new SessionAttendance();
-                $att->user_id = $user_id;
-                $att->session_id = $session->id;
-                $att->scanned_at = new Expression("NOW()");
-                if($att->save()){
-                    return [true, $msg, $att];
-                }else{
-                    $msg = 'Saving Failed';
-                }
-            }
+        $att = new SessionAttendance();
+        $att->user_id = $user_id;
+        $att->session_id = $session->id;
+        $att->scanned_at = new Expression("NOW()");
+        if($att->save()){
+            return [true, $msg, $att];
         }else{
-            $msg = 'Invalid Session Time';
-            //$msg = 'Invalid Session Time - name - '.$session->session_name.' start-'.$session->datetime_start.'-'.$start. '-end-'. $session->datetime_start . '-' . $end . '-curr-'. time() . '-' . date('Y-m-d h:i:s A', time());
+            $errors = $att->getFirstErrors();
+            $msg = $errors ? reset($errors) : 'Saving Failed';
         }
     }else{
         $msg = 'Invalid Session Code';
