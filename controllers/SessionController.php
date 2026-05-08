@@ -107,6 +107,7 @@ class SessionController extends Controller
      */
     public function actionView($id)
     {
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -260,7 +261,19 @@ class SessionController extends Controller
      */
     public function actionDelete($id)
     {
-        //$this->findModel($id)->delete();
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
+
+        $model = $this->findModel($id);
+        if($model->getSessionAttendances()->exists()){
+            Yii::$app->session->addFlash('error', 'This session cannot be deleted because attendance has already been recorded.');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        if($model->delete()){
+            Yii::$app->session->addFlash('success', 'Session deleted.');
+        }else{
+            Yii::$app->session->addFlash('error', 'Failed to delete session.');
+        }
 
         return $this->redirect(['index']);
     }
