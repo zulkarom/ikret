@@ -2106,8 +2106,8 @@ class ProgramRegistrationController extends Controller
             ['name' => 'Bob Johnson', 'matric' => 'A25A1003'],
         ];
 
-        foreach($teamMembers as $member){
-            $sampleRow = $baseSampleRow;
+        foreach($teamMembers as $index => $member){
+            $sampleRow = $index === 0 ? $baseSampleRow : array_fill(0, count($baseSampleRow), '');
             if(array_key_exists('member_names', $extraColumns)){
                 $sampleRow[] = $member['name'];
             }
@@ -2154,6 +2154,7 @@ class ProgramRegistrationController extends Controller
             $groupedData = [];
             $rowNo = 1;
             $lastGroupName = '';
+            $lastProgramSub = '';
             while(($row = fgetcsv($handle)) !== false){
                 $rowNo++;
                 $rowAssoc = [];
@@ -2170,6 +2171,15 @@ class ProgramRegistrationController extends Controller
                 }
                 if(!$hasContent){
                     continue;
+                }
+
+                if((int)$program->has_sub === 1 && array_key_exists('program_sub', $rowAssoc)){
+                    $programSub = trim((string)$rowAssoc['program_sub']);
+                    if($programSub === '' && $lastProgramSub !== ''){
+                        $rowAssoc['program_sub'] = $lastProgramSub;
+                    }elseif($programSub !== ''){
+                        $lastProgramSub = $programSub;
+                    }
                 }
 
                 $groupName = isset($rowAssoc['group_name']) ? trim((string)$rowAssoc['group_name']) : '';

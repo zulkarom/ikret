@@ -139,26 +139,36 @@ class SiteController extends Controller
         }
 
         $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            if($t){
-                $returnUrl = Url::to(['site/qr', 't' => $t]);
-            }else{
-                $returnUrl = Url::to(['site/dashboard']);
+        if ($model->load(Yii::$app->request->post())) {
+            if(trim((string)$model->username) !== '' && !$model->getUser()){
+                Yii::$app->session->set('registerPrefillFromLogin', [
+                    'username' => trim((string)$model->username),
+                    'password' => (string)$model->password,
+                ]);
+                Yii::$app->session->addFlash('warning', 'Username not found. Please fill in your full name and email to register.');
+                return $this->redirect(['site/register']);
             }
 
-            $user = $model->getUser();
-            if($user && $model->password === $user->username){
-                Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
-                return $this->redirect(['site/change-default-password', 'returnUrl' => $returnUrl]);
-            }
+            if($model->login()){
+                if($t){
+                    $returnUrl = Url::to(['site/qr', 't' => $t]);
+                }else{
+                    $returnUrl = Url::to(['site/dashboard']);
+                }
 
-            if($t){
-                return $this->redirect(['site/qr', 't' => $t]);
-            }else{
-                Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
-                return $this->redirect(['site/dashboard']);
+                $user = $model->getUser();
+                if($user && $model->password === $user->username){
+                    Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
+                    return $this->redirect(['site/change-default-password', 'returnUrl' => $returnUrl]);
+                }
+
+                if($t){
+                    return $this->redirect(['site/qr', 't' => $t]);
+                }else{
+                    Yii::$app->session->addFlash('success', "You has been logged in to I-CREATE system");
+                    return $this->redirect(['site/dashboard']);
+                }
             }
-            
         }
 
         $model->password = '';
@@ -469,6 +479,16 @@ class SiteController extends Controller
     public function actionRegister(){
         
         $model = new RegisterForm();
+
+        if(!Yii::$app->request->isPost){
+            $prefill = Yii::$app->session->get('registerPrefillFromLogin');
+            Yii::$app->session->remove('registerPrefillFromLogin');
+            if(is_array($prefill)){
+                $model->username = $prefill['username'] ?? null;
+                $model->password = $prefill['password'] ?? null;
+                $model->password_repeat = $prefill['password'] ?? null;
+            }
+        }
         
         if ($model->load(Yii::$app->request->post())){
        

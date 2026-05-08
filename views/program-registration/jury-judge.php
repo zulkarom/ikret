@@ -246,7 +246,9 @@ CSS);
 ?>
 
 <div class="pagetitle">
-<h1><?=$this->title?></h1></div>
+<h1><?=$this->title?></h1>
+<?= Html::a('<i class="bi bi-arrow-left"></i> Back to Assignment List', ['/program-registration/jury-assignment'], ['class' => 'btn btn-outline-secondary btn-sm mt-2 mb-3']) ?>
+</div>
     <section class="section dashboard">
 
     <?php if($plain && !$edit){ ?>

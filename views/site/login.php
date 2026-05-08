@@ -57,14 +57,16 @@ $this->title = 'I-CREATE - Login';
             ->field($model, 'password', ['addon' => ['append' => ['content'=>'<i class="bi bi-lock"></i>']]])
     
             ->passwordInput() ?>
+            <div class="form-check mt-3 mb-2">
+                <input type="checkbox" class="form-check-input" id="show-login-password">
+                <label class="form-check-label small" for="show-login-password">Show password</label>
+            </div>
             </div>
 
 
 
-            <div class="col-12">
-                      <div class="form-check">
+            <div class="col-12 mt-2">
                 <?= $form->field($model, 'rememberMe')->checkbox() ?>
-            </div>
             <!-- /.col -->
     
             <!-- /.col -->
@@ -98,3 +100,11 @@ $this->title = 'I-CREATE - Login';
     
 </div>
              
+<?php
+$this->registerJs(<<<JS
+$('#show-login-password').on('change', function(){
+    var passwordInput = $('#loginform-password');
+    passwordInput.attr('type', $(this).is(':checked') ? 'text' : 'password');
+});
+JS);
+?>

@@ -64,7 +64,7 @@ foreach($extraColumns as $column){
                     <p class="text-muted mb-2">
                         Upload one CSV file for <?= Html::encode($program->program_name) ?>.
                         <strong>Group-based import:</strong> Multiple rows with the same <code>group_name</code> will be combined into one registration.
-                        A user account will be created for the first member of each group. 
+                        A user account will be created for the first member of each group.
                         <br><strong>Login credentials:</strong> Username = matric (as entered in CSV), Password = matric
                         <?php if($managerSub){ ?><br>This page was opened from <?= Html::encode($managerSub->sub_name) ?>, but import remains at program level, so <code>program_sub</code> must be included in the CSV.<?php } ?>
                     </p>
@@ -127,10 +127,16 @@ foreach($extraColumns as $column){
             <div class="small text-muted">
                 <strong>Important:</strong>
                 <ul class="mb-0 mt-2">
-                    <li>CSV header names must match exactly (case-sensitive)</li>
-                    <li>Column order is flexible - you can arrange columns in any order</li>
-                    <li>Values in each row must correspond to the column headers in that row</li>
-                    <li>Integer option/select fields expect numeric values used by the registration form</li>
+                    <li>CSV header names must match exactly (case-sensitive).</li>
+                    <li>Column order is flexible - you can arrange columns in any order.</li>
+                    <li>Values in each row must correspond to the column headers in that row.</li>
+                    <li>Integer option/select fields expect numeric values used by the registration form.</li>
+                    <li>The first non-empty row for each <code>group_name</code> is used for registration details such as <code>program_sub</code>, category, project, contact, institution, and advisor fields.</li>
+                    <li>If this program has sub-programs, a blank <code>program_sub</code> cell will reuse the previous non-empty <code>program_sub</code> value.</li>
+                    <li>Rows after the first member may leave <code>group_name</code> empty; the importer will treat them as part of the previous group.</li>
+                    <li>A completely empty row is ignored. A row without <code>group_name</code> before any group has started is also ignored.</li>
+                    <li>Empty optional cells are saved as blank values. Empty member-name rows are not added as members.</li>
+                    <li>The first member row in every group must contain both <code>member_names</code> and <code>member_matrics</code> because that member becomes the login user for the registration.</li>
                 </ul>
             </div>
         </div>
@@ -210,8 +216,10 @@ foreach($extraColumns as $column){
         <div class="card-header">Sample CSV</div>
         <div class="card-body pt-4">
             <p class="text-muted">
-                Sample shows a team with 3 members (same <code>group_name</code> across rows).
-                Each row represents one team member. Remove columns you do not need only if they are not marked required above.
+                Sample shows one team with 3 members. The first row starts the group and contains the registration values.
+                The next rows leave <code>group_name</code> and registration-only fields empty, so they continue under the previous group.
+                For sub-program imports, blank <code>program_sub</code> cells continue using the previous <code>program_sub</code>.
+                You may keep blank separator rows between groups; they will be ignored.
             </p>
             <pre class="bg-light border rounded p-3 mb-0"><code><?= Html::encode($sampleCsv) ?></code></pre>
         </div>

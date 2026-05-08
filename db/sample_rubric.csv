@@ -1,12 +1,13 @@
 category_name,item_text,item_type,option_number,item_short,item_description,is_recommend,is_required
-Evaluation,Practical Application of Knowledge,scale,4,Application,"Ranges from failing to apply relevant knowledge with no practical linkage to excellent application that is highly relevant, insightful, and practical.",0,1
-,Shariah Compliance & Contract Justification,scale,4,Shariah,"Ranges from no understanding of Shariah principles and incorrect contracts to excellent mastery with strong, accurate, and well-justified application.",0,1
-,Problem Resolution & Commercial Viability,scale,4,Solution,"Ranges from failing to address the problem with no viable solution to an excellent solution that is highly viable, scalable, and impactful.",0,1
-,The Implementation Blueprint,scale,4,Blueprint,"Ranges from having no clear implementation plan to a comprehensive, strategic, and actionable blueprint.",0,1
-,Innovation & Creativity,scale,4,Innovation,"Ranges from no innovation and lack of originality to highly innovative, unique, and impactful ideas.",0,1
-,Clarity of Presentation & Communication,scale,4,Clarity,"Ranges from very unclear communication to highly clear, professional, and engaging presentation.",0,1
-Final Evaluation,Is this team eligible to receive BEST INNOVATION PRESENTION?,boolean,2,Best Presenter,,1,1
-,Is this team eligible to receive MOST CREATIVE INNOVATION POSTER?,boolean,2,Best Poster,,1,1
-,Is this team eligible to receive BEST INNOVATIVE SOLUTION?,boolean,2,Best Solution,,1,1
-,Strengths,textarea,,Strengths,,0,0
-,Areas for Improvement,textarea,,Improvement,,0,0
+NEXTGEN E-PRENEUR Evaluation,"Idea perniagaan yang dibentangkan adalah kreatif, relevan dan mempunyai nilai keunikan (USP) yang jelas.",scale,10,Business Idea,,0,1
+,Model perniagaan yang dicadangkan menunjukkan potensi pasaran dan kebolehupayaan untuk berkembang (scalability).,scale,10,Business Model,,0,1
+,"Portfolio syarikat disediakan secara profesional, tersusun dan mempunyai identiti jenama yang konsisten.",scale,10,Portfolio,,0,1
+,"Penggunaan elemen visual, grafik dan kandungan dalam portfolio berjaya meningkatkan imej korporat perniagaan.",scale,10,Visual Identity,,0,1
+,"Platform digital perniagaan (website, media sosial, marketplace dan lain-lain) dibangunkan secara kreatif dan berfungsi dengan baik.",scale,10,Digital Platform,,0,1
+,Strategi pemasaran digital yang digunakan menunjukkan kefahaman yang baik terhadap sasaran pelanggan dan trend semasa.,scale,10,Marketing Strategy,,0,1
+,"Penggunaan teknologi digital dan AI membantu meningkatkan keberkesanan operasi, pemasaran atau pengalaman pengguna.",scale,10,Digital AI,,0,1
+,"Pembentangan peserta disampaikan dengan yakin, jelas, profesional dan meyakinkan.",scale,10,Presentation,,0,1
+,"Projek menunjukkan tahap inovasi, penyelesaian masalah dan impak yang berpotensi kepada industri atau masyarakat.",scale,10,Innovation,,0,1
+,Keseluruhan projek menunjukkan ciri-ciri usahawan digital masa hadapan yang kompetitif dan berpotensi tinggi.,scale,10,Overall Potential,,0,1
+,Adakah peserta ini layak dinobatkan sebagai penerima NEXTGEN E-PRENEUR AWARD?,boolean,,NEXTGEN Award,Pilih YA sekiranya peserta menunjukkan prestasi keseluruhan yang cemerlang serta mempunyai potensi tinggi sebagai usahawan digital masa hadapan.,1,1
+,Komen / Cadangan Penambahbaikan,textarea,,Comments,,0,0
