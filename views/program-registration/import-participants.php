@@ -47,6 +47,58 @@ foreach($extraColumns as $column){
         $requiredCount++;
     }
 }
+
+$minimalCsvHeaders = [];
+if((int)$program->has_sub === 1 && in_array('program_sub', $sampleHeaders, true)){
+    $minimalCsvHeaders[] = 'program_sub';
+}
+foreach(['group_name', 'member_names', 'member_matrics'] as $header){
+    if(in_array($header, $sampleHeaders, true)){
+        $minimalCsvHeaders[] = $header;
+    }
+}
+$minimalCsvRows = [];
+if($minimalCsvHeaders){
+    $minimalValues = [
+        [
+            'program_sub' => $availableProgramSubs ? (string)$availableProgramSubs[0]->id : '16',
+            'group_name' => 'AL01',
+            'member_names' => 'ABDUL HADI BIN KHAIRILIZA',
+            'member_matrics' => 'A23A1902',
+        ],
+        [
+            'program_sub' => '',
+            'group_name' => '',
+            'member_names' => 'AIDA NABILA BINTI NORDIN',
+            'member_matrics' => 'A23A1935',
+        ],
+        [
+            'program_sub' => '',
+            'group_name' => '',
+            'member_names' => '',
+            'member_matrics' => '',
+        ],
+        [
+            'program_sub' => '',
+            'group_name' => 'AL02',
+            'member_names' => 'HIDAYATI BINTI MASNGON',
+            'member_matrics' => 'A23A2349',
+        ],
+        [
+            'program_sub' => '',
+            'group_name' => '',
+            'member_names' => 'FATIN FARZANA BINTI AHMAD MURAD',
+            'member_matrics' => 'A23A1534',
+        ],
+    ];
+    foreach($minimalValues as $values){
+        $row = [];
+        foreach($minimalCsvHeaders as $header){
+            $row[$header] = $values[$header] ?? '';
+        }
+        $minimalCsvRows[] = $row;
+    }
+}
 ?>
 
 <div class="pagetitle">
@@ -203,6 +255,52 @@ foreach($extraColumns as $column){
                                     <td><code><?= Html::encode($sub->sub_abbr ?: 'N/A') ?></code></td>
                                     <td><?= Html::encode($sub->sub_name) ?></td>
                                     <td><?= Html::encode($sub->advisor ?: 'N/A') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php } ?>
+
+    <?php if($minimalCsvHeaders){ ?>
+        <div class="card mb-4">
+            <div class="card-header">Minimal CSV Example</div>
+            <div class="card-body pt-4">
+                <p class="text-muted">
+                    This table represents the smallest practical CSV layout for group member import.
+                    Blank cells are intentional: blank <code>group_name</code> continues the previous group, blank <code>program_sub</code> continues the previous sub-program, and a fully empty data row is skipped.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <?php foreach($minimalCsvHeaders as $header): ?>
+                                    <th><code><?= Html::encode($header) ?></code></th>
+                                <?php endforeach; ?>
+                                <th>Importer Behavior</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($minimalCsvRows as $index => $row): ?>
+                                <tr>
+                                    <?php foreach($minimalCsvHeaders as $header): ?>
+                                        <td><?= $row[$header] === '' ? '<span class="text-muted">(empty)</span>' : Html::encode($row[$header]) ?></td>
+                                    <?php endforeach; ?>
+                                    <td class="text-muted">
+                                        <?php if($index === 0): ?>
+                                            Starts group AL01 and sets the current sub-program.
+                                        <?php elseif($index === 1): ?>
+                                            Adds another member to AL01; uses previous group and sub-program.
+                                        <?php elseif($index === 2): ?>
+                                            Fully empty row is ignored.
+                                        <?php elseif($index === 3): ?>
+                                            Starts group AL02; blank sub-program reuses the previous sub-program.
+                                        <?php else: ?>
+                                            Adds another member to AL02; uses previous group and sub-program.
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
