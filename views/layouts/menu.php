@@ -224,6 +224,7 @@ use yii\helpers\Url;
             ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index']],
             ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all']],
             ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
+            ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
           ]];
 
           $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
@@ -235,10 +236,6 @@ use yii\helpers\Url;
           $menu[] = ['name' => 'Registration & Committees', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
             ['name' => 'All Registration', 'url' => ['/program-registration/index']],
             ['name' => 'List of Committees', 'url' => ['/committee/index']],
-          ]];
-
-          $menu[] = ['name' => 'Judging', 'url' => ['/'], 'icon' => 'bi bi-calendar-event', 'children' => [
-            ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
           ]];
 
           $menu[] = ['name' => 'Reports & Analytics', 'url' => ['/'], 'icon' => 'bi bi-bar-chart', 'children' => [
