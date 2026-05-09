@@ -8,6 +8,21 @@ use yii\widgets\ActiveForm;
 
 $this->title = 'Settings';
 
+$this->registerCss(<<<CSS
+.setting-update .form-group {
+    margin-bottom: 18px;
+}
+
+.setting-update .form-group .help-block {
+    margin-top: 6px;
+}
+
+.setting-update .form-group .checkbox {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+CSS);
+
 ?>
 
 <div class="setting-update">

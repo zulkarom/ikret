@@ -11,12 +11,12 @@ $this->title = 'HOME - I-CREATE - The International Convention on Resourceful En
 
 $set = Setting::findOne(1);
 
-$programmeBookUrl = 'https://anyflip.com/nsaql/bhfa/';
+$programmeBookUrl = 'https://fkp-portal.umk.edu.my/icreate/docs/I-CREATE-2026-BUKU-PROGRAM.pdf';
 if ($set && !empty($set->programme_book_url)) {
   $programmeBookUrl = $set->programme_book_url;
 }
 
-$programmeBookQr = Yii::getAlias('@web') . '/images/icreate-programme-book.png';
+$programmeBookQr = Yii::getAlias('@web') . '/docs/qr-buku.png';
 if ($set && !empty($set->programme_book_qr)) {
   $programmeBookQr = Yii::getAlias('@web') . '/' . ltrim($set->programme_book_qr, '/');
 }

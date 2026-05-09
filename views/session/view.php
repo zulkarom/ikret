@@ -57,6 +57,10 @@ $canUpdate = Yii::$app->user->identity->isManager;
                     'id',
                     'session_name',
                     [
+                        'attribute' => 'speaker',
+                        'value' => $model->speaker ?: 'N/A',
+                    ],
+                    [
                         'label' => 'Program',
                         'value' => $model->programNameShort ?: 'N/A',
                     ],

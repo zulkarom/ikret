@@ -115,11 +115,13 @@ EOD;
        
 
 
+            $speaker = trim((string)$this->model->speaker);
+            $speakerHtml = $speaker === '' ? '' : '<br/><span style="font-size:16px">BY ' . strtoupper($speaker) . '</span>';
+
             $html .= '
 <tr><td height="100"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($this->model->session_name) . '<br/>
-<span style="font-size:16px">BY ' . strtoupper($this->model->speaker) . '</span>
+' . strtoupper($this->model->session_name) . $speakerHtml . '
 </td></tr>';
         
         $html .= '</table>';

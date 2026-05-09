@@ -19,6 +19,9 @@ use yii\helpers\Url;
 
 <?= $form->field($model, 'session_name')->textInput() ?>
 
+<?= $form->field($model, 'speaker')->textarea(['rows' => 2])
+    ->hint('Shown after "BY" on the session certificate. Leave blank to hide the BY line.') ?>
+
 <?=$form->field($model, 'datetime_start')->widget(DateTimePicker::classname(), [
         'options' => ['placeholder' => 'Enter start time ...'],
         'pickerIcon' => '<i class="bi bi-calendar2-range"></i>',
@@ -68,4 +71,3 @@ use yii\helpers\Url;
 </div>
         </div>
     </div>
-

@@ -6,7 +6,6 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var app\models\Session $model */
 /** @var app\models\SessionAttendance[] $list */
-/** @var array $certificateRegistrations */
 /** @var bool $certificatesReleased */
 /** @var string|null $certificateReleaseText */
 
@@ -58,12 +57,10 @@ $("#scanner").click(function(){
 
                         if(!$certificatesReleased){
                             $certificate = '<span class="text-muted">' . Html::encode($certificateReleaseText ?: 'Not released') . '</span>';
-                        }elseif(isset($certificateRegistrations[$sessionId])){
+                        }else{
                             $certificate = Html::a('<i class="bi bi-download"></i> DOWNLOAD', [
-                                '/program/cert-participation-session',
-                                'reg' => $certificateRegistrations[$sessionId],
-                                's' => $sessionId,
-                                'u' => Yii::$app->user->identity->id,
+                                'attendance-cert',
+                                'id' => $r->id,
                             ], [
                                 'class' => 'btn btn-sm btn-primary',
                                 'target' => '_blank',

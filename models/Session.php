@@ -8,7 +8,8 @@ use Yii;
  * This is the model class for table "session".
  *
  * @property int $id
- * @property int $session_name
+ * @property string $session_name
+ * @property string|null $speaker
  * @property int|null $program_id
  * @property int|null $program_sub
  * @property string|null $datetime_start
@@ -45,7 +46,7 @@ class Session extends \yii\db\ActiveRecord
             [['session_name', 'datetime_start', 'datetime_end'], 'required'],
             [['program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
             [['datetime_start', 'datetime_end'], 'safe'],
-            [['token', 'session_name'], 'string'],
+            [['token', 'session_name', 'speaker'], 'string'],
             [['allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'default', 'value' => 0],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
             [['program_sub'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramSub::class, 'targetAttribute' => ['program_sub' => 'id']],
@@ -60,6 +61,7 @@ class Session extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'session_name' => 'Session Name',
+            'speaker' => 'Speaker',
             'program_id' => 'Program ID',
             'program_sub' => 'Program Sub',
             'datetime_start' => 'Start',
