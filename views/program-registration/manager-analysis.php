@@ -73,6 +73,37 @@ $recommendationValue = function($model, $asHtml = false){
 
     return implode("\n", array_values($items));
 };
+
+$achievementValue = function($model, $asHtml = false){
+    $items = [];
+    if($model->achievements){
+        foreach($model->achievements as $a){
+            $text = $a->achieve->name;
+            if($a->winnerTitle){
+                $titleText = trim((string)$a->winnerTitle->title_name);
+                if($titleText === ''){
+                    $titleText = 'Winner ' . $a->winnerTitle->winner_order . ' (no title)';
+                }
+                $text .= ' - ' . $titleText;
+            }
+            $items[] = $text;
+        }
+    }
+
+    if(!$items){
+        return '';
+    }
+
+    if($asHtml){
+        $html = '';
+        foreach($items as $item){
+            $html .= Html::encode($item) . '<br />';
+        }
+        return $html;
+    }
+
+    return implode("\n", $items);
+};
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1>
@@ -123,14 +154,8 @@ $recommendationValue = function($model, $asHtml = false){
     $exportColumns[] = [
         'label' =>'Achievement',
         'format' => 'html',
-        'value' => function($model){
-            $html = '';
-            if($model->achievements){
-                foreach($model->achievements as $a){
-                    $html .= $a->achieve->name . '<br />';
-                }
-            }
-            return $html;
+        'value' => function($model) use($achievementValue){
+            return $achievementValue($model, true);
         }
     ];
     //dapatkan category rubric
@@ -311,14 +336,8 @@ $recommendationValue = function($model, $asHtml = false){
             [
                 'label' =>'Achievement',
                 'format' => 'html',
-                'value' => function($model){
-                    $html = '';
-                    if($model->achievements){
-                        foreach($model->achievements as $a){
-                            $html .= $a->achieve->name . '<br />';
-                        }
-                    }
-                    return $html;
+                'value' => function($model) use($achievementValue){
+                    return $achievementValue($model, true);
                 }
             ],
             ['class' => 'yii\grid\ActionColumn',
