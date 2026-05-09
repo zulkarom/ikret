@@ -9,7 +9,6 @@ use app\models\ParticipantAchieve;
 /** @var bool $hasWinnerCountColumn */
 /** @var bool $hasWinnerTitleTable */
 /** @var bool $hasWinnerTitleAchievementColumn */
-/** @var bool $hasWinnerTitleNoTitleColumn */
 /** @var array $winnerTitlesByAchievement */
 
 $this->title = 'Achievement: ' . $model->program_name;
@@ -63,9 +62,9 @@ if($programSub){
                         <?php if($hasWinnerTitleTable): ?> or <code>db/2026-05-10_update_program_winner_title_depend_achievement.sql</code><?php endif; ?>.
                     </div>
                 <?php endif; ?>
-                <?php if($hasWinnerTitleAchievementColumn && !$hasWinnerTitleNoTitleColumn): ?>
-                    <div class="alert alert-warning mt-3 mb-0">
-                        The <code>No title text</code> checkbox needs <code>db/2026-05-10_update_program_winner_title_add_no_title_text.sql</code>.
+                <?php if($hasWinnerCountColumn && $hasWinnerTitleAchievementColumn): ?>
+                    <div class="form-text mt-2">
+                        Leave a winner title blank when the certificate should show no title text for that winner.
                     </div>
                 <?php endif; ?>
 
@@ -101,7 +100,6 @@ if($programSub){
                                     if($winnerCount > 0){
                                         for($winnerNo = 1; $winnerNo <= $winnerCount; $winnerNo++){
                                             $winnerTitle = $winnerTitlesByAchievement[$a->id][$winnerNo] ?? null;
-                                            $noTitleText = $winnerTitle && $hasWinnerTitleNoTitleColumn && (int)$winnerTitle->no_title_text === 1;
                                             echo '<div class="input-group input-group-sm mb-1">';
                                             echo '<span class="input-group-text">' . $winnerNo . '</span>';
                                             echo Html::textInput('winner_titles[' . $winnerNo . ']', $winnerTitle ? $winnerTitle->title_name : '', [
@@ -109,16 +107,6 @@ if($programSub){
                                                 'placeholder' => 'Winner title',
                                                 'form' => $formId,
                                             ]);
-                                            if($hasWinnerTitleNoTitleColumn){
-                                                echo '<span class="input-group-text">';
-                                                echo Html::checkbox('winner_no_title[' . $winnerNo . ']', $noTitleText, [
-                                                    'value' => 1,
-                                                    'form' => $formId,
-                                                    'label' => 'No title text',
-                                                    'labelOptions' => ['class' => 'mb-0 ms-1'],
-                                                ]);
-                                                echo '</span>';
-                                            }
                                             echo '</div>';
                                         }
                                     }else{

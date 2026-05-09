@@ -74,15 +74,12 @@ $this->title = 'Achievement Award';
                                   echo '<div class="d-flex flex-column gap-1">';
                                   echo Html::radio('achievement_winner_title[' . $r->id . ']', !$r->winner_title_id, [
                                       'value' => 0,
-                                      'label' => 'Not applied',
+                                      'label' => 'not applicable',
                                   ]);
                                   foreach($winnerTitles as $winnerTitle){
                                       $label = trim((string)$winnerTitle->title_name);
-                                      if($label === '' && $winnerTitle->hasAttribute('no_title_text') && (int)$winnerTitle->no_title_text === 1){
-                                          $label = 'No title text';
-                                      }
                                       if($label === ''){
-                                          $label = 'Winner ' . $winnerTitle->winner_order;
+                                          $label = 'Winner ' . $winnerTitle->winner_order . ' (no title)';
                                       }
                                       echo Html::radio('achievement_winner_title[' . $r->id . ']', (int)$r->winner_title_id === (int)$winnerTitle->id, [
                                           'value' => $winnerTitle->id,

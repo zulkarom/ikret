@@ -3,7 +3,6 @@ CREATE TABLE `program_winner_title` (
   `achievement_id` int(11) NOT NULL,
   `winner_order` int(11) NOT NULL,
   `title_name` varchar(255) NOT NULL,
-  `no_title_text` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `achievement_winner_order` (`achievement_id`,`winner_order`),
   KEY `achievement_id` (`achievement_id`),

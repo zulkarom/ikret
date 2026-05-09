@@ -24,6 +24,7 @@ use app\models\RegisterForm;
 use app\models\ResetPasswordForm;
 use app\models\Session;
 use app\models\SessionAttendance;
+use app\models\User;
 use app\models\UserRole;
 use InvalidArgumentException;
 use yii\db\Expression;
@@ -132,15 +133,38 @@ class SiteController extends Controller
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post())) {
             if(trim((string)$model->username) !== '' && !$model->getUser()){
-                Yii::$app->session->set('registerPrefillFromLogin', [
-                    'username' => trim((string)$model->username),
-                    'password' => (string)$model->password,
-                ]);
-                Yii::$app->session->addFlash('warning', 'Username not found. Please fill in your full name and email to register.');
-                return $this->redirect(['site/register']);
-            }
+                $existingEmailUser = $this->findInlineRegisterEmailUser();
+                if ($existingEmailUser) {
+                    if ($existingEmailUser->validatePassword((string)$model->password)) {
+                        $username = strtolower(trim((string)$model->username));
+                        $usernameOwner = User::findOne(['username' => $username]);
+                        if ($usernameOwner && (int)$usernameOwner->id !== (int)$existingEmailUser->id) {
+                            Yii::$app->session->addFlash('error', 'Username is already taken.');
+                        } else {
+                            $existingEmailUser->username = $username;
+                            $existingEmailUser->matric = $username;
+                            if ($existingEmailUser->save(false, ['username', 'matric', 'updated_at'])) {
+                                Yii::$app->user->login($existingEmailUser, $model->rememberMe ? 3600*24*30 : 0);
+                                Yii::$app->session->addFlash('success', 'You has been logged in to I-CREATE system');
+                                return $this->redirect($t ? ['site/qr', 't' => $t] : ['site/dashboard']);
+                            }
+                            $existingEmailUser->flashError();
+                        }
+                    } else {
+                        Yii::$app->session->addFlash('error', 'The email exists, but the password is not correct. Please use Recover Password if you need to reset it.');
+                    }
+                } else {
+                    $registerModel = $this->buildInlineRegisterForm($model);
+                    if ($registerModel->signup()) {
+                        Yii::$app->session->addFlash('success', 'Registration successful. You are now logged in to the system.');
+                        return $this->redirect($t ? ['site/qr', 't' => $t] : ['site/dashboard']);
+                    }
 
-            if($model->login()){
+                    foreach ($registerModel->getFirstErrors() as $error) {
+                        Yii::$app->session->addFlash('error', $error);
+                    }
+                }
+            } elseif($model->login()){
                 if($t){
                     $returnUrl = Url::to(['site/qr', 't' => $t]);
                 }else{
@@ -167,6 +191,61 @@ class SiteController extends Controller
             'model' => $model,
             'attendanceToken' => $t
         ]);
+    }
+
+    public function actionLoginUsernameStatus($username = '')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $username = trim((string)$username);
+        $user = $username === '' ? null : User::findByUsernameOrEmail($username);
+
+        return [
+            'exists' => (bool)$user,
+            'needsEmail' => $username !== '' && strpos($username, '@') === false,
+        ];
+    }
+
+    public function actionLoginEmailStatus($email = '')
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $email = strtolower(trim((string)$email));
+        $user = $email === '' ? null : User::findByEmail($email);
+
+        return [
+            'exists' => (bool)$user,
+        ];
+    }
+
+    private function findInlineRegisterEmailUser()
+    {
+        $post = Yii::$app->request->post('InlineRegister', []);
+        $email = strtolower(trim((string)($post['email'] ?? '')));
+
+        if ($email === '') {
+            $loginPost = Yii::$app->request->post('LoginForm', []);
+            $username = strtolower(trim((string)($loginPost['username'] ?? '')));
+            $email = strpos($username, '@') !== false ? $username : '';
+        }
+
+        return $email === '' ? null : User::findByEmail($email);
+    }
+
+    private function buildInlineRegisterForm(LoginForm $loginModel)
+    {
+        $post = Yii::$app->request->post('InlineRegister', []);
+        $username = strtolower(trim((string)$loginModel->username));
+        $email = strpos($username, '@') !== false ? $username : strtolower(trim((string)($post['email'] ?? '')));
+
+        $registerModel = new RegisterForm();
+        $registerModel->username = $username;
+        $registerModel->email = $email;
+        $registerModel->fullname = trim((string)($post['fullname'] ?? ''));
+        $registerModel->password = (string)$loginModel->password;
+        $registerModel->password_repeat = (string)$loginModel->password;
+
+        return $registerModel;
     }
 
     public function actionDashboard()

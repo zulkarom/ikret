@@ -1810,7 +1810,7 @@ class ProgramController extends Controller
                     if($achievementModel->save()){
                         $titlesSaved = true;
                         if($this->hasProgramWinnerTitleAchievementColumn()){
-                            $titlesSaved = $this->saveAchievementWinnerTitles($achievementModel, $post['winner_titles'] ?? [], $post['winner_no_title'] ?? []);
+                            $titlesSaved = $this->saveAchievementWinnerTitles($achievementModel, $post['winner_titles'] ?? []);
                         }
                         if(!$titlesSaved){
                             Yii::$app->session->addFlash('error', 'Achievement updated, but one or more winner titles could not be saved.');
@@ -1843,7 +1843,6 @@ class ProgramController extends Controller
 
         $hasWinnerTitleTable = $this->hasProgramWinnerTitleTable();
         $hasWinnerTitleAchievementColumn = $this->hasProgramWinnerTitleAchievementColumn();
-        $hasWinnerTitleNoTitleColumn = $this->hasProgramWinnerTitleNoTitleColumn();
         $winnerTitlesByAchievement = [];
         if($hasWinnerTitleAchievementColumn && $achievement){
             $achievementIds = array_map(function($item){
@@ -1866,7 +1865,6 @@ class ProgramController extends Controller
             'hasWinnerCountColumn' => $this->hasProgramAchievementWinnerCountColumn(),
             'hasWinnerTitleTable' => $hasWinnerTitleTable,
             'hasWinnerTitleAchievementColumn' => $hasWinnerTitleAchievementColumn,
-            'hasWinnerTitleNoTitleColumn' => $hasWinnerTitleNoTitleColumn,
             'winnerTitlesByAchievement' => $winnerTitlesByAchievement,
         ]);
     }
@@ -1900,16 +1898,9 @@ class ProgramController extends Controller
         return $table && $table->getColumn('achievement_id') && $table->getColumn('winner_order');
     }
 
-    protected function hasProgramWinnerTitleNoTitleColumn()
-    {
-        $table = Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName());
-        return $table && $table->getColumn('no_title_text');
-    }
-
-    protected function saveAchievementWinnerTitles(ProgramAchievement $achievement, $titles, $noTitleTexts = [])
+    protected function saveAchievementWinnerTitles(ProgramAchievement $achievement, $titles)
     {
         $winnerCount = max(0, (int)$achievement->winner_count);
-        $hasNoTitleColumn = $this->hasProgramWinnerTitleNoTitleColumn();
         ProgramWinnerTitle::deleteAll([
             'and',
             ['achievement_id' => (int)$achievement->id],
@@ -1924,15 +1915,7 @@ class ProgramController extends Controller
         $ok = true;
         for($i = 1; $i <= $winnerCount; $i++){
             $titleName = trim((string)($titles[$i] ?? ''));
-            $noTitleText = isset($noTitleTexts[$i]) && (int)$noTitleTexts[$i] === 1;
             $winnerTitle = $existingTitles[$i] ?? null;
-            if($titleName === '' && !$noTitleText){
-                if($winnerTitle){
-                    $ok = $winnerTitle->delete() !== false && $ok;
-                }
-                continue;
-            }
-
             if(!$winnerTitle){
                 $winnerTitle = new ProgramWinnerTitle([
                     'achievement_id' => (int)$achievement->id,
@@ -1940,9 +1923,6 @@ class ProgramController extends Controller
                 ]);
             }
             $winnerTitle->title_name = $titleName;
-            if($hasNoTitleColumn){
-                $winnerTitle->no_title_text = $noTitleText ? 1 : 0;
-            }
             if(!$winnerTitle->save()){
                 $ok = false;
             }

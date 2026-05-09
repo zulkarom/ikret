@@ -9,7 +9,6 @@ namespace app\models;
  * @property int $achievement_id
  * @property int $winner_order
  * @property string $title_name
- * @property int $no_title_text
  *
  * @property ProgramAchievement $achievement
  */
@@ -24,12 +23,8 @@ class ProgramWinnerTitle extends \yii\db\ActiveRecord
     {
         return [
             [['achievement_id', 'winner_order'], 'required'],
-            [['achievement_id', 'winner_order', 'no_title_text'], 'integer'],
-            [['no_title_text'], 'default', 'value' => 0],
+            [['achievement_id', 'winner_order'], 'integer'],
             [['title_name'], 'string', 'max' => 255],
-            ['title_name', 'required', 'when' => function($model){
-                return (int)$model->no_title_text !== 1;
-            }],
             [['achievement_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramAchievement::class, 'targetAttribute' => ['achievement_id' => 'id']],
         ];
     }
@@ -41,7 +36,6 @@ class ProgramWinnerTitle extends \yii\db\ActiveRecord
             'achievement_id' => 'Achievement',
             'winner_order' => 'Winner No.',
             'title_name' => 'Winner Title',
-            'no_title_text' => 'No title text',
         ];
     }
 

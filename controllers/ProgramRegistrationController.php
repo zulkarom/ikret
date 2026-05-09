@@ -606,6 +606,7 @@ class ProgramRegistrationController extends Controller
                 }
             }
             if($achievementIds){
+                $this->ensureWinnerTitleRows($achievementIds);
                 $winnerTitles = ProgramWinnerTitle::find()
                     ->where(['achievement_id' => array_unique($achievementIds)])
                     ->orderBy(['achievement_id' => SORT_ASC, 'winner_order' => SORT_ASC])
@@ -3878,6 +3879,39 @@ class ProgramRegistrationController extends Controller
     {
         $table = Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName());
         return $table && $table->getColumn('achievement_id') && $table->getColumn('winner_order');
+    }
+
+    protected function ensureWinnerTitleRows($achievementIds)
+    {
+        $achievements = ProgramAchievement::find()
+            ->where(['id' => array_unique(array_map('intval', $achievementIds))])
+            ->all();
+
+        foreach($achievements as $achievement){
+            $winnerCount = max(0, (int)$achievement->winner_count);
+            if($winnerCount <= 0){
+                continue;
+            }
+
+            $existingOrders = ProgramWinnerTitle::find()
+                ->select('winner_order')
+                ->where(['achievement_id' => (int)$achievement->id])
+                ->column();
+            $existingOrders = array_map('intval', $existingOrders);
+
+            for($i = 1; $i <= $winnerCount; $i++){
+                if(in_array($i, $existingOrders, true)){
+                    continue;
+                }
+
+                $winnerTitle = new ProgramWinnerTitle([
+                    'achievement_id' => (int)$achievement->id,
+                    'winner_order' => $i,
+                    'title_name' => '',
+                ]);
+                $winnerTitle->save(false);
+            }
+        }
     }
 
     protected function findRegistrationsByImportedGroupName($programId, $programSubId, $groupName)
