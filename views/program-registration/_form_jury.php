@@ -60,7 +60,25 @@ use yii\helpers\Url;
         if($model->judging_session_id){
             $s = RubricJudgingSession::findOne((int)$model->judging_session_id);
             if($s){
-                $sessionData[(int)$s->id] = $s->session_name;
+                $parts = [];
+                $parts[] = $s->session_name;
+                if($s->datetime_start && $s->datetime_end){
+                    $startTime = strtotime($s->datetime_start);
+                    $endTime = strtotime($s->datetime_end);
+                    if(date('Y-m-d', $startTime) === date('Y-m-d', $endTime)){
+                        $parts[] = date('d M Y, h:i A', $startTime) . ' - ' . date('h:i A', $endTime);
+                    }else{
+                        $parts[] = date('d M Y, h:i A', $startTime) . ' - ' . date('d M Y, h:i A', $endTime);
+                    }
+                }else if($s->datetime_start){
+                    $parts[] = date('d M Y, h:i A', strtotime($s->datetime_start));
+                }else if($s->datetime_end){
+                    $parts[] = date('d M Y, h:i A', strtotime($s->datetime_end));
+                }
+                if($s->location){
+                    $parts[] = $s->location;
+                }
+                $sessionData[(int)$s->id] = implode(' | ', $parts);
             }
         }
         ?>

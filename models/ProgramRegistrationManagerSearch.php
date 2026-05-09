@@ -15,6 +15,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     public $dateSearch;
     public $jury_status;
     public $jurySearch;
+    public $unassigned;
    // public $programx_id;
     /**
      * {@inheritdoc}
@@ -22,7 +23,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
     public function rules()
     {
         return [
-            [['program_id', 'program_sub', 'jury_status'], 'integer'],
+            [['program_id', 'program_sub', 'jury_status', 'unassigned'], 'integer'],
             [['fullnameSearch','dateSearch', 'group_name', 'jurySearch'], 'string'],
         ];
     }
@@ -33,6 +34,7 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
             'fullnameSearch' => 'Participant Name',
             'jury_status' => 'Jury Status',
             'jurySearch' => 'Jury Name',
+            'unassigned' => 'Unassigned',
         ];
     }
 
@@ -88,7 +90,11 @@ class ProgramRegistrationManagerSearch extends ProgramRegistration
         ->andFilterWhere(['like', 'a.group_name', $this->group_name])
         ;
 
-        if(($this->jury_status !== null && $this->jury_status !== '') || trim((string)$this->jurySearch) !== ''){
+        if((int)$this->unassigned === 1){
+            $query->joinWith(['juries j'], false, 'LEFT JOIN')
+                ->andWhere(['j.id' => null])
+                ->distinct();
+        }else if(($this->jury_status !== null && $this->jury_status !== '') || trim((string)$this->jurySearch) !== ''){
             $query->innerJoinWith(['juries j'], false)
                 ->leftJoin(['ju' => User::tableName()], 'ju.id = j.user_id');
 

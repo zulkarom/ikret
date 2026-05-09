@@ -844,6 +844,303 @@ class ProgramRegistrationController extends Controller
 
                         return $this->refresh();
                     }
+
+                    if($action === 'delete_jury_assignments'){
+                        $selection = array_filter(array_map('intval', (array)($post['selection'] ?? [])));
+                        if(!$selection){
+                            Yii::$app->session->addFlash('error', 'Please select at least one participant first.');
+                            return $this->refresh();
+                        }
+
+                        $registrations = ProgramRegistration::find()
+                            ->where(['id' => $selection, 'program_id' => $role->program_id])
+                            ->andFilterWhere(['program_sub' => $sub])
+                            ->all();
+
+                        $deletedCount = 0;
+                        $emptyCount = 0;
+                        $blockedCount = 0;
+                        $transaction = Yii::$app->db->beginTransaction();
+                        try{
+                            foreach($registrations as $registration){
+                                $assignments = JuryAssign::find()
+                                    ->where(['reg_id' => $registration->id])
+                                    ->all();
+
+                                if(!$assignments){
+                                    $emptyCount++;
+                                    continue;
+                                }
+
+                                $hasStartedAssignment = false;
+                                foreach($assignments as $assignment){
+                                    if((int)$assignment->status !== 0){
+                                        $hasStartedAssignment = true;
+                                        break;
+                                    }
+                                }
+
+                                if($hasStartedAssignment){
+                                    $blockedCount++;
+                                    continue;
+                                }
+
+                                foreach($assignments as $assignment){
+                                    if($assignment->delete() === false){
+                                        throw new \RuntimeException('Unable to delete jury assignment #' . $assignment->id . '.');
+                                    }
+                                    $deletedCount++;
+                                }
+
+                                $registration->setScoreAndAward();
+                                $registration->save(false, ['score', 'award']);
+                            }
+
+                            $transaction->commit();
+                            if($deletedCount > 0){
+                                Yii::$app->session->addFlash('success', 'Jury assignments deleted: ' . $deletedCount . '.');
+                            }
+                            if($emptyCount > 0){
+                                Yii::$app->session->addFlash('info', $emptyCount . ' selected participant(s) skipped because they have no jury assignments.');
+                            }
+                            if($blockedCount > 0){
+                                Yii::$app->session->addFlash('error', $blockedCount . ' selected participant(s) skipped because at least one jury assignment is already Judging or Complete.');
+                            }
+                        }catch(\Throwable $e){
+                            $transaction->rollBack();
+                            Yii::$app->session->addFlash('error', $e->getMessage());
+                        }
+
+                        return $this->refresh();
+                    }
+
+                    if($action === 'assign_applied_juries' || $action === 'auto_assign_applied_juries'){
+                        $applicationIds = array_filter(array_map('intval', (array)($post['jury_application_ids'] ?? [])));
+                        $rubricId = (int)($post['applied_rubric_id'] ?? 0);
+                        $judgingSessionId = (int)($post['applied_judging_session_id'] ?? 0);
+                        $stage = (int)($post['applied_stage'] ?? 0);
+                        $perGroup = max(1, min(5, (int)($post['applied_juries_per_group'] ?? 1)));
+
+                        if(!$applicationIds){
+                            Yii::$app->session->addFlash('error', 'Please select at least one applied jury first.');
+                            return $this->refresh();
+                        }
+                        if(!$rubricId){
+                            Yii::$app->session->addFlash('error', 'Please select a rubric first.');
+                            return $this->refresh();
+                        }
+                        $rubricScopeQuery = ProgramRubric::find()->where([
+                            'program_id' => (int)$role->program_id,
+                            'rubric_id' => $rubricId,
+                        ]);
+                        if($sub === null){
+                            $rubricScopeQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+                        }else{
+                            $rubricScopeQuery->andWhere(['program_sub' => (int)$sub]);
+                        }
+                        if(!$rubricScopeQuery->exists()){
+                            Yii::$app->session->addFlash('error', 'Selected rubric is not available for this program/category.');
+                            return $this->refresh();
+                        }
+
+                        $appliedJuryData = $this->findApprovedAppliedJuryData($applicationIds, (int)$role->program_id, $sub ? (int)$sub : null);
+                        $juryUsers = $appliedJuryData['users'];
+                        $jurySessionMap = $appliedJuryData['sessionMap'];
+                        if(!$juryUsers){
+                            Yii::$app->session->addFlash('error', 'No approved jury applications found for the selected juries.');
+                            return $this->refresh();
+                        }
+
+                        if($action === 'assign_applied_juries'){
+                            $registrationIds = array_filter(array_map('intval', (array)($post['selection'] ?? [])));
+                            if(!$registrationIds){
+                                Yii::$app->session->addFlash('error', 'Please select participant(s) first before assigning applied juries.');
+                                return $this->refresh();
+                            }
+                        }else{
+                            $registrationQuery = ProgramRegistration::find()
+                                ->select(['id'])
+                                ->where(['program_id' => (int)$role->program_id])
+                                ->andWhere(['in', 'status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
+                                ->orderBy(['group_name' => SORT_ASC, 'id' => SORT_ASC]);
+                            if($sub === null){
+                                $registrationQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+                            }else{
+                                $registrationQuery->andWhere(['program_sub' => (int)$sub]);
+                            }
+                            $registrationIds = $registrationQuery->column();
+                        }
+
+                        $registrationQuery = ProgramRegistration::find()
+                            ->where(['id' => $registrationIds, 'program_id' => (int)$role->program_id])
+                            ->orderBy(['group_name' => SORT_ASC, 'id' => SORT_ASC]);
+                        if($sub === null){
+                            $registrationQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+                        }else{
+                            $registrationQuery->andWhere(['program_sub' => (int)$sub]);
+                        }
+                        $registrations = $registrationQuery->all();
+                        if(!$registrations){
+                            Yii::$app->session->addFlash('error', 'No participant groups found for this program/category.');
+                            return $this->refresh();
+                        }
+
+                        $created = 0;
+                        $skipped = 0;
+                        $alreadyEnoughCount = 0;
+                        $noAvailableJuryCount = 0;
+                        $transaction = Yii::$app->db->beginTransaction();
+                        try{
+                            $juryLoad = $this->buildJuryAssignmentLoad($juryUsers, (int)$role->program_id, $sub ? (int)$sub : null, $stage);
+
+                            foreach($registrations as $registration){
+                                if($action === 'assign_applied_juries'){
+                                    foreach($juryUsers as $juryUser){
+                                        $userId = (int)$juryUser->id;
+                                        if(isset($juryLoad[$userId]['regs'][(int)$registration->id])){
+                                            $skipped++;
+                                            continue;
+                                        }
+
+                                        $assign = new JuryAssign([
+                                            'user_id' => $userId,
+                                            'reg_id' => (int)$registration->id,
+                                            'stage' => $stage,
+                                            'rubric_id' => $rubricId,
+                                            'judging_session_id' => ($jurySessionMap[$userId] ?? null) ?: ($judgingSessionId ?: null),
+                                            'created_at' => time(),
+                                            'updated_at' => time(),
+                                        ]);
+
+                                        if(!$assign->save()){
+                                            throw new \RuntimeException('Unable to assign ' . $juryUser->fullname . ': ' . implode('; ', $assign->getFirstErrors()));
+                                        }
+
+                                        $juryLoad[$userId]['count']++;
+                                        $juryLoad[$userId]['regs'][(int)$registration->id] = true;
+                                        $created++;
+                                    }
+                                    continue;
+                                }
+
+                                $currentCount = (int)JuryAssign::find()
+                                    ->where(['reg_id' => (int)$registration->id, 'stage' => $stage])
+                                    ->count();
+                                $needed = max(0, $perGroup - $currentCount);
+                                if($needed === 0){
+                                    $alreadyEnoughCount++;
+                                    $skipped++;
+                                    continue;
+                                }
+
+                                for($i = 0; $i < $needed; $i++){
+                                    $juryUser = $this->pickLeastAssignedJuryUser($juryUsers, $juryLoad, (int)$registration->id, $stage);
+                                    if(!$juryUser){
+                                        $noAvailableJuryCount++;
+                                        $skipped++;
+                                        break;
+                                    }
+
+                                    $assign = new JuryAssign([
+                                        'user_id' => (int)$juryUser->id,
+                                        'reg_id' => (int)$registration->id,
+                                        'stage' => $stage,
+                                        'rubric_id' => $rubricId,
+                                        'judging_session_id' => ($jurySessionMap[(int)$juryUser->id] ?? null) ?: ($judgingSessionId ?: null),
+                                        'created_at' => time(),
+                                        'updated_at' => time(),
+                                    ]);
+
+                                    if(!$assign->save()){
+                                        throw new \RuntimeException('Unable to assign ' . $juryUser->fullname . ': ' . implode('; ', $assign->getFirstErrors()));
+                                    }
+
+                                    $juryLoad[(int)$juryUser->id]['count']++;
+                                    $juryLoad[(int)$juryUser->id]['regs'][(int)$registration->id] = true;
+                                    $created++;
+                                }
+                            }
+
+                            $transaction->commit();
+                            if($created > 0){
+                                Yii::$app->session->addFlash('success', 'Applied jury assignments created: ' . $created . '.');
+                            }else{
+                                Yii::$app->session->addFlash('info', 'No new applied jury assignments were created. The selected juries may already be assigned or the groups may already have enough juries.');
+                            }
+                            Yii::$app->session->addFlash('info', 'Auto assign checked ' . count($registrations) . ' participant group(s), ' . count($juryUsers) . ' selected applied juries, target ' . $perGroup . ' jury/juries per group.');
+                            if($alreadyEnoughCount > 0){
+                                Yii::$app->session->addFlash('info', $alreadyEnoughCount . ' group(s) already had enough jury assignments for the selected stage.');
+                            }
+                            if($noAvailableJuryCount > 0){
+                                Yii::$app->session->addFlash('info', $noAvailableJuryCount . ' group(s) had no available selected jury left to assign.');
+                            }
+                            if($skipped > 0){
+                                Yii::$app->session->addFlash('info', $skipped . ' participant group(s) skipped or already had enough jury assignments.');
+                            }
+                        }catch(\Throwable $e){
+                            $transaction->rollBack();
+                            Yii::$app->session->addFlash('error', $e->getMessage());
+                        }
+
+                        return $this->refresh();
+                    }
+
+                    if($action === 'update_applied_jury_session'){
+                        $applicationId = (int)($post['application_id'] ?? 0);
+                        $judgingSessionId = (int)($post['application_judging_session_id'] ?? 0);
+
+                        $applicationQuery = JuryApplication::find()
+                            ->where([
+                                'id' => $applicationId,
+                                'program_id' => (int)$role->program_id,
+                                'status' => 10,
+                            ]);
+                        if($sub === null){
+                            $applicationQuery->andWhere(['or', ['program_sub_id' => null], ['program_sub_id' => 0]]);
+                        }else{
+                            $applicationQuery->andWhere(['program_sub_id' => (int)$sub]);
+                        }
+                        $application = $applicationQuery->one();
+
+                        if(!$application){
+                            Yii::$app->session->addFlash('error', 'Selected jury application was not found in this program/category.');
+                            return $this->refresh();
+                        }
+
+                        if($judgingSessionId > 0){
+                            $sessionModel = RubricJudgingSession::findOne($judgingSessionId);
+                            if(!$sessionModel){
+                                Yii::$app->session->addFlash('error', 'Selected judging session was not found.');
+                                return $this->refresh();
+                            }
+
+                            $rubricScopeQuery = ProgramRubric::find()->where([
+                                'program_id' => (int)$role->program_id,
+                                'rubric_id' => (int)$sessionModel->rubric_id,
+                            ]);
+                            if($sub === null){
+                                $rubricScopeQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+                            }else{
+                                $rubricScopeQuery->andWhere(['program_sub' => (int)$sub]);
+                            }
+                            if(!$rubricScopeQuery->exists()){
+                                Yii::$app->session->addFlash('error', 'Selected judging session is not available for this program/category.');
+                                return $this->refresh();
+                            }
+
+                            $application->judging_session_id = $judgingSessionId;
+                        }else{
+                            $application->judging_session_id = null;
+                        }
+
+                        if($application->save(false, ['judging_session_id'])){
+                            Yii::$app->session->addFlash('success', 'Applied jury session updated.');
+                        }else{
+                            Yii::$app->session->addFlash('error', 'Unable to update applied jury session.');
+                        }
+
+                        return $this->refresh();
+                    }
                 }
 
                 if ($this->request->isPost && $model->load($this->request->post())) {
@@ -946,6 +1243,60 @@ class ProgramRegistrationController extends Controller
                 $juryStatusSummary[(int)$summaryRow['status']] = (int)$summaryRow['total'];
             }
 
+            $unassignedCountQuery = (new Query())
+                ->from(['r' => ProgramRegistration::tableName()])
+                ->leftJoin(['j' => JuryAssign::tableName()], 'j.reg_id = r.id')
+                ->where(['r.program_id' => (int)$role->program_id])
+                ->andWhere(['in', 'r.status', [ProgramRegistration::STATUS_REGISTERED, ProgramRegistration::STATUS_COMPLETE]])
+                ->andWhere(['j.id' => null]);
+
+            if($sub === null){
+                $unassignedCountQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+            }else{
+                $unassignedCountQuery->andWhere(['r.program_sub' => (int)$sub]);
+            }
+
+            $unassignedCount = (int)$unassignedCountQuery->count('DISTINCT r.id');
+
+            $juryStatsQuery = (new Query())
+                ->select([
+                    'user_id' => 'u.id',
+                    'fullname' => 'u.fullname',
+                    'assigned' => new Expression('SUM(CASE WHEN j.status = 0 THEN 1 ELSE 0 END)'),
+                    'judging' => new Expression('SUM(CASE WHEN j.status = 10 THEN 1 ELSE 0 END)'),
+                    'complete' => new Expression('SUM(CASE WHEN j.status = 20 THEN 1 ELSE 0 END)'),
+                ])
+                ->from(['j' => JuryAssign::tableName()])
+                ->innerJoin(['r' => ProgramRegistration::tableName()], 'r.id = j.reg_id')
+                ->innerJoin(['u' => User::tableName()], 'u.id = j.user_id')
+                ->where(['r.program_id' => (int)$role->program_id])
+                ->groupBy(['u.id', 'u.fullname'])
+                ->orderBy(['u.fullname' => SORT_ASC]);
+
+            if($sub === null){
+                $juryStatsQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+            }else{
+                $juryStatsQuery->andWhere(['r.program_sub' => (int)$sub]);
+            }
+
+            $juryStats = $juryStatsQuery->all();
+
+            $appliedJuryQuery = JuryApplication::find()->alias('ja')
+                ->innerJoin(['jp' => JuryProfile::tableName()], 'jp.id = ja.jury_profile_id')
+                ->innerJoin(['u' => User::tableName()], 'u.id = jp.user_id')
+                ->where([
+                    'ja.program_id' => (int)$role->program_id,
+                    'ja.status' => 10,
+                ])
+                ->with(['juryProfile.user', 'judgingSession'])
+                ->orderBy(['jp.fullname' => SORT_ASC]);
+            if($sub === null){
+                $appliedJuryQuery->andWhere(['or', ['ja.program_sub_id' => null], ['ja.program_sub_id' => 0]]);
+            }else{
+                $appliedJuryQuery->andWhere(['ja.program_sub_id' => (int)$sub]);
+            }
+            $appliedJuries = $appliedJuryQuery->all();
+
             $participantQuery = (new Query())
                 ->from(['r' => ProgramRegistration::tableName()])
                 ->leftJoin(['u' => User::tableName()], 'u.id = r.user_id')
@@ -968,6 +1319,7 @@ class ProgramRegistrationController extends Controller
             $registrationSummary = [
                 'participantCount' => $groupCount + $memberCount - $leaderMemberCount,
                 'groupCount' => $groupCount,
+                'unassignedCount' => $unassignedCount,
             ];
     
             return $this->render('manager', [
@@ -978,6 +1330,8 @@ class ProgramRegistrationController extends Controller
                 'programSub' => $programSub,
                 'juryStatusSummary' => $juryStatusSummary,
                 'registrationSummary' => $registrationSummary,
+                'juryStats' => $juryStats,
+                'appliedJuries' => $appliedJuries,
             ]);
         }
 
@@ -2694,6 +3048,122 @@ class ProgramRegistrationController extends Controller
         return $this->ensureJuryPipelineForUser($user, $programId, $programSubId, $judgingSessionId, 10);
     }
 
+    protected function findApprovedAppliedJuryData(array $applicationIds, $programId, $programSubId = null)
+    {
+        if(!$applicationIds){
+            return [
+                'users' => [],
+                'sessionMap' => [],
+            ];
+        }
+
+        $applicationQuery = JuryApplication::find()->alias('ja')
+            ->innerJoin(['jp' => JuryProfile::tableName()], 'jp.id = ja.jury_profile_id')
+            ->innerJoin(['u' => User::tableName()], 'u.id = jp.user_id')
+            ->where([
+                'ja.id' => $applicationIds,
+                'ja.program_id' => (int)$programId,
+                'ja.status' => 10,
+            ])
+            ->with(['juryProfile.user'])
+            ->orderBy(['jp.fullname' => SORT_ASC]);
+        if($programSubId === null){
+            $applicationQuery->andWhere(['or', ['ja.program_sub_id' => null], ['ja.program_sub_id' => 0]]);
+        }else{
+            $applicationQuery->andWhere(['ja.program_sub_id' => (int)$programSubId]);
+        }
+        $applications = $applicationQuery->all();
+
+        $users = [];
+        $sessionMap = [];
+        foreach($applications as $application){
+            if($application->juryProfile && $application->juryProfile->user){
+                $userId = (int)$application->juryProfile->user->id;
+                $users[$userId] = $application->juryProfile->user;
+                if($application->judging_session_id){
+                    $sessionMap[$userId] = (int)$application->judging_session_id;
+                }
+            }
+        }
+
+        return [
+            'users' => array_values($users),
+            'sessionMap' => $sessionMap,
+        ];
+    }
+
+    protected function buildJuryAssignmentLoad(array $juryUsers, $programId, $programSubId = null, $stage = 0)
+    {
+        $userIds = array_map(function($user){
+            return (int)$user->id;
+        }, $juryUsers);
+
+        $load = [];
+        foreach($userIds as $userId){
+            $load[$userId] = [
+                'count' => 0,
+                'regs' => [],
+            ];
+        }
+
+        if(!$userIds){
+            return $load;
+        }
+
+        $assignmentQuery = JuryAssign::find()->alias('j')
+            ->innerJoinWith(['registration r'], false)
+            ->where([
+                'j.user_id' => $userIds,
+                'j.stage' => (int)$stage,
+                'r.program_id' => (int)$programId,
+            ])
+            ->orderBy(['j.id' => SORT_ASC]);
+        if($programSubId === null){
+            $assignmentQuery->andWhere(['or', ['r.program_sub' => null], ['r.program_sub' => 0]]);
+        }else{
+            $assignmentQuery->andWhere(['r.program_sub' => (int)$programSubId]);
+        }
+        $assignments = $assignmentQuery->all();
+
+        foreach($assignments as $assignment){
+            $userId = (int)$assignment->user_id;
+            if(!isset($load[$userId])){
+                continue;
+            }
+            $load[$userId]['count']++;
+            $load[$userId]['regs'][(int)$assignment->reg_id] = true;
+        }
+
+        return $load;
+    }
+
+    protected function pickLeastAssignedJuryUser(array $juryUsers, array $juryLoad, $registrationId, $stage = 0)
+    {
+        $available = [];
+        foreach($juryUsers as $juryUser){
+            $userId = (int)$juryUser->id;
+            if(isset($juryLoad[$userId]['regs'][(int)$registrationId])){
+                continue;
+            }
+            $available[] = $juryUser;
+        }
+
+        if(!$available){
+            return null;
+        }
+
+        usort($available, function($a, $b) use ($juryLoad){
+            $aCount = $juryLoad[(int)$a->id]['count'] ?? 0;
+            $bCount = $juryLoad[(int)$b->id]['count'] ?? 0;
+            if($aCount === $bCount){
+                return strcasecmp((string)$a->fullname, (string)$b->fullname);
+            }
+            return $aCount <=> $bCount;
+        });
+
+        return $available[0];
+    }
+
     protected function ensureJuryRoleProfileRequirementForUser($user, $programId, $programSubId = null, $judgingSessionId = null, array $profileData = [])
     {
         if(!$user || !$user->id){
@@ -2868,7 +3338,7 @@ class ProgramRegistrationController extends Controller
 
         $out = [];
         foreach($sessions as $s){
-            $out[] = ['id' => (int)$s->id, 'text' => $s->session_name];
+            $out[] = ['id' => (int)$s->id, 'text' => $this->formatJudgingSessionOptionText($s)];
         }
         return ['results' => $out];
     }
@@ -3315,6 +3785,45 @@ class ProgramRegistrationController extends Controller
         }
 
         return implode(' | ', $parts);
+    }
+
+    protected function formatJudgingSessionOptionText(RubricJudgingSession $session)
+    {
+        $parts = [];
+        if($session->session_name !== ''){
+            $parts[] = $session->session_name;
+        }
+
+        $range = $this->formatJudgingSessionDateRange($session->datetime_start, $session->datetime_end);
+        if($range !== ''){
+            $parts[] = $range;
+        }
+        if($session->location){
+            $parts[] = $session->location;
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    protected function formatJudgingSessionDateRange($startValue, $endValue)
+    {
+        if(!$startValue && !$endValue){
+            return '';
+        }
+        if(!$startValue){
+            return date('d M Y, h:i A', strtotime($endValue));
+        }
+        if(!$endValue){
+            return date('d M Y, h:i A', strtotime($startValue));
+        }
+
+        $startTime = strtotime($startValue);
+        $endTime = strtotime($endValue);
+        if(date('Y-m-d', $startTime) === date('Y-m-d', $endTime)){
+            return date('d M Y, h:i A', $startTime) . ' - ' . date('h:i A', $endTime);
+        }
+
+        return date('d M Y, h:i A', $startTime) . ' - ' . date('d M Y, h:i A', $endTime);
     }
 
     protected function cleanExistingUserFullname(User $user, $matric)
