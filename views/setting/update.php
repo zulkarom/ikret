@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
@@ -33,7 +34,13 @@ CSS);
                 <div class="card-body">
                     <h5 class="card-title">Home Page Settings</h5>
 
-                    <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
+                    <?php $form = ActiveForm::begin([
+                        'action' => Url::to(['/storage/index']),
+                        'options' => ['enctype' => 'multipart/form-data'],
+                    ]); ?>
+
+                    <?= Html::hiddenInput('storage_action', 'setting-update') ?>
+                    <?= Html::hiddenInput('id', $model->id) ?>
 
                     <?= $form->field($model, 'banner_file')->fileInput() ?>
                     <?php if (!empty($model->banner_image)) { ?>

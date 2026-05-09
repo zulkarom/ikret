@@ -29,7 +29,7 @@ class SettingController extends Controller
         ];
     }
 
-    public function actionUpdate($id = 1)
+    public function actionUpdate($id = 1, $successRoute = null)
     {
         $model = Setting::findOne($id);
         if ($model === null) {
@@ -64,7 +64,7 @@ class SettingController extends Controller
 
                 if ($model->save(false)) {
                     Yii::$app->session->addFlash('success', 'Settings Updated');
-                    return $this->refresh();
+                    return $successRoute === null ? $this->refresh() : $this->redirect($successRoute);
                 }
             }
         }

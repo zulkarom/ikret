@@ -6,6 +6,7 @@ use app\models\CertificateJury;
 use app\models\CertificateTemplate;
 use app\models\JuryAssign;
 use app\models\JuryAssignSearch;
+use app\models\JuryApplicationManualCreateForm;
 use app\models\JuryApplicationSearch;
 use app\models\JuryResultSearch;
 use app\models\ManagerAnalysisSearch;
@@ -1942,6 +1943,122 @@ class ProgramRegistrationController extends Controller
         ]);
     }
 
+    public function actionJuryApplicationCreateManual()
+    {
+        if(!Yii::$app->user->identity->isAdminJury) return false;
+
+        $model = new JuryApplicationManualCreateForm();
+        $programScopeOptions = $this->buildManualJuryApplicationProgramScopeOptions();
+        $sessionOptions = $this->buildManualJuryApplicationSessionOptions();
+        $sessionScopeMap = $this->buildManualJuryApplicationSessionScopeMap();
+
+        if($this->request->isPost && $model->load($this->request->post()) && $model->validate()){
+            $scope = $this->parseManualJuryApplicationProgramScope($model->program_scope);
+            if(!$scope){
+                Yii::$app->session->addFlash('error', 'Please select a valid program/category.');
+                return $this->render('jury-application-create-manual', [
+                    'model' => $model,
+                    'programScopeOptions' => $programScopeOptions,
+                    'sessionOptions' => $sessionOptions,
+                    'sessionScopeMap' => $sessionScopeMap,
+                ]);
+            }
+
+            $judgingSessionId = $model->judging_session_id ? (int)$model->judging_session_id : null;
+            if($judgingSessionId && !$this->isJudgingSessionValidForScope($judgingSessionId, $scope['program_id'], $scope['program_sub_id'])){
+                Yii::$app->session->addFlash('error', 'Selected judging session is not available for the selected program/category.');
+                return $this->render('jury-application-create-manual', [
+                    'model' => $model,
+                    'programScopeOptions' => $programScopeOptions,
+                    'sessionOptions' => $sessionOptions,
+                    'sessionScopeMap' => $sessionScopeMap,
+                ]);
+            }
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try{
+                $email = strtolower(trim((string)$model->email));
+                $user = User::find()->where(['email' => $email])->one();
+                $createdUser = false;
+
+                if(!$user){
+                    $user = new User();
+                    $user->scenario = 'create';
+                    $user->email = $email;
+                    $user->username = $email;
+                    $user->fullname = trim((string)$model->fullname);
+                    $user->status = User::STATUS_ACTIVE;
+                    $user->is_student = 0;
+                    $user->is_internal = 0;
+                    $user->phone = $model->phone;
+                    $user->institution = $model->institution;
+                    $user->generateAuthKey();
+                    $user->setPassword($model->password ? $model->password : $email);
+                    if(!$user->save()){
+                        throw new \RuntimeException('Unable to create user: ' . implode('; ', $user->getFirstErrors()));
+                    }
+                    $createdUser = true;
+                }else{
+                    $user->fullname = trim((string)$model->fullname);
+                    $user->status = User::STATUS_ACTIVE;
+                    $user->is_student = 0;
+                    if(!$user->phone){
+                        $user->phone = $model->phone;
+                    }
+                    if(!$user->institution){
+                        $user->institution = $model->institution;
+                    }
+                    if(!$user->save(false)){
+                        throw new \RuntimeException('Unable to update existing user.');
+                    }
+                }
+
+                $application = $this->ensureJuryPipelineForUser(
+                    $user,
+                    (int)$scope['program_id'],
+                    $scope['program_sub_id'],
+                    $judgingSessionId,
+                    10,
+                    [
+                        'category' => $model->category,
+                        'phone' => $model->phone,
+                        'institution' => $model->institution,
+                        'designation' => $model->designation,
+                        'address' => $model->address,
+                    ]
+                );
+
+                $profile = JuryProfile::find()->where(['user_id' => (int)$user->id])->one();
+                if($profile){
+                    $profile->fullname = trim((string)$model->fullname);
+                    $profile->category = trim((string)$model->category);
+                    $profile->phone = trim((string)$model->phone) !== '' ? trim((string)$model->phone) : null;
+                    $profile->institution = trim((string)$model->institution) !== '' ? trim((string)$model->institution) : null;
+                    $profile->designation = trim((string)$model->designation) !== '' ? trim((string)$model->designation) : null;
+                    $profile->address = trim((string)$model->address) !== '' ? trim((string)$model->address) : null;
+                    $profile->updated_at = time();
+                    if(!$profile->save()){
+                        throw new \RuntimeException('Unable to save jury profile: ' . implode('; ', $profile->getFirstErrors()));
+                    }
+                }
+
+                $transaction->commit();
+                Yii::$app->session->addFlash('success', ($createdUser ? 'Jury user created' : 'Existing user updated') . ' and approved jury application saved.');
+                return $this->redirect(['jury-application-view', 'id' => $application->id]);
+            }catch(\Throwable $e){
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('jury-application-create-manual', [
+            'model' => $model,
+            'programScopeOptions' => $programScopeOptions,
+            'sessionOptions' => $sessionOptions,
+            'sessionScopeMap' => $sessionScopeMap,
+        ]);
+    }
+
     public function actionJuryApplicationBulkUpdate()
     {
         if(!Yii::$app->request->isPost){
@@ -3046,6 +3163,175 @@ class ProgramRegistrationController extends Controller
     protected function ensureApprovedJuryApplicationForUser($user, $programId, $programSubId = null, $judgingSessionId = null)
     {
         return $this->ensureJuryPipelineForUser($user, $programId, $programSubId, $judgingSessionId, 10);
+    }
+
+    protected function buildManualJuryApplicationProgramScopeOptions()
+    {
+        $programQuery = Program::find()->orderBy(['program_abbr' => SORT_ASC, 'program_name' => SORT_ASC]);
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programQuery->andWhere(['is_active' => 1]);
+        }
+
+        $programs = $programQuery->all();
+        $options = [];
+        foreach($programs as $program){
+            $programLabel = $program->program_abbr ?: $program->program_name;
+            if((int)$program->has_sub === 1){
+                $subQuery = $program->getProgramSubs()->orderBy(['sub_name' => SORT_ASC]);
+                $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+                if($subTable && $subTable->getColumn('is_active')){
+                    $subQuery->andWhere(['is_active' => 1]);
+                }
+                foreach($subQuery->all() as $sub){
+                    $subLabel = $sub->sub_abbr ?: $sub->sub_name;
+                    $options['s:' . $sub->id] = $programLabel . ' / ' . $subLabel;
+                }
+            }else{
+                $options['p:' . $program->id] = $programLabel;
+            }
+        }
+        return $options;
+    }
+
+    protected function buildManualJuryApplicationSessionOptions()
+    {
+        $activeProgramIds = Program::find()->select(['id']);
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $activeProgramIds->andWhere(['is_active' => 1]);
+        }
+
+        $programRubricQuery = ProgramRubric::find()
+            ->where(['program_rubric.program_id' => $activeProgramIds])
+            ->with(['program', 'programSub']);
+
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $programRubricQuery
+                ->leftJoin(['ps' => ProgramSub::tableName()], 'ps.id = program_rubric.program_sub')
+                ->andWhere(['or', ['program_rubric.program_sub' => null], ['program_rubric.program_sub' => 0], ['ps.is_active' => 1]]);
+        }
+
+        $programRubrics = $programRubricQuery->all();
+        if(!$programRubrics){
+            return [];
+        }
+
+        $rubricIds = array_values(array_unique(array_map(function($programRubric){
+            return (int)$programRubric->rubric_id;
+        }, $programRubrics)));
+
+        $sessions = RubricJudgingSession::find()
+            ->where(['rubric_id' => $rubricIds])
+            ->orderBy(['datetime_start' => SORT_ASC, 'session_name' => SORT_ASC])
+            ->all();
+
+        $options = [];
+        foreach($sessions as $session){
+            $scopeLabels = [];
+            foreach($programRubrics as $programRubric){
+                if((int)$programRubric->rubric_id !== (int)$session->rubric_id){
+                    continue;
+                }
+                $programLabel = $programRubric->program ? ($programRubric->program->program_abbr ?: $programRubric->program->program_name) : ('Program #' . $programRubric->program_id);
+                if($programRubric->programSub){
+                    $programLabel .= ' / ' . ($programRubric->programSub->sub_abbr ?: $programRubric->programSub->sub_name);
+                }
+                $scopeLabels[] = $programLabel;
+            }
+
+            $label = $this->formatJudgingSessionOptionText($session);
+            if($scopeLabels){
+                $label = implode(', ', array_unique($scopeLabels)) . ' - ' . $label;
+            }
+            $options[(int)$session->id] = $label;
+        }
+
+        return $options;
+    }
+
+    protected function buildManualJuryApplicationSessionScopeMap()
+    {
+        $map = [];
+        $programRubricQuery = ProgramRubric::find()->with(['program', 'programSub']);
+
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if($programTable && $programTable->getColumn('is_active')){
+            $programRubricQuery
+                ->innerJoin(['p' => Program::tableName()], 'p.id = program_rubric.program_id')
+                ->andWhere(['p.is_active' => 1]);
+        }
+
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $programRubricQuery
+                ->leftJoin(['ps' => ProgramSub::tableName()], 'ps.id = program_rubric.program_sub')
+                ->andWhere(['or', ['program_rubric.program_sub' => null], ['program_rubric.program_sub' => 0], ['ps.is_active' => 1]]);
+        }
+
+        $programRubrics = $programRubricQuery->all();
+        foreach($programRubrics as $programRubric){
+            $sessions = RubricJudgingSession::find()->where(['rubric_id' => (int)$programRubric->rubric_id])->all();
+            $scopeKey = $programRubric->program_sub ? ('s:' . (int)$programRubric->program_sub) : ('p:' . (int)$programRubric->program_id);
+            foreach($sessions as $session){
+                $map[(int)$session->id][] = $scopeKey;
+            }
+        }
+
+        foreach($map as $sessionId => $scopeKeys){
+            $map[$sessionId] = array_values(array_unique($scopeKeys));
+        }
+
+        return $map;
+    }
+
+    protected function parseManualJuryApplicationProgramScope($scope)
+    {
+        $scope = trim((string)$scope);
+        if(strpos($scope, 's:') === 0){
+            $sub = ProgramSub::findOne((int)substr($scope, 2));
+            if(!$sub){
+                return null;
+            }
+            return [
+                'program_id' => (int)$sub->program_id,
+                'program_sub_id' => (int)$sub->id,
+            ];
+        }
+
+        if(strpos($scope, 'p:') === 0){
+            $program = Program::findOne((int)substr($scope, 2));
+            if(!$program){
+                return null;
+            }
+            return [
+                'program_id' => (int)$program->id,
+                'program_sub_id' => null,
+            ];
+        }
+
+        return null;
+    }
+
+    protected function isJudgingSessionValidForScope($judgingSessionId, $programId, $programSubId = null)
+    {
+        $session = RubricJudgingSession::findOne((int)$judgingSessionId);
+        if(!$session){
+            return false;
+        }
+
+        $query = ProgramRubric::find()->where([
+            'program_id' => (int)$programId,
+            'rubric_id' => (int)$session->rubric_id,
+        ]);
+        if($programSubId === null){
+            $query->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+        }else{
+            $query->andWhere(['program_sub' => (int)$programSubId]);
+        }
+
+        return $query->exists();
     }
 
     protected function findApprovedAppliedJuryData(array $applicationIds, $programId, $programSubId = null)

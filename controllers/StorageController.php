@@ -6,6 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 
 class StorageController extends Controller
 {
@@ -57,6 +58,15 @@ class StorageController extends Controller
                         Yii::$app->request->post('pr') !== '' ? Yii::$app->request->post('pr') : null,
                         Yii::$app->request->post('rubric') !== '' ? Yii::$app->request->post('rubric') : null
                     );
+                case 'setting-update':
+                    if (Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) {
+                        throw new ForbiddenHttpException('You are not allowed to update settings.');
+                    }
+
+                    $id = Yii::$app->request->post('id', 1);
+                    $settingController = new SettingController('setting', Yii::$app);
+
+                    return $settingController->actionUpdate($id, ['/setting/update', 'id' => $id]);
                 default:
                     throw new BadRequestHttpException('Invalid storage action.');
             }
