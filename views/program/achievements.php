@@ -1,9 +1,16 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
+use app\models\ParticipantAchieve;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistration $model */
+/** @var bool $hasWinnerCountColumn */
+/** @var bool $hasWinnerTitleTable */
+/** @var bool $hasWinnerTitleAchievementColumn */
+/** @var bool $hasWinnerTitleNoTitleColumn */
+/** @var array $winnerTitlesByAchievement */
 
 $this->title = 'Achievement: ' . $model->program_name;
 
@@ -31,32 +38,129 @@ if($programSub){
 
     <section class="section dashboard">
 
-    <div class="card">
-            <div class="card-body pt-4">
+    <div class="card mb-3">
+            <div class="card-header">Achievement</div>
+            <div class="card-body pt-3">
+                <?= Html::beginForm(Url::to(['program/achievement', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]), 'post', ['class' => 'row g-2']) ?>
+                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                <?= Html::hiddenInput('action_type', 'add') ?>
+                <div class="<?= $hasWinnerCountColumn ? 'col-12 col-md-7' : 'col-12 col-md-9' ?>">
+                    <?= Html::textInput('name', '', ['class' => 'form-control', 'placeholder' => 'Achievement name', 'required' => true]) ?>
+                </div>
+                <?php if($hasWinnerCountColumn): ?>
+                    <div class="col-12 col-md-2">
+                        <?= Html::input('number', 'winner_count', '', ['class' => 'form-control', 'placeholder' => 'Winners', 'min' => 0]) ?>
+                    </div>
+                <?php endif; ?>
+                <div class="col-12 col-md-3">
+                    <?= Html::submitButton('Add', ['class' => 'btn btn-primary w-100']) ?>
+                </div>
+                <?= Html::endForm() ?>
 
+                <?php if($hasWinnerCountColumn && !$hasWinnerTitleAchievementColumn): ?>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        Winner title inputs need the achievement-based table. Please run <code>db/2026-05-10_create_program_winner_title.sql</code>
+                        <?php if($hasWinnerTitleTable): ?> or <code>db/2026-05-10_update_program_winner_title_depend_achievement.sql</code><?php endif; ?>.
+                    </div>
+                <?php endif; ?>
+                <?php if($hasWinnerTitleAchievementColumn && !$hasWinnerTitleNoTitleColumn): ?>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        The <code>No title text</code> checkbox needs <code>db/2026-05-10_update_program_winner_title_add_no_title_text.sql</code>.
+                    </div>
+                <?php endif; ?>
+
+            <div class="table-responsive mt-4">
             <table class="table">
                 <tbody>
-                    <tr><th>No.</th><th>Achievement Name</th><th></th></tr>
+                    <tr>
+                        <th>No.</th>
+                        <th style="min-width: 320px;">Achievement Name</th>
+                        <?php if($hasWinnerCountColumn): ?>
+                            <th style="width: 160px;">Number of Winner</th>
+                            <th style="min-width: 260px;">Winner's Title</th>
+                        <?php endif; ?>
+                        <th style="width: 220px;">Used</th>
+                        <th style="width: 260px;">Action</th>
+                    </tr>
                     <?php 
                     if($achievement){
                         $i=1;
                         foreach($achievement as $a){
-                            echo '<tr><td>'.$i.'. </td><td>'.$a->name.'</td></tr>';
+                            $usedCount = (int)ParticipantAchieve::find()->where(['achieve_id' => $a->id])->count();
+                            $formId = 'achievement-update-' . (int)$a->id;
+                            echo '<tr><td>'.$i.'. </td><td>';
+                            echo Html::textInput('name', $a->name, ['class' => 'form-control form-control-sm', 'required' => true, 'form' => $formId]);
+                            echo '</td>';
+                            if($hasWinnerCountColumn){
+                                echo '<td>';
+                                echo Html::input('number', 'winner_count', $a->winner_count, ['class' => 'form-control form-control-sm', 'min' => 0, 'form' => $formId]);
+                                echo '</td>';
+                                echo '<td>';
+                                if($hasWinnerTitleAchievementColumn){
+                                    $winnerCount = max(0, (int)$a->winner_count);
+                                    if($winnerCount > 0){
+                                        for($winnerNo = 1; $winnerNo <= $winnerCount; $winnerNo++){
+                                            $winnerTitle = $winnerTitlesByAchievement[$a->id][$winnerNo] ?? null;
+                                            $noTitleText = $winnerTitle && $hasWinnerTitleNoTitleColumn && (int)$winnerTitle->no_title_text === 1;
+                                            echo '<div class="input-group input-group-sm mb-1">';
+                                            echo '<span class="input-group-text">' . $winnerNo . '</span>';
+                                            echo Html::textInput('winner_titles[' . $winnerNo . ']', $winnerTitle ? $winnerTitle->title_name : '', [
+                                                'class' => 'form-control',
+                                                'placeholder' => 'Winner title',
+                                                'form' => $formId,
+                                            ]);
+                                            if($hasWinnerTitleNoTitleColumn){
+                                                echo '<span class="input-group-text">';
+                                                echo Html::checkbox('winner_no_title[' . $winnerNo . ']', $noTitleText, [
+                                                    'value' => 1,
+                                                    'form' => $formId,
+                                                    'label' => 'No title text',
+                                                    'labelOptions' => ['class' => 'mb-0 ms-1'],
+                                                ]);
+                                                echo '</span>';
+                                            }
+                                            echo '</div>';
+                                        }
+                                    }else{
+                                        echo Html::tag('span', 'Set number of winner first.', ['class' => 'text-muted']);
+                                    }
+                                }else{
+                                    echo Html::tag('span', 'Migration required', ['class' => 'text-muted']);
+                                }
+                                echo '</td>';
+                            }
+                            echo '<td>';
+                            echo $usedCount > 0 ? Html::tag('span', $usedCount . ' participant(s)', ['class' => 'badge bg-info']) : Html::tag('span', 'Not used', ['class' => 'badge bg-secondary']);
+                            echo '</td><td class="text-nowrap">';
+                            echo Html::beginForm(Url::to(['program/achievement', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]), 'post', ['id' => $formId, 'style' => 'display:inline-block;margin-right:6px;']);
+                            echo Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken());
+                            echo Html::hiddenInput('action_type', 'update');
+                            echo Html::hiddenInput('achievement_id', $a->id);
+                            echo Html::submitButton('Save', ['class' => 'btn btn-primary btn-sm']);
+                            echo Html::endForm();
+                            if($usedCount === 0){
+                                echo Html::beginForm(Url::to(['program/achievement', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]), 'post', ['style' => 'display:inline-block;']);
+                                echo Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken());
+                                echo Html::hiddenInput('action_type', 'delete');
+                                echo Html::hiddenInput('achievement_id', $a->id);
+                                echo Html::submitButton('Delete', ['class' => 'btn btn-outline-danger btn-sm', 'data-confirm' => 'Delete this achievement?']);
+                                echo Html::endForm();
+                            }else{
+                                echo ' ' . Html::button('Delete', ['class' => 'btn btn-outline-secondary btn-sm', 'disabled' => true, 'title' => 'Already used']);
+                            }
+                            echo '</td></tr>';
                             $i++;
                         }
+                    }else{
+                        echo '<tr><td colspan="' . ($hasWinnerCountColumn ? 6 : 4) . '" class="text-muted">No achievement found.</td></tr>';
                     }
                     ?> 
                 </tbody>
             </table>
-
-    
-
+            </div>
 </div>
             </div>
         </div>
 
 
-
     </section>
-
-

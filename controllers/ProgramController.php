@@ -12,6 +12,7 @@ use app\models\JuryApplication;
 use app\models\Member;
 use app\models\Mentor;
 use app\models\Model;
+use app\models\ParticipantAchieve;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -21,6 +22,7 @@ use app\models\ProgramSub;
 use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
 use app\models\ProgramRubric;
+use app\models\ProgramWinnerTitle;
 use app\models\PublicRegistrationAccessForm;
 use app\models\Questionnaire;
 use app\models\QuestionnaireAnswer;
@@ -1758,18 +1760,114 @@ class ProgramController extends Controller
             }
         }
 
+        if(Yii::$app->request->isPost){
+            $post = Yii::$app->request->post();
+            $action = (string)($post['action_type'] ?? '');
+            $achievementId = (int)($post['achievement_id'] ?? 0);
+            $name = trim((string)($post['name'] ?? ''));
+            $hasWinnerCountColumn = $this->hasProgramAchievementWinnerCountColumn();
+            $winnerCountRaw = trim((string)($post['winner_count'] ?? ''));
+            $winnerCount = $winnerCountRaw === '' ? null : (int)$winnerCountRaw;
+
+            if($action === 'add'){
+                $achievementModel = new ProgramAchievement([
+                    'program_id' => (int)$id,
+                    'program_sub' => $programSub ? (int)$programSub->id : null,
+                    'name' => $name,
+                ]);
+                if($hasWinnerCountColumn){
+                    $achievementModel->winner_count = $winnerCount;
+                }
+                if($achievementModel->save()){
+                    Yii::$app->session->addFlash('success', 'Achievement added.');
+                }else{
+                    Yii::$app->session->addFlash('error', implode('<br>', $achievementModel->getFirstErrors()));
+                }
+
+                return $this->redirect(['achievement', 'id' => $id, 'sub' => $sub]);
+            }
+
+            if($action === 'update' || $action === 'delete'){
+                $achievementQuery = ProgramAchievement::find()->where([
+                    'id' => $achievementId,
+                    'program_id' => (int)$id,
+                ]);
+                if($programSub){
+                    $achievementQuery->andWhere(['program_sub' => (int)$programSub->id]);
+                }else{
+                    $achievementQuery->andWhere(['program_sub' => null]);
+                }
+                $achievementModel = $achievementQuery->one();
+                if(!$achievementModel){
+                    throw new NotFoundHttpException('Achievement not found.');
+                }
+
+                if($action === 'update'){
+                    $achievementModel->name = $name;
+                    if($hasWinnerCountColumn){
+                        $achievementModel->winner_count = $winnerCount;
+                    }
+                    if($achievementModel->save()){
+                        $titlesSaved = true;
+                        if($this->hasProgramWinnerTitleAchievementColumn()){
+                            $titlesSaved = $this->saveAchievementWinnerTitles($achievementModel, $post['winner_titles'] ?? [], $post['winner_no_title'] ?? []);
+                        }
+                        if(!$titlesSaved){
+                            Yii::$app->session->addFlash('error', 'Achievement updated, but one or more winner titles could not be saved.');
+                        }
+                        Yii::$app->session->addFlash('success', 'Achievement updated.');
+                    }else{
+                        Yii::$app->session->addFlash('error', implode('<br>', $achievementModel->getFirstErrors()));
+                    }
+                }else{
+                    $usedCount = ParticipantAchieve::find()->where(['achieve_id' => $achievementModel->id])->count();
+                    if($usedCount > 0){
+                        Yii::$app->session->addFlash('error', 'Achievement cannot be deleted because it is already used.');
+                    }else if($achievementModel->delete()){
+                        Yii::$app->session->addFlash('success', 'Achievement deleted.');
+                    }else{
+                        Yii::$app->session->addFlash('error', 'Unable to delete achievement.');
+                    }
+                }
+
+                return $this->redirect(['achievement', 'id' => $id, 'sub' => $sub]);
+            }
+        }
+
         if($programSub){
             $achievement = ProgramAchievement::find()
-            ->where(['program_id' => $id, 'program_sub' => $sub])->all();
+            ->where(['program_id' => $id, 'program_sub' => $sub])->orderBy(['name' => SORT_ASC])->all();
         }else{
-            $achievement = ProgramAchievement::find()->where(['program_id' => $id])->all();
+            $achievement = ProgramAchievement::find()->where(['program_id' => $id, 'program_sub' => null])->orderBy(['name' => SORT_ASC])->all();
+        }
+
+        $hasWinnerTitleTable = $this->hasProgramWinnerTitleTable();
+        $hasWinnerTitleAchievementColumn = $this->hasProgramWinnerTitleAchievementColumn();
+        $hasWinnerTitleNoTitleColumn = $this->hasProgramWinnerTitleNoTitleColumn();
+        $winnerTitlesByAchievement = [];
+        if($hasWinnerTitleAchievementColumn && $achievement){
+            $achievementIds = array_map(function($item){
+                return (int)$item->id;
+            }, $achievement);
+            $winnerTitles = ProgramWinnerTitle::find()
+                ->where(['achievement_id' => $achievementIds])
+                ->orderBy(['achievement_id' => SORT_ASC, 'winner_order' => SORT_ASC])
+                ->all();
+            foreach($winnerTitles as $winnerTitle){
+                $winnerTitlesByAchievement[(int)$winnerTitle->achievement_id][(int)$winnerTitle->winner_order] = $winnerTitle;
+            }
         }
         
         $model = $this->findModel($id);
         return $this->render('achievements',[
             'model' => $model,
             'achievement' => $achievement,
-            'programSub' => $programSub
+            'programSub' => $programSub,
+            'hasWinnerCountColumn' => $this->hasProgramAchievementWinnerCountColumn(),
+            'hasWinnerTitleTable' => $hasWinnerTitleTable,
+            'hasWinnerTitleAchievementColumn' => $hasWinnerTitleAchievementColumn,
+            'hasWinnerTitleNoTitleColumn' => $hasWinnerTitleNoTitleColumn,
+            'winnerTitlesByAchievement' => $winnerTitlesByAchievement,
         ]);
     }
 
@@ -1783,6 +1881,74 @@ class ProgramController extends Controller
 
         $program = $role->program;
         return $this->redirect(['/program-reg-field/index', 'id' => $program->id, 'sub' => $sub]);
+    }
+
+    protected function hasProgramAchievementWinnerCountColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ProgramAchievement::tableName());
+        return $table && $table->getColumn('winner_count');
+    }
+
+    protected function hasProgramWinnerTitleTable()
+    {
+        return Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName()) !== null;
+    }
+
+    protected function hasProgramWinnerTitleAchievementColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName());
+        return $table && $table->getColumn('achievement_id') && $table->getColumn('winner_order');
+    }
+
+    protected function hasProgramWinnerTitleNoTitleColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName());
+        return $table && $table->getColumn('no_title_text');
+    }
+
+    protected function saveAchievementWinnerTitles(ProgramAchievement $achievement, $titles, $noTitleTexts = [])
+    {
+        $winnerCount = max(0, (int)$achievement->winner_count);
+        $hasNoTitleColumn = $this->hasProgramWinnerTitleNoTitleColumn();
+        ProgramWinnerTitle::deleteAll([
+            'and',
+            ['achievement_id' => (int)$achievement->id],
+            ['>', 'winner_order', $winnerCount],
+        ]);
+
+        $existingTitles = ProgramWinnerTitle::find()
+            ->where(['achievement_id' => (int)$achievement->id])
+            ->indexBy('winner_order')
+            ->all();
+
+        $ok = true;
+        for($i = 1; $i <= $winnerCount; $i++){
+            $titleName = trim((string)($titles[$i] ?? ''));
+            $noTitleText = isset($noTitleTexts[$i]) && (int)$noTitleTexts[$i] === 1;
+            $winnerTitle = $existingTitles[$i] ?? null;
+            if($titleName === '' && !$noTitleText){
+                if($winnerTitle){
+                    $ok = $winnerTitle->delete() !== false && $ok;
+                }
+                continue;
+            }
+
+            if(!$winnerTitle){
+                $winnerTitle = new ProgramWinnerTitle([
+                    'achievement_id' => (int)$achievement->id,
+                    'winner_order' => $i,
+                ]);
+            }
+            $winnerTitle->title_name = $titleName;
+            if($hasNoTitleColumn){
+                $winnerTitle->no_title_text = $noTitleText ? 1 : 0;
+            }
+            if(!$winnerTitle->save()){
+                $ok = false;
+            }
+        }
+
+        return $ok;
     }
 
     protected function findManagerRole($id, $sub = null)
@@ -1885,8 +2051,15 @@ class ProgramController extends Controller
             $programs->andWhere(['status' => 10]);
         }
 
+        $orderBy = [];
+        if($programTable && $programTable->getColumn('reg_closed')){
+            $orderBy['reg_closed'] = SORT_ASC;
+        }
+        $orderBy['date_start'] = SORT_ASC;
+        $orderBy['id'] = SORT_ASC;
+
         $programs = $programs
-            ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
+            ->orderBy($orderBy)
             ->all();
 
         return $this->render('public_programs', [
@@ -2970,7 +3143,7 @@ class ProgramController extends Controller
         $reg = $this->findRegistration($reg);
         $mentor = $this->meAsMentor($reg);
         
-        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || $mentor){ // atau mentor
+        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin || $mentor){ // atau mentor
 
             $pdf->template = CertificateTemplate::findOne(1);
             $pdf->model = $reg;
@@ -2987,7 +3160,7 @@ class ProgramController extends Controller
         $pdf = new CertificateSession;
         $session = $this->findSessionReg($s, $reg, $u);
         
-        if($session->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager){
+        if($session->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin){
             $pdf->template = CertificateTemplate::findOne(7);
             $pdf->model = $session;
             $pdf->generatePdf();
@@ -3003,7 +3176,7 @@ class ProgramController extends Controller
         $pdf = new CertificateAchievement;
         $reg = $this->findRegistrationAchievement($reg);
         $mentor = $this->meAsMentor($reg);
-        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || $mentor){
+        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin || $mentor){
             $pdf->template = CertificateTemplate::findOne(4);
             $pdf->model = $reg;
             $pdf->generatePdf();
@@ -3019,7 +3192,7 @@ class ProgramController extends Controller
         $pdf = new CertificateExcellence;
         $reg = $this->findRegistrationExcellence($reg);
         $mentor = $this->meAsMentor($reg);
-        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || $mentor){
+        if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin || $mentor){
             $pdf->template = CertificateTemplate::findOne(5);
             $pdf->model = $reg;
             $pdf->generatePdf();

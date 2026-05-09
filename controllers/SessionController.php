@@ -214,12 +214,12 @@ class SessionController extends Controller
 
     public function actionAttendanceCert($id)
     {
-        if(!$this->ensureCertificateAvailable(7, false)){
+        if(!$this->ensureCertificateAvailable(7, true)){
             return $this->render('empty');
         }
 
         $attendance = $this->findAttendanceModel($id);
-        if($attendance->user_id != Yii::$app->user->identity->id && !Yii::$app->user->identity->isManager){
+        if($attendance->user_id != Yii::$app->user->identity->id && !Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdmin){
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 

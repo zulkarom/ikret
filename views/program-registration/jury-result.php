@@ -3,6 +3,7 @@
 use app\models\Mentor;
 use app\models\Program;
 use app\models\ProgramRegistration;
+use app\models\JuryAssign;
 use app\widgets\Breadcrumbs;
 use kartik\export\ExportMenu;
 use yii\helpers\Html;
@@ -22,6 +23,131 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
+
+$recommendationValue = function($model, $asHtml = false){
+    $answer = $model->rubricAnswer;
+    $rubric = $answer && $answer->rubric ? $answer->rubric : $model->rubric;
+    if(!$answer || !$rubric || !$rubric->categoriesRecommend){
+        return '';
+    }
+
+    $items = [];
+    foreach($rubric->categoriesRecommend as $cat){
+        if(!$cat->items){
+            continue;
+        }
+
+        foreach($cat->items as $item){
+            $column = $item->colum_ans;
+            if(!$column){
+                continue;
+            }
+
+            $value = $answer->$column;
+            $hasRecommendation = false;
+            if((int)$item->item_type === 2){
+                $hasRecommendation = (int)$value === 1;
+            }else if((int)$item->item_type === 1){
+                $hasRecommendation = (int)$value > 0;
+            }else{
+                $hasRecommendation = trim((string)$value) !== '';
+            }
+
+            if($hasRecommendation){
+                $items[] = trim((string)($item->item_short ?: $item->item_text));
+            }
+        }
+    }
+
+    if(!$items){
+        return '';
+    }
+
+    if($asHtml){
+        $html = '<ul class="mb-0 ps-3">';
+        foreach($items as $item){
+            $html .= '<li>' . Html::encode($item) . '</li>';
+        }
+        return $html . '</ul>';
+    }
+
+    return implode("\n", $items);
+};
+
+$statusSummaryQuery = JuryAssign::find()->alias('a')
+    ->select(['a.status', 'total' => 'COUNT(*)'])
+    ->joinWith(['registration r'])
+    ->leftJoin('user u','u.id = r.user_id')
+    ->where(['r.program_id' => $program->id, 'a.rubric_id' => $searchModel->rubric]);
+if($programSub){
+    $statusSummaryQuery->andWhere(['r.program_sub' => $programSub->id]);
+}
+$statusSummaryQuery->andFilterWhere(['like', 'u.fullname', $searchModel->fullnameSearch]);
+$statusSummaryRows = $statusSummaryQuery->groupBy('a.status')->asArray()->all();
+$statusSummary = [0 => 0, 10 => 0, 20 => 0];
+foreach($statusSummaryRows as $row){
+    $statusSummary[(int)$row['status']] = (int)$row['total'];
+}
+$totalAssignments = array_sum($statusSummary);
+$completionPercent = $totalAssignments > 0 ? round(($statusSummary[20] / $totalAssignments) * 100) : 0;
+$selectedStatus = $searchModel->jury_status;
+$statusFilterUrl = function($status = null)use($searchModel, $program, $programSub){
+    $params = Yii::$app->request->queryParams;
+    unset($params['page'], $params['per-page']);
+    $params[0] = 'program-registration/jury-result';
+    $params['id'] = $program->id;
+    if($programSub){
+        $params['sub'] = $programSub->id;
+    }
+
+    if($status === null){
+        unset($params[$searchModel->formName()]['jury_status']);
+    }else{
+        $params[$searchModel->formName()]['jury_status'] = $status;
+    }
+
+    return Url::to($params);
+};
+
+$this->registerCss(<<<CSS
+.jury-result-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .75rem;
+    margin: 0 0 1rem;
+}
+.jury-result-stat {
+    display: block;
+    padding: .9rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+}
+.jury-result-stat:hover,
+.jury-result-stat.active {
+    border-color: #0d6efd;
+    box-shadow: 0 .5rem 1.25rem rgba(13, 110, 253, .12);
+}
+.jury-result-stat-label {
+    color: #6c757d;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.jury-result-stat-count {
+    margin-top: .25rem;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1;
+}
+@media (max-width: 767.98px) {
+    .jury-result-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+CSS);
 ?>
 
 <div class="pagetitle">
@@ -67,17 +193,9 @@ $this->params['breadcrumbs'][] = $this->title;
     ];
     
     $exportColumns[] = [
-        'label' =>'Group/Booth ID',
-        'value' => function($model){
-            $html = '';
-            $reg = $model->registration;
-            if($reg->group_code){
-                $html .= $reg->group_code. ' ';
-            }
-            if($reg->booth_number){
-                $html .= $reg->booth_number;
-            }
-            return $html;
+        'label' =>'Recommendation',
+        'value' => function($model)use($recommendationValue){
+            return $recommendationValue($model);
         }
     ];
 
@@ -213,7 +331,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <section class="section dashboard">
 
-   
+    <div class="jury-result-stats">
+        <?= Html::a(
+            '<div class="jury-result-stat-label">All Assignments</div><div class="jury-result-stat-count text-primary">' . Html::encode($totalAssignments) . '</div>',
+            $statusFilterUrl(null),
+            ['class' => 'jury-result-stat' . ($selectedStatus === null || $selectedStatus === '' ? ' active' : '')]
+        ) ?>
+        <?= Html::a(
+            '<div class="jury-result-stat-label">Assigned</div><div class="jury-result-stat-count text-warning">' . Html::encode($statusSummary[0]) . '</div>',
+            $statusFilterUrl(0),
+            ['class' => 'jury-result-stat' . ((string)$selectedStatus === '0' ? ' active' : '')]
+        ) ?>
+        <?= Html::a(
+            '<div class="jury-result-stat-label">Judging</div><div class="jury-result-stat-count text-primary">' . Html::encode($statusSummary[10]) . '</div>',
+            $statusFilterUrl(10),
+            ['class' => 'jury-result-stat' . ((string)$selectedStatus === '10' ? ' active' : '')]
+        ) ?>
+        <?= Html::a(
+            '<div class="jury-result-stat-label">Complete</div><div class="jury-result-stat-count text-success">' . Html::encode($statusSummary[20]) . '</div>',
+            $statusFilterUrl(20),
+            ['class' => 'jury-result-stat' . ((string)$selectedStatus === '20' ? ' active' : '')]
+        ) ?>
+        <div class="jury-result-stat">
+            <div class="jury-result-stat-label">% Completion</div>
+            <div class="jury-result-stat-count text-success"><?= Html::encode($completionPercent) ?>%</div>
+        </div>
+    </div>
 
     <div class="card"  id="con-filter-form">
     <div class="card-header">Filter Form</div>
@@ -249,17 +392,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
-                'label' =>'Group/ Booth',
-                'value' => function($model){
-                    $html = '';
-                    $reg = $model->registration;
-                    if($reg->group_code){
-                        $html .= $reg->group_code. ' ';
-                    }
-                    if($reg->booth_number){
-                        $html .= $reg->booth_number;
-                    }
-                    return $html;
+                'label' =>'Recommendation',
+                'format' => 'raw',
+                'value' => function($model)use($recommendationValue){
+                    $html = $recommendationValue($model, true);
+                    return $html ?: '<span class="text-muted">-</span>';
                 }
             ],
             [

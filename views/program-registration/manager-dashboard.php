@@ -83,19 +83,7 @@ if((int)$program->program_type === 1){
         ],
     ];
     $subProgramLevelCards[] = [
-        'title' => 'Jury Applications',
-        'url' => Url::to(['program-registration/manager-jury-applications', 'id' => $id, 'sub' => $sub]),
-        'icon' => 'bi bi-person-lines-fill',
-        'accent' => 'teal',
-        'description' => 'Review and track incoming jury applications.',
-        'stats' => [
-            ['label' => 'Total', 'value' => (string)($dashboardStats['jury_applications_total'] ?? 0)],
-            ['label' => 'New', 'value' => (string)($dashboardStats['jury_applications_new'] ?? 0)],
-            ['label' => 'Approved', 'value' => (string)($dashboardStats['jury_applications_approved'] ?? 0)],
-        ],
-    ];
-    $subProgramLevelCards[] = [
-        'title' => 'Result By Assignments',
+        'title' => 'Juries Judging Raw Input',
         'url' => Url::to(['program-registration/jury-result', 'id' => $id, 'sub' => $sub]),
         'icon' => 'bi bi-bar-chart-line-fill',
         'accent' => 'amber',
@@ -137,13 +125,12 @@ if((int)$program->program_type === 1){
         'accent' => 'violet',
         'description' => 'Maintain rubric structures used for this judging flow.',
         'stats' => [
-            ['label' => 'Linked', 'value' => (string)($dashboardStats['rubrics_count'] ?? 0)],
-            ['label' => 'Assigned', 'value' => (string)($dashboardStats['assignments_total'] ?? 0)],
-            ['label' => 'Done', 'value' => (string)($dashboardStats['assignments_complete'] ?? 0)],
+            ['label' => 'Rubrics', 'value' => (string)($dashboardStats['rubrics_count'] ?? 0)],
+            ['label' => 'Sessions', 'value' => (string)($dashboardStats['rubric_sessions_count'] ?? 0)],
         ],
     ];
     $subProgramLevelCards[] = [
-        'title' => 'Achievements',
+        'title' => 'Achievements & Winners Config',
         'url' => Url::to(['program/achievement', 'id' => $id, 'sub' => $sub]),
         'icon' => 'bi bi-award-fill',
         'accent' => 'emerald',

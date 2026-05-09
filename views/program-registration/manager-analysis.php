@@ -16,6 +16,63 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
+
+$recommendationValue = function($model, $asHtml = false){
+    $items = [];
+    if($model->juriesCompleted){
+        foreach($model->juriesCompleted as $jury){
+            $answer = $jury->rubricAnswer;
+            $rubric = $answer && $answer->rubric ? $answer->rubric : $jury->rubric;
+            if(!$answer || !$rubric || !$rubric->categoriesRecommend){
+                continue;
+            }
+
+            foreach($rubric->categoriesRecommend as $cat){
+                if(!$cat->items){
+                    continue;
+                }
+
+                foreach($cat->items as $item){
+                    $column = $item->colum_ans;
+                    if(!$column){
+                        continue;
+                    }
+
+                    $value = $answer->$column;
+                    $hasRecommendation = false;
+                    if((int)$item->item_type === 2){
+                        $hasRecommendation = (int)$value === 1;
+                    }else if((int)$item->item_type === 1){
+                        $hasRecommendation = (int)$value > 0;
+                    }else{
+                        $hasRecommendation = trim((string)$value) !== '';
+                    }
+
+                    if($hasRecommendation){
+                        $label = trim((string)($item->item_short ?: $item->item_text));
+                        if($label !== ''){
+                            $items[$label] = $label;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if(!$items){
+        return '';
+    }
+
+    if($asHtml){
+        $html = '<ul class="mb-0 ps-3">';
+        foreach($items as $item){
+            $html .= '<li>' . Html::encode($item) . '</li>';
+        }
+        return $html . '</ul>';
+    }
+
+    return implode("\n", array_values($items));
+};
 ?>
   <div class="pagetitle">
 <h1><?=$this->title?></h1>
@@ -30,17 +87,9 @@ $this->params['breadcrumbs'][] = $this->title;
     $exportColumns[] = ['class' => 'yii\grid\SerialColumn'];
     $exportColumns[] = 'participantText';
     $exportColumns[] =[
-        'label' =>'Group/ Booth ID',
-        'value' => function($model){
-            $html = '';
-            $reg = $model;
-            if($reg->group_code){
-                $html .= $reg->group_code. ' ';
-            }
-            if($reg->booth_number){
-                $html .= $reg->booth_number;
-            }
-            return $html;
+        'label' =>'Recommendation',
+        'value' => function($model) use($recommendationValue){
+            return $recommendationValue($model);
         }
     ];
     $exportColumns[] = [
@@ -226,17 +275,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
-                'label' =>'Group/ Booth ID',
-                'value' => function($model){
-                    $html = '';
-                    $reg = $model;
-                    if($reg->group_code){
-                        $html .= $reg->group_code. ' ';
-                    }
-                    if($reg->booth_number){
-                        $html .= $reg->booth_number;
-                    }
-                    return $html;
+                'label' =>'Recommendation',
+                'format' => 'raw',
+                'value' => function($model) use($recommendationValue){
+                    $html = $recommendationValue($model, true);
+                    return $html ?: '<span class="text-muted">-</span>';
                 }
             ],
             [

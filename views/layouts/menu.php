@@ -262,14 +262,22 @@ use yii\helpers\Url;
               ['name' => 'Jury Applications', 'url' => ['/program-registration/admin-jury-applications-all']],
               ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
               ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
+              ['name' => 'Achievement Config', 'url' => ['/certificate-template/achievement-config']],
             ]];
           }
 
           if(Yii::$app->user->identity->isAdmin){
+            $menu[] = ['name' => 'Certification', 'url' => ['/'], 'icon' => 'bi bi-award', 'children' => [
+              ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
+              ['name' => 'All Participants', 'url' => ['/certificate-template/participants']],
+              ['name' => 'All Session Participants', 'url' => ['/certificate-template/session-participants']],
+              ['name' => 'All Juries', 'url' => ['/certificate-template/juries']],
+              ['name' => 'All Committees', 'url' => ['/certificate-template/committees']],
+            ]];
+
             $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
               ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
               ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
-              ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
               ['name' => 'Settings', 'url' => ['/setting/update']],
               ['name' => 'Settings Media', 'url' => ['/setting/media']],
             ]];

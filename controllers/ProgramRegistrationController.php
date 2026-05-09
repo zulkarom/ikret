@@ -24,6 +24,7 @@ use app\models\ProgramRegistrationManagerSearch;
 use app\models\ProgramRegistrationSearch;
 use app\models\ProgramRubric;
 use app\models\ProgramSub;
+use app\models\ProgramWinnerTitle;
 use app\models\JuryApplication;
 use app\models\JuryRequirement;
 use app\models\QuestionnaireAnswer;
@@ -112,7 +113,7 @@ class ProgramRegistrationController extends Controller
     }
 
     private function canAccessDoc($u, $p, $s){
-        if(Yii::$app->user->identity->isManager){
+        if(Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin){
             return true;
         }else{
             $role = $this->findAssignmentByProgram($u, $p, $s);
@@ -419,6 +420,12 @@ class ProgramRegistrationController extends Controller
             'rubric_id' => $assign->rubric_id,
             'assignment_id' => $assign->id
         ]);
+        if(!$model){
+            $model = new RubricAnswer([
+                'rubric_id' => $assign->rubric_id,
+                'assignment_id' => $assign->id,
+            ]);
+        }
 
         return $this->render('jury-judge', [
             'assign' => $assign,
@@ -542,7 +549,9 @@ class ProgramRegistrationController extends Controller
 
         $achieve = new ParticipantAchieve();
         $achieve->program_reg_id = $id;
-        if ($this->request->isPost && $achieve->load($this->request->post())) {
+        $post = $this->request->post();
+        $action = (string)($post['action_type'] ?? '');
+        if ($this->request->isPost && $action === 'achievement-add' && $achieve->load($post)) {
             $achieve->achieved_at = time();
             if($achieve->save()){
                 Yii::$app->session->addFlash('success', "Achievement Added");
@@ -550,17 +559,69 @@ class ProgramRegistrationController extends Controller
             }
         }
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
+        if($this->request->isPost && $action === 'achievement-title-update' && $this->hasParticipantAchieveWinnerTitleColumn()){
+            $selectedTitles = $post['achievement_winner_title'] ?? [];
+            if($selectedTitles){
+                foreach($selectedTitles as $participantAchieveId => $winnerTitleId){
+                    $participantAchieve = ParticipantAchieve::findOne([
+                        'id' => (int)$participantAchieveId,
+                        'program_reg_id' => (int)$model->id,
+                    ]);
+                    if(!$participantAchieve){
+                        continue;
+                    }
+
+                    $winnerTitleId = (int)$winnerTitleId;
+                    if($winnerTitleId === 0){
+                        $participantAchieve->winner_title_id = null;
+                    }else{
+                        $winnerTitle = ProgramWinnerTitle::find()
+                            ->where(['id' => $winnerTitleId, 'achievement_id' => (int)$participantAchieve->achieve_id])
+                            ->one();
+                        $participantAchieve->winner_title_id = $winnerTitle ? (int)$winnerTitle->id : null;
+                    }
+                    $participantAchieve->save(false, ['winner_title_id']);
+                }
+            }
+
+            Yii::$app->session->addFlash('success', "Winner title updated");
+            return $this->refresh();
+        }
+
+        if ($this->request->isPost && $model->load($post)) {
             if($model->save()){
                 Yii::$app->session->addFlash('success', "Medal updated");
                 return $this->refresh();
             }
         }
 
+        $hasWinnerTitleSelection = $this->hasParticipantAchieveWinnerTitleColumn()
+            && $this->hasProgramWinnerTitleAchievementColumn();
+        $winnerTitlesByAchievement = [];
+        if($hasWinnerTitleSelection && $model->achievements){
+            $achievementIds = [];
+            foreach($model->achievements as $participantAchieve){
+                if($participantAchieve->achieve_id){
+                    $achievementIds[] = (int)$participantAchieve->achieve_id;
+                }
+            }
+            if($achievementIds){
+                $winnerTitles = ProgramWinnerTitle::find()
+                    ->where(['achievement_id' => array_unique($achievementIds)])
+                    ->orderBy(['achievement_id' => SORT_ASC, 'winner_order' => SORT_ASC])
+                    ->all();
+                foreach($winnerTitles as $winnerTitle){
+                    $winnerTitlesByAchievement[(int)$winnerTitle->achievement_id][] = $winnerTitle;
+                }
+            }
+        }
+
         return $this->render('manager-award', [
             'model' => $model,
             'achieve' => $achieve,
-            'list' => $list
+            'list' => $list,
+            'hasWinnerTitleSelection' => $hasWinnerTitleSelection,
+            'winnerTitlesByAchievement' => $winnerTitlesByAchievement,
         ]);
     }
 
@@ -2976,6 +3037,8 @@ class ProgramRegistrationController extends Controller
             $rubricQuery->andWhere(['program_sub' => null]);
         }
         $rubricCount = (clone $rubricQuery)->count();
+        $rubricIds = (clone $rubricQuery)->select(['rubric_id'])->column();
+        $sessionCount = $rubricIds ? RubricJudgingSession::find()->where(['rubric_id' => $rubricIds])->count() : 0;
 
         $achievementCount = ProgramAchievement::find()->where(['program_id' => $programId])->count();
 
@@ -3020,6 +3083,7 @@ class ProgramRegistrationController extends Controller
             'assignments_total' => (int)$assignmentTotal,
             'assignments_complete' => (int)$assignmentComplete,
             'rubrics_count' => (int)$rubricCount,
+            'rubric_sessions_count' => (int)$sessionCount,
             'achievements_count' => (int)$achievementCount,
             'awarded_count' => (int)$awardedCount,
             'jury_applications_total' => (int)$juryAppTotal,
@@ -3802,6 +3866,18 @@ class ProgramRegistrationController extends Controller
     protected function hasJuryAssignments($id)
     {
         return JuryAssign::find()->where(['reg_id' => $id])->exists();
+    }
+
+    protected function hasParticipantAchieveWinnerTitleColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ParticipantAchieve::tableName());
+        return $table && $table->getColumn('winner_title_id');
+    }
+
+    protected function hasProgramWinnerTitleAchievementColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ProgramWinnerTitle::tableName());
+        return $table && $table->getColumn('achievement_id') && $table->getColumn('winner_order');
     }
 
     protected function findRegistrationsByImportedGroupName($programId, $programSubId, $groupName)

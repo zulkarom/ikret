@@ -297,7 +297,9 @@ CSS);
 
 <div class="pagetitle">
 <h1><?=$this->title?></h1>
-<?= Html::a('<i class="bi bi-arrow-left"></i> Back to Assignment List', ['/program-registration/jury-assignment'], ['class' => 'btn btn-outline-secondary btn-sm mt-2 mb-3']) ?>
+<?php if(!$plain && $write && !Yii::$app->user->isGuest && Yii::$app->user->identity->isJury): ?>
+    <?= Html::a('<i class="bi bi-arrow-left"></i> Back to Assignment List', ['/program-registration/jury-assignment'], ['class' => 'btn btn-outline-secondary btn-sm mt-2 mb-3']) ?>
+<?php endif; ?>
 </div>
     <section class="section dashboard">
 

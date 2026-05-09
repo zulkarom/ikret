@@ -16,6 +16,7 @@ class JuryResultSearch extends User
     public $program_sub;
     public $rubric;
     public $fullnameSearch;
+    public $jury_status;
 
     /**
      * {@inheritdoc}
@@ -23,7 +24,7 @@ class JuryResultSearch extends User
     public function rules()
     {
         return [
-            [['is_internal', 'rubric'], 'integer'],
+            [['is_internal', 'rubric', 'jury_status'], 'integer'],
             [['fullnameSearch','email'], 'string'],
         ];
     }
@@ -54,7 +55,12 @@ class JuryResultSearch extends User
             $query = $query->andWhere(
                 ['r.program_sub' => $this->program_sub]);
         }
-        $query = $query->orderBy('reg_id ASC, user_id ASC');
+        $query = $query->orderBy([
+            'a.status' => SORT_ASC,
+            'a.score' => SORT_DESC,
+            'a.reg_id' => SORT_ASC,
+            'a.user_id' => SORT_ASC,
+        ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -82,6 +88,10 @@ class JuryResultSearch extends User
         ]); */
 
         $query->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);
+
+        if($this->jury_status !== null && $this->jury_status !== ''){
+            $query->andWhere(['a.status' => (int)$this->jury_status]);
+        }
 
         return $dataProvider;
     }
