@@ -47,16 +47,14 @@ class CertificateExcellence
 
     public function writeData()
     { 
-        //$left = $this->template->margin_left + 0;
-
-        $left = 70;
+        $left = $this->template->textLeft(70);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
             $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetXY($left,101);
+            $this->pdf->SetXY($left,$this->template->textTop('field1_mt', 101));
             $this->html_award();
             $this->pdf->SetX($left);
 
@@ -74,11 +72,11 @@ class CertificateExcellence
     {
 
 
-        $margin_name = $this->template->name_mt;
-        $size = 23;
+        $margin_name = $this->template->textTop('name_mt', 0);
+        $size = $this->template->textSize('name_size', 23);
         $kira = $this->model->memberCountAll;
         if($kira > 10){
-            $size = 21;
+            $size = min($size, 21);
         }
 
         $html = '<table border="0">
@@ -125,7 +123,7 @@ EOD;
 
             $html .= '
 <tr><td></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:26px"><span style="color:#DA9100">
+<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field1_size', 26) . 'px"><span style="color:#DA9100">
 ' . strtoupper($this->model->achieve_name) . '</span></td></tr>';
         
         $html .= '</table>';
@@ -154,7 +152,7 @@ EOD;
 
             $html .= '
 <tr><td height="53"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:20px">
+<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field2_size', 20) . 'px">
 ' . strtoupper($this->model->programNameLong) . '</td></tr>';
         
         $html .= '</table>';
@@ -200,8 +198,7 @@ EOD;
         // set margins
         // $this->pdf->SetMargins(25, 10, PDF_MARGIN_RIGHT);
 
-        //$right = $this->template->margin_right + 0;
-        $right = 11;
+        $right = $this->template->textRight(11);
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

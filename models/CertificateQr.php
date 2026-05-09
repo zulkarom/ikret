@@ -47,8 +47,7 @@ class CertificateQr
 
     public function writeData()
     { 
-        //$left = $this->template->margin_left + 0;
-        $left = 72;
+        $left = $this->template->textLeft(72);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
@@ -68,7 +67,7 @@ class CertificateQr
     {
 
 
-        $margin_name = $this->template->name_mt;
+        $margin_name = $this->template->textTop('name_mt', 0);
 
         $html = '<table border="0">
 <tr>
@@ -78,7 +77,7 @@ class CertificateQr
         $html .= '<table border="0" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
-            $size = 28;
+            $size = $this->template->textSize('name_size', 28);
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';
@@ -130,7 +129,7 @@ EOD;
         // $this->pdf->SetMargins(25, 10, PDF_MARGIN_RIGHT);
 
         //$right = $this->template->margin_right + 0;
-        $right = 14;
+        $right = $this->template->textRight(14);
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

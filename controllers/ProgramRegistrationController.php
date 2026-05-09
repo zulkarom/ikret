@@ -89,7 +89,7 @@ class ProgramRegistrationController extends Controller
     }
 
     public function actionJuryCertPdf($p, $s = null, $u = null){
-        if(!$this->ensureCertificatesReleased(true)){
+        if(!$this->ensureCertificatesReleased(true, 3)){
             return $this->render('empty');
         }
 
@@ -122,29 +122,34 @@ class ProgramRegistrationController extends Controller
         return false;
     }
 
-    private function ensureCertificatesReleased($allowPrivileged = true)
+    private function ensureCertificatesReleased($allowPrivileged = true, $templateId = null)
     {
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
 
-        if(Setting::areCertificatesReleased()){
-            return true;
+        if(!Setting::areCertificatesReleased()){
+            $releaseDate = Setting::certificateReleaseText();
+            $message = $releaseDate
+                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+                : 'Certificates have not been published.';
+            Yii::$app->session->addFlash('info', $message);
+
+            return false;
         }
 
-        $releaseDate = Setting::certificateReleaseText();
-        $message = $releaseDate
-            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-            : 'Certificates have not been published.';
-        Yii::$app->session->addFlash('info', $message);
+        if($templateId !== null && !CertificateTemplate::isPublished($templateId)){
+            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            return false;
+        }
 
-        return false;
+        return true;
     }
 
     public function actionJuryCertPage($u=null)
     {
         $admin = $u && Yii::$app->user->identity->isManager;
-        if(!$this->ensureCertificatesReleased($admin)){
+        if(!$this->ensureCertificatesReleased($admin, 3)){
             return $this->render("empty");
         }
         if($u){
@@ -421,6 +426,49 @@ class ProgramRegistrationController extends Controller
             'title' => 'View Result',
             'write' => false,
         ]);
+    }
+
+    public function actionReturnResultJudging($id)
+    {
+        if(!Yii::$app->user->identity->isAdminJury) return false;
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        $assign = $this->findAssignment($id);
+        if((int)$assign->status !== 20){
+            Yii::$app->session->addFlash('info', 'This result is already open for judging.');
+            return $this->redirect(['view-result', 'id' => $assign->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try{
+            $assign->status = 10;
+            $assign->updated_at = time();
+            $assign->save(false, ['status', 'updated_at']);
+
+            $answer = RubricAnswer::findOne([
+                'rubric_id' => $assign->rubric_id,
+                'assignment_id' => $assign->id,
+            ]);
+            if($answer){
+                $answer->submitted_at = null;
+                $answer->save(false, ['submitted_at']);
+            }
+
+            if($assign->registration){
+                $assign->registration->setScoreAndAward();
+                $assign->registration->save(false, ['score', 'award']);
+            }
+
+            $transaction->commit();
+            Yii::$app->session->addFlash('success', 'Result returned as Judging.');
+        }catch(\Throwable $e){
+            $transaction->rollBack();
+            Yii::$app->session->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirect(['view-result', 'id' => $assign->id]);
     }
 
     public function actionAchieveDelete($id){

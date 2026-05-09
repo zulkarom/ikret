@@ -16,6 +16,10 @@ $formName =  $model->formName();
 $edit = $edit ?? false;
 $program = $program ?? null;
 $programSub = $programSub ?? null;
+$canReturnResultJudging = !$write
+    && !Yii::$app->user->isGuest
+    && Yii::$app->user->identity->isAdminJury
+    && (int)$assign->status === 20;
 $groupBadgeHtml = '';
 $participantInfoHtml = $register ? $register->shortFieldsHtml : '';
 $participantMembersHtml = '';
@@ -681,6 +685,17 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
             </div>
         </div>
         <?php } ?>
+
+<?php if($canReturnResultJudging){ ?>
+    <div class="mb-3">
+        <?= Html::beginForm(['return-result-judging', 'id' => $assign->id], 'post') ?>
+            <?= Html::submitButton('Return as Judging', [
+                'class' => 'btn btn-warning',
+                'data-confirm' => 'Return this completed result to Judging so the jury can edit and submit again?',
+            ]) ?>
+        <?= Html::endForm() ?>
+    </div>
+<?php } ?>
 
 
 <?php if($assign->status <= 10 || $write == false){?>

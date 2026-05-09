@@ -10,7 +10,6 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\PasswordResetRequestForm;
-use app\models\QuestionnaireAnswer;
 use app\models\JuryApplication;
 use app\models\JuryApplyForm;
 use app\models\JuryAssign;
@@ -76,15 +75,6 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        if (!Yii::$app->user->isGuest) {
-            if(Yii::$app->user->identity->isParticipant){
-                $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
-                if(!$check){
-                    Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
-                }
-            }
-        }
-
         $curr = Session::find()
         ->where(['<', 'datetime_start', new Expression('NOW()')])
         ->andWhere(['>', 'datetime_end', new Expression('NOW()')])

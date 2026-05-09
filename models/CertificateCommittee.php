@@ -47,8 +47,7 @@ class CertificateCommittee
 
     public function writeData()
     { 
-        //$left = $this->template->margin_left + 0;
-        $left = 75;
+        $left = $this->template->textLeft(75);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
@@ -70,7 +69,7 @@ class CertificateCommittee
     {
 
 
-        $margin_name = $this->template->name_mt;
+        $margin_name = $this->template->textTop('name_mt', 0);
 
         $html = '<table border="0">
 <tr>
@@ -80,7 +79,7 @@ class CertificateCommittee
         $html .= '<table border="0" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
-            $size = $this->template->name_size;
+            $size = $this->template->textSize('name_size', 27);
             $html .= '
 <tr><td height="' . $margin_name . '"></td></tr>
 <tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
@@ -121,8 +120,8 @@ EOD;
 		}
 
             $html .= '
-<tr><td height="100"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:23px">
+<tr><td height="' . $this->template->textTop('field1_mt', 100) . '"></td></tr>
+<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field1_size', 23) . 'px">
 ' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
         
         $html .= '</table>';
@@ -168,7 +167,7 @@ EOD;
 
         //$right = $this->template->margin_right + 0;
 
-        $right = 12;
+        $right = $this->template->textRight(12);
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

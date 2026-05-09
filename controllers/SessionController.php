@@ -78,6 +78,7 @@ class SessionController extends Controller
             'list' => $list,
             'certificatesReleased' => Setting::areCertificatesReleased(),
             'certificateReleaseText' => Setting::certificateReleaseText(),
+            'sessionCertificatePublished' => CertificateTemplate::isPublished(7),
         ]);
     }
 
@@ -188,17 +189,13 @@ class SessionController extends Controller
     }
 
     public function actionCertQr($u = null){
+        if(!$this->ensureCertificateAvailable(6, false)){
+            return $this->render('empty');
+        }
+
         if(Yii::$app->user->identity->isManager && $u){
             $user = User::findOne($u);
         }else{
-            if(!Setting::areCertificatesReleased()){
-                $releaseDate = Setting::certificateReleaseText();
-                $message = $releaseDate
-                    ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-                    : 'The certificates are expected to be released soon.';
-                Yii::$app->session->addFlash('info', $message);
-                return $this->render('empty');
-            }
             $user = Yii::$app->user->identity;
         }
         $att = SessionAttendance::findOne(['user_id' => $user->id]);
@@ -217,12 +214,7 @@ class SessionController extends Controller
 
     public function actionAttendanceCert($id)
     {
-        if(!Setting::areCertificatesReleased()){
-            $releaseDate = Setting::certificateReleaseText();
-            $message = $releaseDate
-                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-                : 'The certificates are expected to be released soon.';
-            Yii::$app->session->addFlash('info', $message);
+        if(!$this->ensureCertificateAvailable(7, false)){
             return $this->render('empty');
         }
 
@@ -247,6 +239,29 @@ class SessionController extends Controller
         $pdf->model = $session;
         $pdf->generatePdf();
         exit;
+    }
+
+    private function ensureCertificateAvailable($templateId, $allowPrivileged = true)
+    {
+        if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
+            return true;
+        }
+
+        if(!Setting::areCertificatesReleased()){
+            $releaseDate = Setting::certificateReleaseText();
+            $message = $releaseDate
+                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+                : 'The certificates are expected to be released soon.';
+            Yii::$app->session->addFlash('info', $message);
+            return false;
+        }
+
+        if(!CertificateTemplate::isPublished($templateId)){
+            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            return false;
+        }
+
+        return true;
     }
 
     /**

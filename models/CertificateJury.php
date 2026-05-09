@@ -47,19 +47,13 @@ class CertificateJury
 
     public function writeData()
     { 
-        //$left = $this->template->margin_left + 0;
-        $left = 75;
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetX($left);
             $this->html_position();
-            $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('iniriaserif', '', 10);
-            $this->pdf->SetXY($left,0);
         } else {
             $html = $this->template->custom_html;
         }
@@ -72,35 +66,9 @@ class CertificateJury
     {
 
 
-        $margin_name = $this->template->name_mt;
-
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            $size = $this->template->name_size;
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:28px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $top = $this->template->textTop('name_mt', 255);
+        $size = $this->template->textSize('name_size', 28);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</span>');
     }
 
     public function html_position()
@@ -109,28 +77,57 @@ EOD;
         die();
          */
         //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-            //$size = $this->template->field1_size;
+        $top = $this->template->textTop('field1_mt', 700);
+        $size = $this->template->textSize('field1_size', 21);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->registration->programNameLong) . '</span>');
+    }
 
+    protected function writeTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
+        }
 
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
 
-            $html .= '
-<tr><td height="210"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:21px">
-' . strtoupper($this->model->registration->programNameLong) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
 
-$tbl = <<<EOD
-$html
-EOD;
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
 
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        if ($value > $pageHeight) {
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
+    protected function horizontalMargin($attribute)
+    {
+        return $this->template->$attribute === null || $this->template->$attribute === '' ? 0 : max(0, (float)$this->template->$attribute);
+    }
+
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
+
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     public function startPage()
@@ -165,7 +162,7 @@ EOD;
 
         //$right = $this->template->margin_right + 0;
 
-        $right = 14;
+        $right = $this->template->textRight(14);
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);

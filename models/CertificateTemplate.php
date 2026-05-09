@@ -35,6 +35,8 @@ use Yii;
  */
 class CertificateTemplate extends \yii\db\ActiveRecord
 {
+    public $template_upload;
+
     /**
      * {@inheritdoc}
      */
@@ -54,6 +56,7 @@ class CertificateTemplate extends \yii\db\ActiveRecord
             [['custom_html', 'template_file'], 'string'],
             [['updated_at', 'published_at', 'publish_date'], 'safe'],
             [['template_name'], 'string', 'max' => 255],
+            [['template_upload'], 'file', 'skipOnEmpty' => true, 'extensions' => ['jpg', 'jpeg', 'png'], 'maxSize' => 1024 * 1024 * 10],
         ];
     }
 
@@ -88,6 +91,66 @@ class CertificateTemplate extends \yii\db\ActiveRecord
             'published_at' => 'Published At',
             'publish_date' => 'Publish Date',
             'align' => 'Align',
+            'template_upload' => 'Upload Template',
         ];
+    }
+
+    public function getOrientationLabel()
+    {
+        return (int)$this->is_portrait === 1 ? 'Portrait' : 'Landscape';
+    }
+
+    public function getAlignLabel()
+    {
+        $list = static::alignOptions();
+        return isset($list[(int)$this->align]) ? $list[(int)$this->align] : 'Center';
+    }
+
+    public static function alignOptions()
+    {
+        return [
+            1 => 'Left',
+            2 => 'Right',
+            3 => 'Center',
+        ];
+    }
+
+    public static function orientationOptions()
+    {
+        return [
+            0 => 'Landscape',
+            1 => 'Portrait',
+        ];
+    }
+
+    public static function isPublished($id)
+    {
+        $model = static::findOne((int)$id);
+        return $model && (int)$model->published === 1;
+    }
+
+    public function textLeft($default)
+    {
+        return $this->margin_left === null || $this->margin_left === '' || (float)$this->margin_left <= 0 ? $default : (float)$this->margin_left;
+    }
+
+    public function textRight($default)
+    {
+        return $this->margin_right === null || $this->margin_right === '' || (float)$this->margin_right <= 0 ? $default : (float)$this->margin_right;
+    }
+
+    public function textTop($attribute, $default)
+    {
+        if ($this->$attribute === null || $this->$attribute === '') {
+            return $default;
+        }
+
+        $value = (float)$this->$attribute;
+        return $value > 500 ? $default : $value;
+    }
+
+    public function textSize($attribute, $default)
+    {
+        return $this->$attribute === null || $this->$attribute === '' ? $default : (float)$this->$attribute;
     }
 }

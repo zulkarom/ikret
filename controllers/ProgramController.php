@@ -78,11 +78,6 @@ class ProgramController extends Controller
     {
         //Yii::$app->session->addFlash('success', "hai");
 
-        $check = QuestionnaireAnswer::findOne(['user_id' => Yii::$app->user->identity->id]);
-        if(!$check){
-            Yii::$app->session->addFlash('info', "You need to answer <a href='".Url::to(['program/prequestion'])."'>pre-event questionnaire</a> before registering to any program below.");
-        }
-
         $registered = ProgramRegistration::find()
         ->where(['user_id' => Yii::$app->user->identity->id])
         ->all();
@@ -2056,7 +2051,13 @@ class ProgramController extends Controller
             'registered' => $registered,
             'medals' => $medals,
             'excel' => $excel,
-            'sessions' => $session
+            'sessions' => $session,
+            'publishedTemplates' => [
+                1 => CertificateTemplate::isPublished(1),
+                4 => CertificateTemplate::isPublished(4),
+                5 => CertificateTemplate::isPublished(5),
+                7 => CertificateTemplate::isPublished(7),
+            ],
         ]);
     }
 
@@ -2775,27 +2776,32 @@ class ProgramController extends Controller
         return $mentor;
     }
 
-    private function ensureCertificatesReleased($allowPrivileged = true)
+    private function ensureCertificatesReleased($allowPrivileged = true, $templateId = null)
     {
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
 
-        if(Setting::areCertificatesReleased()){
-            return true;
+        if(!Setting::areCertificatesReleased()){
+            $releaseDate = Setting::certificateReleaseText();
+            $message = $releaseDate
+                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+                : 'The certificates are expected to be released soon.';
+            Yii::$app->session->addFlash('info', $message);
+
+            return false;
         }
 
-        $releaseDate = Setting::certificateReleaseText();
-        $message = $releaseDate
-            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-            : 'The certificates are expected to be released soon.';
-        Yii::$app->session->addFlash('info', $message);
+        if($templateId !== null && !CertificateTemplate::isPublished($templateId)){
+            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            return false;
+        }
 
-        return false;
+        return true;
     }
 
     public function actionCertParticipation($reg){
-        if(!$this->ensureCertificatesReleased()){
+        if(!$this->ensureCertificatesReleased(true, 1)){
             return $this->render('empty');
         }
 
@@ -2814,7 +2820,7 @@ class ProgramController extends Controller
     }
 
     public function actionCertParticipationSession($reg, $s, $u){
-        if(!$this->ensureCertificatesReleased()){
+        if(!$this->ensureCertificatesReleased(true, 7)){
             return $this->render('empty');
         }
 
@@ -2830,7 +2836,7 @@ class ProgramController extends Controller
     }
 
     public function actionCertAchievement($reg){
-        if(!$this->ensureCertificatesReleased()){
+        if(!$this->ensureCertificatesReleased(true, 4)){
             return $this->render('empty');
         }
 
@@ -2846,7 +2852,7 @@ class ProgramController extends Controller
     }
 
     public function actionCertExcellence($reg){
-        if(!$this->ensureCertificatesReleased()){
+        if(!$this->ensureCertificatesReleased(true, 5)){
             return $this->render('empty');
         }
 

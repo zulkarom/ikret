@@ -8,6 +8,7 @@ use yii\helpers\Url;
 /** @var app\models\SessionAttendance[] $list */
 /** @var bool $certificatesReleased */
 /** @var string|null $certificateReleaseText */
+/** @var bool $sessionCertificatePublished */
 
 $this->title = 'Attendance & Certificate';
 $this->params['breadcrumbs'][] = ['label' => 'Sessions', 'url' => ['index']];
@@ -55,8 +56,8 @@ $("#scanner").click(function(){
                         $sessionId = (int)$r->session_id;
                         $certificate = '<span class="text-muted">N/A</span>';
 
-                        if(!$certificatesReleased){
-                            $certificate = '<span class="text-muted">' . Html::encode($certificateReleaseText ?: 'Not released') . '</span>';
+                        if(!$certificatesReleased || !$sessionCertificatePublished){
+                            $certificate = '<span class="text-muted">To be available soon</span>';
                         }else{
                             $certificate = Html::a('<i class="bi bi-download"></i> DOWNLOAD', [
                                 'attendance-cert',

@@ -4,6 +4,7 @@ use app\models\UserRole;
 use app\models\Program;
 use app\models\ProgramSub;
 use app\models\AppSetting;
+use app\models\CertificateTemplate;
 use app\models\Setting;
 use yii\helpers\Url;
 
@@ -13,6 +14,9 @@ use yii\helpers\Url;
       <?php
       
       $certificatesReleased = Setting::areCertificatesReleased();
+      $participantCertificatesPublished = CertificateTemplate::isPublished(1) || CertificateTemplate::isPublished(4) || CertificateTemplate::isPublished(5) || CertificateTemplate::isPublished(7);
+      $juryCertificatePublished = CertificateTemplate::isPublished(3);
+      $committeeCertificatePublished = CertificateTemplate::isPublished(2);
 
       $menu[] = ['name' => 'Home', 'url' => ['/'], 'icon' => 'bi bi-house'];
       if(AppSetting::getBool('call_for_juries_enabled', true)){
@@ -29,7 +33,7 @@ use yii\helpers\Url;
       }else{
 
         $menu[] = ['name' => 'Dashboard', 'url' => ['/site/dashboard'], 'icon' => 'bi bi-speedometer2'];
-        $menu[] = ['name' => $certificatesReleased ? 'Attendance & Certificate' : 'Attendance', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
+        $menu[] = ['name' => 'Attendance & Certificate', 'url' => ['/session/participant'], 'icon' => 'bi bi-upc-scan'];
      
 
         if(Yii::$app->user->identity->isParticipant){
@@ -97,7 +101,7 @@ use yii\helpers\Url;
         }
 
         if(Yii::$app->user->identity->isMentor){
-          $menu[] = ['name' => 'Mentor Menu', 'heading' => true];
+          //$menu[] = ['name' => 'Mentor Menu', 'heading' => true];
           if($certificatesReleased){
             $menu[] = ['name' => 'Mentees & Certificates', 'url' => ['/program-registration/mentor-mentees'], 'icon' => 'bi bi-file-earmark-medical'];
           }
@@ -265,6 +269,7 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
               ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
               ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
+              ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
               ['name' => 'Settings', 'url' => ['/setting/update']],
             ]];
           }

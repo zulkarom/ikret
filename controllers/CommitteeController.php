@@ -206,7 +206,7 @@ class CommitteeController extends Controller
     }
 
     public function actionCertificate($id){
-        if(!$this->ensureCertificatesReleased()){
+        if(!$this->ensureCertificatesReleased(true, 2)){
             return $this->render('empty');
         }
 
@@ -232,29 +232,34 @@ class CommitteeController extends Controller
         return false;
     }
 
-    private function ensureCertificatesReleased($allowPrivileged = true)
+    private function ensureCertificatesReleased($allowPrivileged = true, $templateId = null)
     {
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
 
-        if(Setting::areCertificatesReleased()){
-            return true;
+        if(!Setting::areCertificatesReleased()){
+            $releaseDate = Setting::certificateReleaseText();
+            $message = $releaseDate
+                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
+                : 'Certificates have not been published.';
+            Yii::$app->session->addFlash('info', $message);
+
+            return false;
         }
 
-        $releaseDate = Setting::certificateReleaseText();
-        $message = $releaseDate
-            ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-            : 'Certificates have not been published.';
-        Yii::$app->session->addFlash('info', $message);
+        if($templateId !== null && !CertificateTemplate::isPublished($templateId)){
+            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            return false;
+        }
 
-        return false;
+        return true;
     }
 
     public function actionCertificatePage()
     {
         if(!Yii::$app->user->identity->isCommittee) return false;
-        if(!$this->ensureCertificatesReleased(false)){
+        if(!$this->ensureCertificatesReleased(false, 2)){
             return $this->render('empty');
         }
 

@@ -47,19 +47,13 @@ class CertificateSession
 
     public function writeData()
     { 
-        //$left = $this->template->margin_left + 0;
-        $left = 75;
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetXY($left,65);
             $this->html_position();
-            $this->pdf->SetXY($left,110);
             $this->html_program();
-            $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('iniriaserif', '', 10);
         } else {
             $html = $this->template->custom_html;
@@ -71,35 +65,9 @@ class CertificateSession
     {
 
 
-        $margin_name = $this->template->name_mt;
-
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            $size = $this->template->name_size;
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $top = $this->template->textTop('name_mt', 350);
+        $size = $this->template->textSize('name_size', 27);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</span>');
     }
 
     public function html_position()
@@ -109,30 +77,11 @@ EOD;
          */
         //$margin_name = $this->template->field1_mt;
         //echo $this->model->session_name;die();
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-
-
-            $speaker = trim((string)$this->model->speaker);
-            $speakerHtml = $speaker === '' ? '' : '<br/><span style="font-size:16px">BY ' . strtoupper($speaker) . '</span>';
-
-            $html .= '
-<tr><td height="100"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($this->model->session_name) . $speakerHtml . '
-</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $speaker = trim((string)$this->model->speaker);
+        $speakerHtml = $speaker === '' ? '' : '<br/><span style="font-size:16px">BY ' . strtoupper($speaker) . '</span>';
+        $top = $this->template->textTop('field1_mt', 410);
+        $size = $this->template->textSize('field1_size', 23);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->session_name) . $speakerHtml . '</span>');
     }
 
     public function html_program()
@@ -141,27 +90,57 @@ EOD;
         die();
          */
         //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
+        $top = $this->template->textTop('field2_mt', 480);
+        $size = $this->template->textSize('field2_size', 23);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->program_name) . '</span>');
+    }
 
+    protected function writeTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
+        }
 
-            $html .= '
-<tr><td height="55"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:23px">
-' . strtoupper($this->model->program_name) . '
-</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
 
-$tbl = <<<EOD
-$html
-EOD;
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
 
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
+
+        if ($value > $pageHeight) {
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
+    protected function horizontalMargin($attribute)
+    {
+        return $this->template->$attribute === null || $this->template->$attribute === '' ? 0 : max(0, (float)$this->template->$attribute);
+    }
+
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
+
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     public function startPage()
@@ -196,7 +175,7 @@ EOD;
 
         //$right = $this->template->margin_right + 0;
 
-        $right = 12;
+        $right = $this->template->textRight(12);
 
         $this->pdf->SetMargins(0, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
