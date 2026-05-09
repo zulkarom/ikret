@@ -7,6 +7,7 @@ use yii\helpers\Url;
 $this->title = 'Judging Sessions';
 
 $modeList = RubricJudgingSession::listMode();
+$juryStatusCounts = $juryStatusCounts ?? [];
 $programId = (int)$programId;
 $programSubSelected = $programSubId === null ? '' : (string)(int)$programSubId;
 
@@ -142,12 +143,15 @@ $formatDatetimeRange = function($startValue, $endValue) use ($formatDatetime){
                         <th>Session / Date Time</th>
                         <th>Program / Sub</th>
                         <th>Location / Mode</th>
+                        <th style="width: 120px;">Juries Assigned</th>
+                        <th style="width: 120px;">Juries Judging</th>
+                        <th style="width: 120px;">Juries Complete</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if(!$rows){ ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No judging sessions found.</td>
+                            <td colspan="8" class="text-center text-muted py-4">No judging sessions found.</td>
                         </tr>
                     <?php } ?>
                     <?php foreach($rows as $index => $row){ ?>
@@ -156,6 +160,10 @@ $formatDatetimeRange = function($startValue, $endValue) use ($formatDatetime){
                         if($row['sub_name']){
                             $programLabel .= ' / ' . $row['sub_name'];
                         }
+                        $sessionCounts = $juryStatusCounts[(int)$row['session_id']] ?? [];
+                        $assignedCount = (int)($sessionCounts[0] ?? 0);
+                        $judgingCount = (int)($sessionCounts[10] ?? 0);
+                        $completeCount = (int)($sessionCounts[20] ?? 0);
                         ?>
                         <tr>
                             <td>
@@ -173,6 +181,9 @@ $formatDatetimeRange = function($startValue, $endValue) use ($formatDatetime){
                                 <?= $row['location'] ? Html::encode($row['location']) : '<span class="text-muted">-</span>' ?>
                                 <div>(<?= Html::encode($modeList[(int)$row['mode']] ?? '-') ?>)</div>
                             </td>
+                            <td><span class="badge bg-warning"><?= $assignedCount ?></span></td>
+                            <td><span class="badge bg-primary"><?= $judgingCount ?></span></td>
+                            <td><span class="badge bg-success"><?= $completeCount ?></span></td>
                         </tr>
                     <?php } ?>
                 </tbody>

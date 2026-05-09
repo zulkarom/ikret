@@ -90,6 +90,7 @@ class SiteController extends Controller
         if($kira_curr < 4){
             $next = Session::find()
             ->where(['>', 'datetime_start', new Expression('NOW()')])
+            ->orderBy(['datetime_start' => SORT_ASC, 'id' => SORT_ASC])
             ->limit(4)
             ->all();
         }

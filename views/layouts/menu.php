@@ -271,12 +271,14 @@ use yii\helpers\Url;
               ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
               ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
               ['name' => 'Settings', 'url' => ['/setting/update']],
+              ['name' => 'Settings Media', 'url' => ['/setting/media']],
             ]];
           }
 
           if(Yii::$app->user->identity->isAdminRegistration){
             $menu[] = ['name' => 'Registration', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
               ['name' => 'All Registration', 'url' => ['/program-registration/index']],
+              ['name' => 'All Program/Sub', 'url' => ['/program/admin-registration-status']],
               ['name' => 'Event Session List', 'url' => ['/session/index']],
               ['name' => 'Event Attendance List', 'url' => ['/session/attendance']],
             ]];

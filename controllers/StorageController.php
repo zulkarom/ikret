@@ -67,6 +67,15 @@ class StorageController extends Controller
                     $settingController = new SettingController('setting', Yii::$app);
 
                     return $settingController->actionUpdate($id, ['/setting/update', 'id' => $id]);
+                case 'setting-media-update':
+                    if (Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdmin) {
+                        throw new ForbiddenHttpException('You are not allowed to update settings media.');
+                    }
+
+                    $id = Yii::$app->request->post('id', 1);
+                    $settingController = new SettingController('setting', Yii::$app);
+
+                    return $settingController->actionMedia($id, ['/setting/media', 'id' => $id]);
                 default:
                     throw new BadRequestHttpException('Invalid storage action.');
             }

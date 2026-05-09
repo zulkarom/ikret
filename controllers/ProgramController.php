@@ -375,6 +375,45 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function actionAdminRegistrationStatus()
+    {
+        if(Yii::$app->user->isGuest || (!Yii::$app->user->identity->isAdmin && !Yii::$app->user->identity->isAdminRegistration)){
+            return false;
+        }
+
+        $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
+        if(!$programTable || !$programTable->getColumn('reg_closed')){
+            throw new NotFoundHttpException('Registration status column is not available.');
+        }
+
+        if(Yii::$app->request->isPost){
+            $programId = (int)Yii::$app->request->post('program_id');
+            $regClosed = (int)Yii::$app->request->post('reg_closed', 0) === 1 ? 1 : 0;
+            $program = Program::findOne($programId);
+
+            if($program){
+                $program->setAttribute('reg_closed', $regClosed);
+                if($program->save(false, ['reg_closed'])){
+                    Yii::$app->session->addFlash('success', 'Registration status updated.');
+                }else{
+                    Yii::$app->session->addFlash('error', 'Unable to update registration status.');
+                }
+            }else{
+                Yii::$app->session->addFlash('error', 'Program not found.');
+            }
+
+            return $this->redirect(['admin-registration-status']);
+        }
+
+        $programs = Program::find()
+            ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
+            ->all();
+
+        return $this->render('admin_registration_status', [
+            'programs' => $programs,
+        ]);
+    }
+
     public function actionAdminJudgingSessions()
     {
         if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isAdminJury) return false;
@@ -493,12 +532,37 @@ class ProgramController extends Controller
             ])
             ->all();
 
+        $sessionIds = array_values(array_unique(array_map(function($row){
+            return (int)$row['session_id'];
+        }, $rows)));
+        $juryStatusCounts = [];
+
+        if($sessionIds){
+            $statusRows = (new Query())
+                ->select([
+                    'judging_session_id' => 'j.judging_session_id',
+                    'status' => 'j.status',
+                    'total' => new Expression('COUNT(*)'),
+                ])
+                ->from(['j' => JuryAssign::tableName()])
+                ->where(['j.judging_session_id' => $sessionIds])
+                ->groupBy(['j.judging_session_id', 'j.status'])
+                ->all();
+
+            foreach($statusRows as $statusRow){
+                $sessionId = (int)$statusRow['judging_session_id'];
+                $status = (int)$statusRow['status'];
+                $juryStatusCounts[$sessionId][$status] = (int)$statusRow['total'];
+            }
+        }
+
         return $this->render('admin_judging_sessions', [
             'rows' => $rows,
             'programs' => $programs,
             'subs' => $subs,
             'programId' => $programId,
             'programSubId' => $programSubId,
+            'juryStatusCounts' => $juryStatusCounts,
         ]);
     }
 
