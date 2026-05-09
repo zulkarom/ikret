@@ -30,7 +30,7 @@ class Program extends \yii\db\ActiveRecord
         return [
             [['program_name','date_start', 'date_end', 'reg_info'], 'required'],
 
-            [['date_start', 'date_end'], 'safe'],
+            [['date_start', 'date_end', 'allow_edit_reg_until'], 'safe'],
 
             [['public_reg_enabled'], 'integer'],
 
@@ -60,6 +60,7 @@ class Program extends \yii\db\ActiveRecord
             'reg_info' => 'Registration Information',
             'public_reg_enabled' => 'Enable Public Registration',
             'reg_closed' => 'Close Registration',
+            'allow_edit_reg_until' => 'Allow Edit Registration Until',
             'is_active' => 'Active'
         ];
     }

@@ -34,6 +34,9 @@ $this->title = 'Available Programs';
                                     <div class="small text-muted">
                                         <?= StringHelper::truncateWords(strip_tags((string)$program->reg_info), 30) ?>
                                     </div>
+                                    <div class="mt-2">
+                                        <?= Html::a('Edit Registration', ['public-edit-login', 'id' => $program->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
+                                    </div>
                                 </div>
                                 <div class="text-md-end">
                                     <?php if($isClosed){ ?>
@@ -41,9 +44,6 @@ $this->title = 'Available Programs';
                                     <?php }else{ ?>
                                         <?= Html::a('Register', ['public-register-form', 'id' => $program->id], ['class' => 'btn btn-primary']) ?>
                                     <?php } ?>
-                                    <div class="mt-2">
-                                        <?= Html::a('Edit', ['public-edit-login', 'id' => $program->id], ['class' => '']) ?>
-                                    </div>
                                 </div>
                             </div>
                         </div>

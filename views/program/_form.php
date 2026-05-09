@@ -70,6 +70,18 @@ use yii\helpers\Html;
 
     <?= $form->field($model, 'reg_closed')->checkbox() ?>
 
+    <?php if($model->hasAttribute('allow_edit_reg_until')){ ?>
+        <?= $form->field($model, 'allow_edit_reg_until')->widget(DatePicker::classname(), [
+            'removeButton' => false,
+            'pickerIcon' => '<i class="bi bi-calendar"></i>',
+            'pluginOptions' => [
+                'autoclose'=>true,
+                'format' => 'yyyy-mm-dd',
+                'todayHighlight' => true,
+            ],
+        ]) ?>
+    <?php } ?>
+
     <?= $form->field($model, 'has_sub')->checkbox() ?>
 
     <div class="form-group">

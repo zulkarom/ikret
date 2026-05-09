@@ -388,15 +388,49 @@ class ProgramController extends Controller
 
         if(Yii::$app->request->isPost){
             $programId = (int)Yii::$app->request->post('program_id');
-            $regClosed = (int)Yii::$app->request->post('reg_closed', 0) === 1 ? 1 : 0;
-            $program = Program::findOne($programId);
+            $action = Yii::$app->request->post('action');
 
-            if($program){
-                $program->setAttribute('reg_closed', $regClosed);
-                if($program->save(false, ['reg_closed'])){
-                    Yii::$app->session->addFlash('success', 'Registration status updated.');
+            if($action === 'general-edit-deadline'){
+                $setting = Setting::findOne(1);
+                if($setting){
+                    $allowEditRegUntil = trim((string)Yii::$app->request->post('allow_edit_reg_until', ''));
+                    $setting->allow_edit_reg_until = $allowEditRegUntil !== '' ? $allowEditRegUntil : null;
+
+                    if($setting->save(false, ['allow_edit_reg_until'])){
+                        Yii::$app->session->addFlash('success', 'General last edit date updated.');
+                    }else{
+                        Yii::$app->session->addFlash('error', 'Unable to update general last edit date.');
+                    }
                 }else{
-                    Yii::$app->session->addFlash('error', 'Unable to update registration status.');
+                    Yii::$app->session->addFlash('error', 'General settings record not found.');
+                }
+
+                return $this->redirect(['admin-registration-status']);
+            }
+
+            $program = Program::findOne($programId);
+            if($program){
+                if($action === 'edit-deadline'){
+                    if(!$programTable->getColumn('allow_edit_reg_until')){
+                        throw new NotFoundHttpException('Program edit deadline column is not available.');
+                    }
+
+                    $allowEditRegUntil = trim((string)Yii::$app->request->post('allow_edit_reg_until', ''));
+                    $program->setAttribute('allow_edit_reg_until', $allowEditRegUntil !== '' ? $allowEditRegUntil : null);
+
+                    if($program->save(false, ['allow_edit_reg_until'])){
+                        Yii::$app->session->addFlash('success', 'Last edit date updated.');
+                    }else{
+                        Yii::$app->session->addFlash('error', 'Unable to update last edit date.');
+                    }
+                }else{
+                    $regClosed = (int)Yii::$app->request->post('reg_closed', 0) === 1 ? 1 : 0;
+                    $program->setAttribute('reg_closed', $regClosed);
+                    if($program->save(false, ['reg_closed'])){
+                        Yii::$app->session->addFlash('success', 'Registration status updated.');
+                    }else{
+                        Yii::$app->session->addFlash('error', 'Unable to update registration status.');
+                    }
                 }
             }else{
                 Yii::$app->session->addFlash('error', 'Program not found.');
@@ -405,12 +439,46 @@ class ProgramController extends Controller
             return $this->redirect(['admin-registration-status']);
         }
 
-        $programs = Program::find()
+        $programQuery = Program::find();
+        if($programTable && $programTable->getColumn('is_active')){
+            $programQuery->andWhere(['is_active' => 1]);
+        }
+        if($programTable && $programTable->getColumn('status')){
+            $programQuery->andWhere(['status' => 10]);
+        }
+
+        $programs = $programQuery
             ->orderBy(['date_start' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
 
+        $programIds = array_map(function($program){
+            return (int)$program->id;
+        }, $programs);
+        $subsByProgram = [];
+
+        if($programIds){
+            $subQuery = ProgramSub::find()
+                ->where(['program_id' => $programIds])
+                ->orderBy(['program_id' => SORT_ASC, 'id' => SORT_ASC]);
+            $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+
+            if($subTable && $subTable->getColumn('is_active')){
+                $subQuery->andWhere(['is_active' => 1]);
+            }
+            if($subTable && $subTable->getColumn('status')){
+                $subQuery->andWhere(['status' => 10]);
+            }
+
+            foreach($subQuery->all() as $sub){
+                $subsByProgram[(int)$sub->program_id][] = $sub;
+            }
+        }
+
         return $this->render('admin_registration_status', [
             'programs' => $programs,
+            'subsByProgram' => $subsByProgram,
+            'hasProgramEditDeadline' => (bool)$programTable->getColumn('allow_edit_reg_until'),
+            'setting' => Setting::findOne(1),
         ]);
     }
 
@@ -1777,6 +1845,10 @@ class ProgramController extends Controller
         if($reg){
             $register = $this->findRegistration($reg);
             $this->ensurePublicRegistrationAccess($register, $id);
+            if($edit && $this->isProgramEditDeadlinePassed($model)){
+                Yii::$app->session->addFlash('error', 'The last date to edit registration has passed.');
+                return $this->render('empty');
+            }
             $members = $register->members;
             if(empty($members)){
                 $members = [new Member()];
@@ -1835,6 +1907,10 @@ class ProgramController extends Controller
         if($reg){
             $register = $this->findRegistration($reg);
             $this->ensurePublicRegistrationAccess($register, $id);
+            if($edit && $this->isProgramEditDeadlinePassed($model)){
+                Yii::$app->session->addFlash('error', 'The last date to edit registration has passed.');
+                return $this->render('empty');
+            }
             $members = $register->members;
             if(empty($members)){
                 $members = [new Member()];
@@ -2273,11 +2349,9 @@ class ProgramController extends Controller
         if($reg){
             $register = $this->findRegistration($reg);
             $members = $register->members;
-            $set = Setting::findOne(1);
-            $due = strtotime($set->allow_edit_reg_until.' 23:59:59');
             if(Yii::$app->user->identity->id == $register->user_id){
                 if($edit){
-                    if(time() > $due){
+                    if($this->isProgramEditDeadlinePassed($model)){
                         return;
                     }
                 }
@@ -2725,6 +2799,28 @@ class ProgramController extends Controller
         }
 
         return ((int)$program->getAttribute('reg_closed') === 1);
+    }
+
+    protected function getProgramEditDeadlineTimestamp($program)
+    {
+        $editDeadline = null;
+        if($program && $program->hasAttribute('allow_edit_reg_until') && !empty($program->getAttribute('allow_edit_reg_until'))){
+            $editDeadline = $program->getAttribute('allow_edit_reg_until');
+        }else{
+            $setting = Setting::findOne(1);
+            if($setting && !empty($setting->allow_edit_reg_until)){
+                $editDeadline = $setting->allow_edit_reg_until;
+            }
+        }
+
+        return $editDeadline ? strtotime($editDeadline . ' 23:59:59') : null;
+    }
+
+    protected function isProgramEditDeadlinePassed($program)
+    {
+        $due = $this->getProgramEditDeadlineTimestamp($program);
+
+        return $due !== null && time() > $due;
     }
 
     protected function findRubric($id)
