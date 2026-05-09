@@ -137,9 +137,9 @@ class SiteController extends Controller
                 if ($existingEmailUser) {
                     if ($existingEmailUser->validatePassword((string)$model->password)) {
                         $username = strtolower(trim((string)$model->username));
-                        $usernameOwner = User::findOne(['username' => $username]);
+                        $usernameOwner = User::findByUsernameOrEmail($username);
                         if ($usernameOwner && (int)$usernameOwner->id !== (int)$existingEmailUser->id) {
-                            Yii::$app->session->addFlash('error', 'Username is already taken.');
+                            Yii::$app->session->addFlash('error', 'Username or email is already used by another account.');
                         } else {
                             $existingEmailUser->username = $username;
                             $existingEmailUser->matric = $username;
