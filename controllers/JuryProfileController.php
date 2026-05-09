@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\JuryProfile;
+use app\models\JuryManualCreateForm;
 use app\models\JuryProfileSearch;
 use app\models\JuryApplication;
 use app\models\JuryAssign;
@@ -53,6 +54,96 @@ class JuryProfileController extends Controller
         if(!Yii::$app->user->identity->isAdminJury) return false;
 
         return $this->render('import');
+    }
+
+    public function actionCreate()
+    {
+        if(!Yii::$app->user->identity->isAdminJury) return false;
+
+        $model = new JuryManualCreateForm();
+
+        if($this->request->isPost && $model->load($this->request->post()) && $model->validate()){
+            $tx = Yii::$app->db->beginTransaction();
+            try{
+                $email = strtolower(trim((string)$model->email));
+                $user = User::find()->where(['email' => $email])->one();
+                $createdUser = false;
+
+                if(!$user){
+                    $user = new User();
+                    $user->scenario = 'create';
+                    $user->email = $email;
+                    $user->username = $email;
+                    $user->fullname = trim((string)$model->fullname);
+                    $user->status = User::STATUS_ACTIVE;
+                    $user->is_student = 0;
+                    $user->is_internal = 0;
+                    $user->phone = $model->phone;
+                    $user->institution = $model->institution;
+                    $user->generateAuthKey();
+                    $user->setPassword($model->password ? $model->password : $email);
+                    if(!$user->save()){
+                        throw new \RuntimeException('Unable to create user: ' . implode('; ', $user->getFirstErrors()));
+                    }
+                    $createdUser = true;
+                }else{
+                    $user->fullname = trim((string)$model->fullname);
+                    $user->status = User::STATUS_ACTIVE;
+                    $user->is_student = 0;
+                    if($user->phone === null || $user->phone === ''){
+                        $user->phone = $model->phone;
+                    }
+                    if($user->institution === null || $user->institution === ''){
+                        $user->institution = $model->institution;
+                    }
+                    if(!$user->save(false)){
+                        throw new \RuntimeException('Unable to update existing user.');
+                    }
+                }
+
+                $profile = JuryProfile::find()->where(['user_id' => (int)$user->id])->one();
+                if(!$profile){
+                    $profile = new JuryProfile();
+                    $profile->user_id = (int)$user->id;
+                    $profile->created_at = time();
+                }
+
+                $profile->fullname = trim((string)$model->fullname);
+                $profile->category = trim((string)$model->category);
+                $profile->phone = trim((string)$model->phone) !== '' ? trim((string)$model->phone) : null;
+                $profile->institution = trim((string)$model->institution) !== '' ? trim((string)$model->institution) : null;
+                $profile->designation = trim((string)$model->designation) !== '' ? trim((string)$model->designation) : null;
+                $profile->address = trim((string)$model->address) !== '' ? trim((string)$model->address) : null;
+                $profile->updated_at = time();
+
+                if(!$profile->save()){
+                    throw new \RuntimeException('Unable to save jury profile: ' . implode('; ', $profile->getFirstErrors()));
+                }
+
+                $role = UserRole::findOne(['user_id' => (int)$user->id, 'role_name' => 'jury']);
+                if(!$role){
+                    $role = new UserRole();
+                    $role->user_id = (int)$user->id;
+                    $role->role_name = 'jury';
+                }
+                $role->status = 10;
+                $role->approve_at = new Expression('NOW()');
+                if(!$role->save()){
+                    throw new \RuntimeException('Unable to save jury role: ' . implode('; ', $role->getFirstErrors()));
+                }
+
+                $tx->commit();
+                Yii::$app->session->addFlash('success', ($createdUser ? 'Jury user created' : 'Existing user updated') . ' and jury profile saved.');
+                return $this->redirect(['index']);
+            }catch(\Throwable $e){
+                $tx->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
     public function actionImportCsv()

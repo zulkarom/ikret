@@ -20,6 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <section class="section">
     <div class="mb-3">
+        <?= Html::a('Create Jury Manually', ['create'], ['class' => 'btn btn-success']) ?>
         <?= Html::a('Import CSV', ['import'], ['class' => 'btn btn-primary']) ?>
     </div>
 
