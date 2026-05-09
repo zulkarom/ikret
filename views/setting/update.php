@@ -8,6 +8,9 @@ use yii\widgets\ActiveForm;
 /** @var app\models\Setting $model */
 
 $this->title = 'Settings';
+$hasBannerImage = !empty($model->banner_image);
+$hasProgrammeBookQr = !empty($model->programme_book_qr);
+$needsUploadForm = !$hasBannerImage || !$hasProgrammeBookQr;
 
 $this->registerCss(<<<CSS
 .setting-update .form-group {
@@ -36,17 +39,18 @@ CSS);
 
                     <?php $form = ActiveForm::begin([
                         'action' => Url::to(['/storage/index']),
-                        'options' => ['enctype' => 'multipart/form-data'],
+                        'options' => $needsUploadForm ? ['enctype' => 'multipart/form-data'] : [],
                     ]); ?>
 
                     <?= Html::hiddenInput('storage_action', 'setting-update') ?>
                     <?= Html::hiddenInput('id', $model->id) ?>
 
-                    <?= $form->field($model, 'banner_file')->fileInput() ?>
-                    <?php if (!empty($model->banner_image)) { ?>
+                    <?php if ($hasBannerImage) { ?>
                         <div class="mb-3">
                             <?= Html::img(Yii::getAlias('@web') . '/' . ltrim($model->banner_image, '/'), ['style' => 'max-width:100%; max-height:180px; object-fit:cover;']) ?>
                         </div>
+                    <?php } else { ?>
+                        <?= $form->field($model, 'banner_file')->fileInput() ?>
                     <?php } ?>
 
                     <?= $form->field($model, 'show_icreate_list_event')->checkbox() ?>
@@ -55,11 +59,12 @@ CSS);
 
                     <?= $form->field($model, 'program_description')->textarea(['rows' => 6]) ?>
 
-                    <?= $form->field($model, 'programme_book_qr_file')->fileInput() ?>
-                    <?php if (!empty($model->programme_book_qr)) { ?>
+                    <?php if ($hasProgrammeBookQr) { ?>
                         <div class="mb-3">
                             <?= Html::img(Yii::getAlias('@web') . '/' . ltrim($model->programme_book_qr, '/'), ['style' => 'max-width:140px; width:100%;']) ?>
                         </div>
+                    <?php } else { ?>
+                        <?= $form->field($model, 'programme_book_qr_file')->fileInput() ?>
                     <?php } ?>
 
                     <hr />
