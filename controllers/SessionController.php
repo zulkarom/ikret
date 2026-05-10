@@ -189,15 +189,19 @@ class SessionController extends Controller
     }
 
     public function actionCertQr($u = null){
-        if(!$this->ensureCertificateAvailable(6, false)){
+        if(!$this->ensureCertificateAvailable(6, true)){
             return $this->render('empty');
         }
 
-        if(Yii::$app->user->identity->isManager && $u){
+        if((Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin) && $u){
             $user = User::findOne($u);
         }else{
             $user = Yii::$app->user->identity;
         }
+        if(!$user){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         $att = SessionAttendance::findOne(['user_id' => $user->id]);
         if($att){
             $pdf = new CertificateQr;

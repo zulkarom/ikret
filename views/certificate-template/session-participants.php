@@ -1,7 +1,6 @@
 <?php
 
 use app\models\SessionAttendance;
-use app\models\ProgramRegistration;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
@@ -59,24 +58,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             'format' => 'raw',
                             'value' => function(SessionAttendance $model){
                                 $links = [];
-                                $registration = null;
 
-                                if($model->session){
-                                    $registration = ProgramRegistration::find()
-                                        ->where([
-                                            'user_id' => $model->user_id,
-                                            'program_id' => $model->session->program_id,
-                                        ])
-                                        ->andWhere(['>', 'status', ProgramRegistration::STATUS_DRAFT])
-                                        ->orderBy(['id' => SORT_DESC])
-                                        ->one();
-                                }
-
-                                if($registration){
-                                    $links[] = Html::a('Certificate of Participation', ['/program/cert-participation', 'reg' => $registration->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
-                                }
-
-                                $links[] = Html::a('Certificate of Participation Session', ['/session/attendance-cert', 'id' => $model->id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
+                                $links[] = Html::a('Certificate of Participation Session', ['/session/attendance-cert', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
+                                $links[] = Html::a('Certificate of Participation QR', ['/session/cert-qr', 'u' => $model->user_id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
 
                                 return implode(' ', $links);
                             },

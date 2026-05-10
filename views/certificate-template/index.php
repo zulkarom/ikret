@@ -8,6 +8,16 @@ use yii\helpers\Url;
 /** @var app\models\Setting|null $setting */
 
 $this->title = 'Certificate Config';
+
+$certificateDescriptions = [
+    1 => 'Per program registration. Uses participant/member names and the registered program.',
+    2 => 'Committee member certificate.',
+    3 => 'Jury certificate for assigned program judging.',
+    4 => 'Achievement certificate for participants with an award.',
+    5 => 'Excellence certificate for imported excellence achievements.',
+    6 => 'General attendance certificate. Uses the user name after at least one QR/session attendance scan.',
+    7 => 'Per session attendance certificate. Uses attended session details.',
+];
 ?>
 
 <div class="certificate-template-index">
@@ -34,6 +44,7 @@ $this->title = 'Certificate Config';
                                 <tr>
                                     <th width="5%">#</th>
                                     <th>Certificate Type</th>
+                                    <th>Description</th>
                                     <th>Publish Status</th>
                                     <th>Template</th>
                                     <th>Orientation</th>
@@ -46,6 +57,7 @@ $this->title = 'Certificate Config';
                                     <tr>
                                         <td><?= (int)$model->id ?></td>
                                         <td><?= Html::encode(ucwords((string)$model->template_name)) ?></td>
+                                        <td><?= Html::encode($certificateDescriptions[(int)$model->id] ?? '') ?></td>
                                         <td>
                                             <div class="form-check form-switch">
                                                 <?= Html::checkbox('published[' . $model->id . ']', (int)$model->published === 1, ['class' => 'form-check-input', 'id' => 'published-' . $model->id]) ?>
@@ -57,7 +69,7 @@ $this->title = 'Certificate Config';
                                         <td>
                                             <?php if (!empty($model->template_file)): ?>
                                                 <a href="<?= Url::to('@web/images/' . ltrim($model->template_file, '/')) ?>" target="_blank">
-                                                    <?= Html::encode($model->template_file) ?>
+                                                    View
                                                 </a>
                                             <?php else: ?>
                                                 <span class="text-muted">Not uploaded</span>
