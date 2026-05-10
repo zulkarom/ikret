@@ -59,7 +59,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             'value' => function(SessionAttendance $model){
                                 $links = [];
 
-                                $links[] = Html::a('Certificate of Participation Session', ['/session/attendance-cert', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
+                                if($model->session && (int)$model->session->has_session_certificate === 1){
+                                    $links[] = Html::a('Certificate of Participation Session', ['/session/attendance-cert', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
+                                }else{
+                                    $links[] = '<span class="text-muted me-1">No session cert</span>';
+                                }
                                 $links[] = Html::a('Certificate of Participation QR', ['/session/cert-qr', 'u' => $model->user_id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
 
                                 return implode(' ', $links);

@@ -239,6 +239,11 @@ class SessionController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
+        if((int)$session->has_session_certificate !== 1){
+            Yii::$app->session->addFlash('info', 'Session participant certificate is not available for this session.');
+            return $this->render('empty');
+        }
+
         $pdf = new CertificateSession;
         $pdf->template = CertificateTemplate::findOne(7);
         $pdf->model = $session;

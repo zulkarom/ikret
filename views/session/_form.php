@@ -50,6 +50,10 @@ use yii\helpers\Url;
     'label' => 'Allow scan up to 1 hour after event ends',
 ]) ?>
 
+<?= $form->field($model, 'has_session_certificate')->checkbox([
+    'label' => 'Generate special session participant certificate for this session',
+])->hint('If unchecked, participants will only have the general participant certificate without the session name.') ?>
+
 <?= $form->field($model, 'program_id')->dropDownList(Program::listPrograms(), ['prompt' => 'Select Program','onchange'=>'
                          $.get("'.Url::to(['/user/sub-program-options', 'program' => '']).
                        '"+$(this).val(),function( data ) 

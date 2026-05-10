@@ -3013,7 +3013,7 @@ class ProgramController extends Controller
         ->joinWith(['program p', 'sessionAttendances t'])
         ->innerJoin('program_reg r', 'r.program_id = p.id')
         ->innerJoin('user u', 'u.id = r.user_id')
-        ->where(['a.id' => $s, 'r.id' => $reg, 'r.user_id' => $u, 'r.status' => 10, 'p.program_type' => 2, 't.user_id' => $u])
+        ->where(['a.id' => $s, 'r.id' => $reg, 'r.user_id' => $u, 'r.status' => 10, 'p.program_type' => 2, 't.user_id' => $u, 'a.has_session_certificate' => 1])
         ->one();
 
         if ($model !== null) {

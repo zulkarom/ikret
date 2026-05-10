@@ -16,6 +16,7 @@ use Yii;
  * @property string|null $datetime_end
  * @property int $allow_scan_outside_duration
  * @property int $allow_scan_1_hour_after_event
+ * @property int $has_session_certificate
  * @property string|null $token
  *
  * @property Program $program
@@ -44,10 +45,11 @@ class Session extends \yii\db\ActiveRecord
     {
         return [
             [['session_name', 'datetime_start', 'datetime_end'], 'required'],
-            [['program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
+            [['program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event', 'has_session_certificate'], 'integer'],
             [['datetime_start', 'datetime_end'], 'safe'],
             [['token', 'session_name', 'speaker'], 'string'],
             [['allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'default', 'value' => 0],
+            [['has_session_certificate'], 'default', 'value' => 1],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
             [['program_sub'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramSub::class, 'targetAttribute' => ['program_sub' => 'id']],
         ];
@@ -68,6 +70,7 @@ class Session extends \yii\db\ActiveRecord
             'datetime_end' => 'End',
             'allow_scan_outside_duration' => 'Allow scan outside duration',
             'allow_scan_1_hour_after_event' => 'Allow scan 1 hour after event',
+            'has_session_certificate' => 'Has session participant certificate',
             'token' => 'Token',
         ];
     }

@@ -22,6 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <h1><?= Html::encode($this->title) ?></h1>
 
 <div style="margin-top: 20px; margin-bottom:20px">
+                <div class="mb-2"><strong>General Participant Cert.</strong></div>
                 <button class="btn btn-primary" id="scanner" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
                 <?php if($participantCertificatePublished): ?>
                     <?= Html::a('<i class="bi bi-download"></i> Certificate of Participation', ['/session/cert-qr'], ['class' => 'btn btn-success', 'target' => '_blank']) ?>
@@ -60,7 +61,9 @@ $("#scanner").click(function(){
                         $sessionId = (int)$r->session_id;
                         $certificate = '<span class="text-muted">N/A</span>';
 
-                        if(!$certificatesReleased || !$sessionCertificatePublished){
+                        if((int)$r->session->has_session_certificate !== 1){
+                            $certificate = '<span class="text-muted">Not available for this session</span>';
+                        }elseif(!$certificatesReleased || !$sessionCertificatePublished){
                             $certificate = '<span class="text-muted">To be available soon</span>';
                         }else{
                             $certificate = Html::a('<i class="bi bi-download"></i> DOWNLOAD', [
