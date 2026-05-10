@@ -66,8 +66,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                         ->where([
                                             'user_id' => $model->user_id,
                                             'program_id' => $model->session->program_id,
-                                            'status' => ProgramRegistration::STATUS_REGISTERED,
                                         ])
+                                        ->andWhere(['>', 'status', ProgramRegistration::STATUS_DRAFT])
                                         ->orderBy(['id' => SORT_DESC])
                                         ->one();
                                 }
