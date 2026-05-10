@@ -5,7 +5,6 @@
 use app\models\Common;
 use app\models\Setting;
 use yii\helpers\Html;
-use yii\helpers\Url;
 
 $this->title = 'HOME - I-CREATE - The International Convention on Resourceful Entrepreneurs Achieving Tomorrow\'s Excellence';
 
@@ -43,21 +42,10 @@ $previous = $previous ?? null;
 
     </div><!-- End Page Title -->
 
-    <?php 
-    if(Yii::$app->user->isGuest){
-      ?>
-      <div style="text-align:center" align="center"><?=Html::a('<i class="bi bi-box-arrow-in-right"></i> Login',['/site/login'],['class' => 'btn btn-primary'])?> <?=Html::a('<i class="bi bi-card-list"></i> Register',['/site/register'],['class' => 'btn btn-success'])?></div>
-      <?php
-    }else{
-      ?>
-      <div style="text-align:center" align="center">
-      <?=Yii::$app->user->identity->isParticipant ? '' : Html::a('<i class="bi bi-file-earmark-person"></i> Profile',['/user/index'],['class' => 'btn btn-primary'])?>
-       <?=Html::button('<i class="bx bx-qr-scan"></i> Scan Attendance',['class' => 'btn btn-warning', 'id' => 'scanner'])?></div>
-      <?php
-    }
-    
-    
-    ?>
+    <div style="text-align: center; margin-top:5px" align="center">
+      <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank"><img src="<?= Html::encode($programmeBookQr) ?>" style="max-width:125px" width="90%" /></a>
+      <div><a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">Programme Book</a></div>
+    </div>
     
 
 
@@ -139,12 +127,6 @@ if($next){?>
     <?= nl2br(Html::encode($programDescription)) ?>
     </section>
 
-    <div style="text-align: center; margin-top:5px" align="center">
-    <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank"><img src="<?= Html::encode($programmeBookQr) ?>" style="max-width:125px" width="90%" /></a> 
-    <div> <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">Programme Book</a> </div>
-
-
-    </div>
 </div>
 
   
@@ -170,11 +152,4 @@ if($next){?>
         </tr>';
 
   }
-$this->registerJs('
-
-$("#scanner").click(function(){
-    window.open("'. Url::to(['/session/qrscanner']) .'", "_blank", "toolbar=yes,scrollbars=yes,resizable=yes,top=0,left=0,width="+screen.width+",height="+screen.height);
-});
-
-');
 ?>
