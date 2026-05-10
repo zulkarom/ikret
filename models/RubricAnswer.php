@@ -159,7 +159,7 @@ class RubricAnswer extends \yii\db\ActiveRecord
         $cat = $rubric->categoriesScore;
         if($cat){
             foreach($cat as $c){
-                $items = $c->items;
+                $items = $c->itemsScore;
                 if($items){
                     foreach($items as $item){
                         $option = $item->option_number;

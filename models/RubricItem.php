@@ -31,12 +31,17 @@ class RubricItem extends \yii\db\ActiveRecord
      */
     public function rules()
     {
+        $integerAttributes = ['category_id', 'item_type', 'item_order', 'option_number', 'is_required'];
+        if(static::getTableSchema()->getColumn('is_recommend') !== null){
+            $integerAttributes[] = 'is_recommend';
+        }
+
         return [
             [['item_text', 'category_id'], 'required'],
 
             [['item_text', 'item_description', 'item_short'], 'string'],
 
-            [['category_id', 'item_type', 'item_order', 'option_number', 'is_required'], 'integer'],
+            [$integerAttributes, 'integer'],
             [['colum_ans'], 'string', 'max' => 100],
 
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => RubricCategory::class, 'targetAttribute' => ['category_id' => 'id']],
@@ -66,6 +71,27 @@ class RubricItem extends \yii\db\ActiveRecord
     public function getCategory()
     {
         return $this->hasOne(RubricCategory::class, ['id' => 'category_id']);
+    }
+
+    public function hasRecommendAttribute()
+    {
+        return $this->hasAttribute('is_recommend');
+    }
+
+    public function getIsRecommendation()
+    {
+        if($this->hasRecommendAttribute()){
+            return (int)$this->getAttribute('is_recommend') === 1;
+        }
+
+        return $this->category && (int)$this->category->is_recommend === 1;
+    }
+
+    public function setRecommendationFlag($value)
+    {
+        if($this->hasRecommendAttribute()){
+            $this->setAttribute('is_recommend', ((int)$value === 1) ? 1 : 0);
+        }
     }
 
     public function listType(){

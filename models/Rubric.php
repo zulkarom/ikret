@@ -78,16 +78,24 @@ class Rubric extends \yii\db\ActiveRecord
 
     public function getCategoriesScore()
     {
-        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
-        ->where(['is_recommend' => 0])
-        ->orderBy('cat_order ASC');
+        $categories = [];
+        foreach($this->categories as $category){
+            if($category->itemsScore){
+                $categories[] = $category;
+            }
+        }
+        return $categories;
     }
 
     public function getCategoriesRecommend()
     {
-        return $this->hasMany(RubricCategory::class, ['rubric_id' => 'id'])
-        ->where(['is_recommend' => 1])
-        ->orderBy('cat_order ASC');
+        $categories = [];
+        foreach($this->categories as $category){
+            if($category->itemsRecommend){
+                $categories[] = $category;
+            }
+        }
+        return $categories;
     }
 
     public function getJudgingSessions()

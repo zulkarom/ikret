@@ -28,11 +28,11 @@ $recommendationValue = function($model, $asHtml = false){
             }
 
             foreach($rubric->categoriesRecommend as $cat){
-                if(!$cat->items){
+                if(!$cat->itemsRecommend){
                     continue;
                 }
 
-                foreach($cat->items as $item){
+                foreach($cat->itemsRecommend as $item){
                     $column = $item->colum_ans;
                     if(!$column){
                         continue;
@@ -166,7 +166,7 @@ $achievementValue = function($model, $asHtml = false){
                     'label' =>$cat->category_name,
                     'format' => 'html',
                     'value' => function($model) use($cat){
-                        $items = $cat->items;
+                        $items = $cat->itemsScore;
                         $arrayColum = [];
                         if($items){
                             foreach($items as $item){
@@ -205,8 +205,8 @@ $achievementValue = function($model, $asHtml = false){
 
         if($selectedRubric->categoriesRecommend){
             foreach($selectedRubric->categoriesRecommend as $cat){
-                if($cat->itemsYesno){
-                    foreach($cat->itemsYesno as $item){
+                if($cat->itemsRecommendYesno){
+                    foreach($cat->itemsRecommendYesno as $item){
                         //get total
                         $colum = $item->colum_ans;
                         $exportColumns[] = [

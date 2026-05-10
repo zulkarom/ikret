@@ -71,8 +71,41 @@ class RubricCategory extends \yii\db\ActiveRecord
         return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->orderBy('item_order ASC');
     }
 
+    public function getItemsScore()
+    {
+        $items = [];
+        foreach($this->items as $item){
+            if(!$item->isRecommendation){
+                $items[] = $item;
+            }
+        }
+        return $items;
+    }
+
+    public function getItemsRecommend()
+    {
+        $items = [];
+        foreach($this->items as $item){
+            if($item->isRecommendation){
+                $items[] = $item;
+            }
+        }
+        return $items;
+    }
+
     public function getItemsYesno()
     {
         return $this->hasMany(RubricItem::class, ['category_id' => 'id'])->where(['item_type' => 2])->orderBy('item_order ASC');
+    }
+
+    public function getItemsRecommendYesno()
+    {
+        $items = [];
+        foreach($this->itemsRecommend as $item){
+            if((int)$item->item_type === 2){
+                $items[] = $item;
+            }
+        }
+        return $items;
     }
 }

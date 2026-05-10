@@ -335,13 +335,7 @@ CSS);
                                     <div class="col-12">
                                         <input type="text" name="category_name" class="form-control" placeholder="New category name" />
                                     </div>
-                                    <div class="col-8">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="is_recommend_new" />
-                                            <label class="form-check-label" for="is_recommend_new">Recommend</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-4 text-end">
+                                    <div class="col-12 text-end">
                                         <button type="submit" class="btn btn-success btn-sm">Add</button>
                                     </div>
                                 </div>
@@ -359,7 +353,7 @@ CSS);
                                         <div class="flex-grow-1">
                                             <div>
                                                 <?= Html::a(Html::encode($c->category_name), ['program/view-rubric', 'id' => $rubric->id, 'edit' => 1, 'cat' => $c->id], ['class' => $isActive ? 'text-white' : '']) ?>
-                                                <?php if((int)$c->is_recommend === 1){ echo ' <span class="badge bg-info">Recommend</span>'; } ?>
+                                                <?php if($c->itemsRecommend){ echo ' <span class="badge bg-info">Has recommendation items</span>'; } ?>
                                             </div>
                                             <form method="post" action="<?= Url::to(['program/rubric-category-edit', 'id' => $rubric->id, 'cat' => $c->id]) ?>" class="mt-2">
                                                 <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
@@ -367,13 +361,7 @@ CSS);
                                                     <div class="col-12">
                                                         <input type="text" name="category_name" class="form-control form-control-sm" value="<?= Html::encode($c->category_name) ?>" />
                                                     </div>
-                                                    <div class="col-7">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="is_recommend_<?= (int)$c->id ?>" <?= ((int)$c->is_recommend === 1 ? 'checked' : '') ?> />
-                                                            <label class="form-check-label" for="is_recommend_<?= (int)$c->id ?>">Recommend</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-5 text-end">
+                                                    <div class="col-12 text-end">
                                                         <button type="submit" class="btn btn-light btn-sm">Save</button>
                                                         <?= Html::a('Del', ['program/rubric-category-delete', 'id' => $rubric->id, 'cat' => $c->id], [
                                                             'class' => 'btn btn-danger btn-sm',
@@ -438,6 +426,10 @@ CSS);
                                                 <input class="form-check-input" type="checkbox" name="is_required" value="1" id="is_required_new" checked />
                                                 <label class="form-check-label" for="is_required_new">Required</label>
                                             </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="item_is_recommend_new" />
+                                                <label class="form-check-label" for="item_is_recommend_new">Recommendation item</label>
+                                            </div>
                                         </div>
                                         <div class="col-md-12">
                                             <input type="text" name="item_description" class="form-control" placeholder="Description" />
@@ -462,6 +454,7 @@ CSS);
                                                     <div><b><?= Html::encode($item->item_text) ?></b></div>
                                                     <div class="text-muted" style="font-size: 0.9em;">
                                                         Type: <?= Html::encode($typeText) ?> | Options: <?= Html::encode($item->option_number) ?> | colum_ans: <?= Html::encode($item->colum_ans) ?>
+                                                        <?php if($item->isRecommendation){ echo ' | <span class="badge bg-info">Recommend</span>'; } ?>
                                                     </div>
                                                 </div>
                                                 <div>
@@ -501,6 +494,10 @@ CSS);
                                                             <div class="form-check">
                                                                 <input class="form-check-input" type="checkbox" name="is_required" value="1" id="is_required_<?= (int)$item->id ?>" <?= ((int)$item->is_required === 1 ? 'checked' : '') ?> />
                                                                 <label class="form-check-label" for="is_required_<?= (int)$item->id ?>">Required</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="is_recommend" value="1" id="item_is_recommend_<?= (int)$item->id ?>" <?= ($item->isRecommendation ? 'checked' : '') ?> />
+                                                                <label class="form-check-label" for="item_is_recommend_<?= (int)$item->id ?>">Recommendation item</label>
                                                             </div>
                                                         </div>
                                                         <div class="col-md-12">

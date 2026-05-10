@@ -33,11 +33,11 @@ $recommendationValue = function($model, $asHtml = false){
 
     $items = [];
     foreach($rubric->categoriesRecommend as $cat){
-        if(!$cat->items){
+        if(!$cat->itemsRecommend){
             continue;
         }
 
-        foreach($cat->items as $item){
+        foreach($cat->itemsRecommend as $item){
             $column = $item->colum_ans;
             if(!$column){
                 continue;

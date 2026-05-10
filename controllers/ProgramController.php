@@ -1127,6 +1127,7 @@ class ProgramController extends Controller
         $item->option_number = Yii::$app->request->post('option_number');
         $postedRequired = Yii::$app->request->post('is_required', null);
         $item->is_required = ((int)$postedRequired === 1) ? 1 : 0;
+        $item->setRecommendationFlag(Yii::$app->request->post('is_recommend', 0));
         $item->item_order = Yii::$app->request->post('item_order');
         if($item->item_order === null || $item->item_order === ''){
             $max = (int)RubricItem::find()->where(['category_id' => $category->id])->max('item_order');
@@ -1183,6 +1184,7 @@ class ProgramController extends Controller
         $it->option_number = Yii::$app->request->post('option_number', $it->option_number);
         $postedRequired = Yii::$app->request->post('is_required', null);
         $it->is_required = ((int)$postedRequired === 1) ? 1 : 0;
+        $it->setRecommendationFlag(Yii::$app->request->post('is_recommend', 0));
         $it->item_order = Yii::$app->request->post('item_order', $it->item_order);
 
         if($it->item_text === null || trim($it->item_text) === ''){
@@ -1395,25 +1397,11 @@ class ProgramController extends Controller
                     $category->is_recommend = 0;
                     $category->cat_order = ++$catOrder;
 
-                    if(isset($idx['is_recommend'])){
-                        $isRec = trim((string)($row[$idx['is_recommend']] ?? ''));
-                        $category->is_recommend = ((int)$isRec === 1) ? 1 : 0;
-                    }
-
                     if(!$category->save()){
                         throw new BadRequestHttpException('Row ' . $rowNo . ': failed to create category.');
                     }
                     $catsByName[$catKey] = $category;
                     $createdCats++;
-                } else {
-                    if(isset($idx['is_recommend'])){
-                        $isRec = trim((string)($row[$idx['is_recommend']] ?? ''));
-                        $newIsRec = ((int)$isRec === 1) ? 1 : 0;
-                        if((int)$category->is_recommend !== $newIsRec){
-                            $category->is_recommend = $newIsRec;
-                            $category->save(false, ['is_recommend']);
-                        }
-                    }
                 }
 
                 if(!isset($itemOrderCache[$category->id])){
@@ -1460,6 +1448,10 @@ class ProgramController extends Controller
                 if(isset($idx['is_required'])){
                     $req = trim((string)($row[$idx['is_required']] ?? ''));
                     $item->is_required = ((int)$req === 1) ? 1 : 0;
+                }
+                if(isset($idx['is_recommend'])){
+                    $isRec = trim((string)($row[$idx['is_recommend']] ?? ''));
+                    $item->setRecommendationFlag(((int)$isRec === 1) ? 1 : 0);
                 }
                 $item->item_order = ++$itemOrderCache[$category->id];
                 $item->colum_ans = $this->generateRubricAnswerColumn($rubric->id, (int)$item->item_type);
