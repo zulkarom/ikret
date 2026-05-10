@@ -78,6 +78,7 @@ class SessionController extends Controller
             'list' => $list,
             'certificatesReleased' => Setting::areCertificatesReleased(),
             'certificateReleaseText' => Setting::certificateReleaseText(),
+            'participantCertificatePublished' => CertificateTemplate::isPublished(6),
             'sessionCertificatePublished' => CertificateTemplate::isPublished(7),
         ]);
     }

@@ -8,6 +8,7 @@ use yii\helpers\Url;
 /** @var app\models\SessionAttendance[] $list */
 /** @var bool $certificatesReleased */
 /** @var string|null $certificateReleaseText */
+/** @var bool $participantCertificatePublished */
 /** @var bool $sessionCertificatePublished */
 
 $this->title = 'Attendance & Certificate';
@@ -20,8 +21,11 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="pagetitle">
 <h1><?= Html::encode($this->title) ?></h1>
 
-<div>
-                <button class="btn btn-primary" id="scanner" style="margin-top: 20px; margin-bottom:20px" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
+<div style="margin-top: 20px; margin-bottom:20px">
+                <button class="btn btn-primary" id="scanner" type="button"> <i class="bx bx-qr-scan"></i>  SCAN NOW</button>
+                <?php if($participantCertificatePublished): ?>
+                    <?= Html::a('<i class="bi bi-download"></i> Certificate of Participation', ['/session/cert-qr'], ['class' => 'btn btn-success', 'target' => '_blank']) ?>
+                <?php endif; ?>
               </div>
 
 <?php
