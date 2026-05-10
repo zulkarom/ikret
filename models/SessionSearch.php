@@ -40,12 +40,18 @@ class SessionSearch extends Session
      */
     public function search($params)
     {
-        $query = Session::find()->orderBy('id DESC');
+        $query = Session::find();
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'datetime_start' => SORT_ASC,
+                    'id' => SORT_ASC,
+                ],
+            ],
         ]);
 
         $this->load($params);
