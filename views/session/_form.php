@@ -17,10 +17,10 @@ use yii\helpers\Url;
 
 <?php $form = ActiveForm::begin(); ?>
 
-<?= $form->field($model, 'session_name')->textInput() ?>
+<?= $form->field($model, 'session_name')->textInput(['maxlength' => \app\models\Session::SESSION_NAME_MAX_LENGTH])
+    ->hint('Maximum ' . \app\models\Session::SESSION_NAME_MAX_LENGTH . ' characters. Example maximum length: I-CREATE BERSAMA PEKAUMK (PDP PINTAR: TIPS PRAKTIKAL NOTEBOOKLM DAN GEMINI)') ?>
 
-<?= $form->field($model, 'speaker')->textarea(['rows' => 2])
-    ->hint('Shown after "BY" on the session certificate. Leave blank to hide the BY line.') ?>
+<?= $form->field($model, 'speaker')->textarea(['rows' => 2]) ?>
 
 <?=$form->field($model, 'datetime_start')->widget(DateTimePicker::classname(), [
         'options' => ['placeholder' => 'Enter start time ...'],

@@ -25,6 +25,8 @@ use Yii;
  */
 class Session extends \yii\db\ActiveRecord
 {
+    const SESSION_NAME_MAX_LENGTH = 75;
+
     public $reg_id;
     public $user_id;
     public $fullname;
@@ -47,7 +49,8 @@ class Session extends \yii\db\ActiveRecord
             [['session_name', 'datetime_start', 'datetime_end'], 'required'],
             [['program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event', 'has_session_certificate'], 'integer'],
             [['datetime_start', 'datetime_end'], 'safe'],
-            [['token', 'session_name', 'speaker'], 'string'],
+            [['token', 'speaker'], 'string'],
+            [['session_name'], 'string', 'max' => self::SESSION_NAME_MAX_LENGTH],
             [['allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'default', 'value' => 0],
             [['has_session_certificate'], 'default', 'value' => 1],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
