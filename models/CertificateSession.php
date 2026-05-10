@@ -95,16 +95,21 @@ class CertificateSession
             return;
         }
 
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($programName) . '</span>');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($programName) . '</span>', 20);
     }
 
-    protected function writeTextBlock($top, $html)
+    protected function writeTextBlock($top, $html, $sideMargin = null)
     {
         $top = $this->pdfTop($top);
-        $left = $this->horizontalMargin('margin_left');
-        $right = $this->horizontalMargin('margin_right');
-        if ($right <= 0) {
+        if($sideMargin !== null){
+            $left = max(0, (float)$sideMargin);
             $right = $left;
+        }else{
+            $left = $this->horizontalMargin('margin_left');
+            $right = $this->horizontalMargin('margin_right');
+            if ($right <= 0) {
+                $right = $left;
+            }
         }
 
         $width = $this->pdf->getPageWidth() - $left - $right;
