@@ -164,6 +164,12 @@ $this->registerCss(<<<CSS
     padding: 1.5rem;
     box-shadow: 0 18px 40px rgba(16, 37, 66, 0.18);
 }
+.dashboard-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
 .dashboard-hero__eyebrow {
     display: inline-flex;
     align-items: center;
@@ -175,6 +181,21 @@ $this->registerCss(<<<CSS
     font-size: .78rem;
     text-transform: uppercase;
     letter-spacing: .08em;
+}
+.dashboard-hero__back {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    border-color: rgba(255,255,255,.5);
+    color: #fff;
+    background: rgba(255,255,255,.08);
+    white-space: nowrap;
+}
+.dashboard-hero__back:hover,
+.dashboard-hero__back:focus {
+    border-color: rgba(255,255,255,.8);
+    color: #fff;
+    background: rgba(255,255,255,.16);
 }
 .dashboard-hero__stats {
     display: grid;
@@ -305,6 +326,10 @@ $this->registerCss(<<<CSS
 .accent-violet { --accent: #6a5ad1; --accent-dark: #5043a5; --accent-soft: rgba(106, 90, 209, .12); }
 .accent-emerald { --accent: #1f8a5b; --accent-dark: #176646; --accent-soft: rgba(31, 138, 91, .12); }
 @media (max-width: 767.98px) {
+    .dashboard-hero__top {
+        align-items: flex-start;
+        flex-direction: column;
+    }
     .dashboard-card__stats {
         grid-template-columns: 1fr;
     }
@@ -345,9 +370,14 @@ $renderCards = static function($cards){
 
 <section class="section dashboard">
     <div class="dashboard-hero mb-4">
-        <div class="dashboard-hero__eyebrow">
-            <i class="bi bi-speedometer2"></i>
-            <?= $programSub ? 'Sub Program Dashboard' : 'Program Dashboard' ?>
+        <div class="dashboard-hero__top">
+            <div class="dashboard-hero__eyebrow">
+                <i class="bi bi-speedometer2"></i>
+                <?= $programSub ? 'Sub Program Dashboard' : 'Program Dashboard' ?>
+            </div>
+            <?php if($programSub): ?>
+                <?= Html::a('<i class="bi bi-arrow-left"></i> Back to Parent', ['/program-registration/manager-parent', 'id' => $id], ['class' => 'btn btn-sm dashboard-hero__back']) ?>
+            <?php endif; ?>
         </div>
         <h2 class="mt-3 mb-2"><?= Html::encode($title) ?></h2>
         <div class="text-white-50">A cleaner overview for registration, judging, certificates, and setup management.</div>

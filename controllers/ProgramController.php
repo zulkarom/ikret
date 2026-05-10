@@ -1796,6 +1796,13 @@ class ProgramController extends Controller
 
                 if($action === 'update'){
                     $achievementModel->name = $name;
+                    if($hasWinnerCountColumn
+                        && $this->hasProgramWinnerTitleAchievementColumn()
+                        && $this->hasAssignedWinnerTitleBeyondCount($achievementModel, $winnerCount)
+                    ){
+                        Yii::$app->session->addFlash('error', 'Number of winner cannot be reduced because one or more removed winner titles are already assigned.');
+                        return $this->redirect(['achievement', 'id' => $id, 'sub' => $sub]);
+                    }
                     if($hasWinnerCountColumn){
                         $achievementModel->winner_count = $winnerCount;
                     }
@@ -1893,6 +1900,10 @@ class ProgramController extends Controller
     protected function saveAchievementWinnerTitles(ProgramAchievement $achievement, $titles)
     {
         $winnerCount = max(0, (int)$achievement->winner_count);
+        if($this->hasAssignedWinnerTitleBeyondCount($achievement, $winnerCount)){
+            return false;
+        }
+
         ProgramWinnerTitle::deleteAll([
             'and',
             ['achievement_id' => (int)$achievement->id],
@@ -1921,6 +1932,26 @@ class ProgramController extends Controller
         }
 
         return $ok;
+    }
+
+    protected function hasAssignedWinnerTitleBeyondCount(ProgramAchievement $achievement, $winnerCount)
+    {
+        if(!$this->hasParticipantAchieveWinnerTitleColumn()){
+            return false;
+        }
+
+        $winnerCount = max(0, (int)$winnerCount);
+        return ParticipantAchieve::find()->alias('pa')
+            ->innerJoin(ProgramWinnerTitle::tableName() . ' pwt', 'pwt.id = pa.winner_title_id')
+            ->where(['pwt.achievement_id' => (int)$achievement->id])
+            ->andWhere(['>', 'pwt.winner_order', $winnerCount])
+            ->exists();
+    }
+
+    protected function hasParticipantAchieveWinnerTitleColumn()
+    {
+        $table = Yii::$app->db->schema->getTableSchema(ParticipantAchieve::tableName());
+        return $table && $table->getColumn('winner_title_id');
     }
 
     protected function findManagerRole($id, $sub = null)
