@@ -26,7 +26,7 @@ use app\models\Session;
 use app\models\SessionAttendance;
 use app\models\User;
 use app\models\UserRole;
-use InvalidArgumentException;
+use yii\base\InvalidArgumentException;
 use yii\db\Expression;
 use yii\helpers\Url;
 use yii\web\BadRequestHttpException;
@@ -532,7 +532,9 @@ class SiteController extends Controller
         try {
             $model = new ResetPasswordForm($token);
         } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
+            Yii::$app->response->statusCode = 400;
+
+            return $this->render('reset_password_invalid');
         }
         
         if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
