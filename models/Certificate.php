@@ -47,20 +47,15 @@ class Certificate
 
     public function writeData()
     { 
-        $left = $this->template->textLeft(75);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetXY($left,$this->template->textTop('field1_mt', 89));
             $this->html_program();
-            $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('iniriaserif', '', 10);
-            $this->pdf->SetXY($left,0);
         } else {
-            $html = $this->template->custom_html;
+            $this->writeTextBlock(0, $this->template->custom_html);
         }
 
         
@@ -69,42 +64,14 @@ class Certificate
 
     public function html_name()
     {
-
-
-        $margin_name = $this->template->textTop('name_mt', 0);
+        $top = $this->template->textTop('name_mt', 250);
         $size = $this->template->textSize('name_size', 23);
         $kira = $this->model->memberCountAll;
         if($kira > 10){
             $size = min($size, 21);
         }
 
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            //$size = $this->template->name_size;
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>');
     }
 
     public function html_program()
@@ -112,27 +79,62 @@ EOD;
         /* echo $this->model->committee->com_name_en;
         die();
          */
-        //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-    //$size = $this->template->field1_size;
+        $top = $this->template->textTop('field1_mt', 89) + 120;
+        $size = $this->template->textSize('field1_size', 20);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->programNameLong) . '</span>');
+    }
 
-            $html .= '
-<tr><td height="120"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field1_size', 20) . 'px">
-' . strtoupper($this->model->programNameLong) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
+    protected function writeTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        if ($this->align === 'center') {
+            $left = 0;
+            $right = 0;
+        } else {
+            $left = $this->horizontalMargin('margin_left');
+            $right = $this->horizontalMargin('margin_right');
+            if ($right <= 0) {
+                $right = $left;
+            }
+        }
 
-$tbl = <<<EOD
-$html
-EOD;
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
 
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
+
+        if ($value > $pageHeight) {
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
+    protected function horizontalMargin($attribute)
+    {
+        return $this->template->$attribute === null || $this->template->$attribute === '' ? 0 : max(0, (float)$this->template->$attribute);
+    }
+
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
+
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     public function startPage()
