@@ -44,9 +44,11 @@ class ResetPasswordForm extends Model
      */
     public function rules()
     {
+        $passwordMinLength = Yii::$app->params['user.passwordMinLength'] ?? 6;
+
         return [
             ['password', 'required'],
-            ['password', 'string', 'min' => Yii::$app->params['user.passwordMinLength']],
+            ['password', 'string', 'min' => $passwordMinLength],
         ];
     }
 
