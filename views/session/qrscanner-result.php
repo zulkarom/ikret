@@ -2,10 +2,6 @@
 
 use app\models\Session;
 use app\models\SessionAttendance;
-use backend\modules\egayong\models\AnakGayong;
-use backend\modules\egayong\models\SesiHadir;
-use backend\modules\egayong\models\SesiKelas;
-use backend\modules\egayong\models\SesiRegister;
 use yii\db\Expression;
 use yii\helpers\Url;
 
@@ -61,7 +57,6 @@ if($result[0]){
 ?>
 
 <button type="button" class="btn btn-primary btn-lg"  id="tutup">Close</button> 
-<?=$err?>
 </div>
 </div>
 </div>
