@@ -185,7 +185,14 @@ $achievementValue = function($model, $asHtml = false){
                                     $sum_q = 0;
                                     if($arrayColum){
                                         foreach($arrayColum as $q){
-                                            $sum_q += $ans[$q];
+                                            if(!$q){
+                                                continue;
+                                            }
+                                            $value = $ans[$q];
+                                            if($value === null || $value === '' || !is_numeric($value)){
+                                                continue;
+                                            }
+                                            $sum_q += (float)$value;
                                             $count_q++;
                                         }
                                     }

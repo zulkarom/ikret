@@ -1107,7 +1107,7 @@ class ProgramController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
         if(!Yii::$app->request->isPost){
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $cat]);
         }
 
         $rubric = $this->findRubric($id);
@@ -1137,24 +1137,24 @@ class ProgramController extends Controller
 
         if($item->item_text === null || trim($item->item_text) === ''){
             Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
         }
 
         if($item->item_type == 1){
             $opt = (int)$item->option_number;
             if($opt <= 0){
                 Yii::$app->session->addFlash('error', 'Likert item must have option_number > 0.');
-                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
             }
         }
 
         if(!$item->save()){
             Yii::$app->session->addFlash('error', 'Failed to add item.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
         }
 
         Yii::$app->session->addFlash('success', 'Item added.');
-        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
     }
 
     public function actionRubricItemEdit($id, $item)
@@ -1189,24 +1189,24 @@ class ProgramController extends Controller
 
         if($it->item_text === null || trim($it->item_text) === ''){
             Yii::$app->session->addFlash('error', 'Item text cannot be blank.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
         }
 
         if($it->item_type == 1){
             $opt = (int)$it->option_number;
             if($opt <= 0){
                 Yii::$app->session->addFlash('error', 'Likert item must have option_number > 0.');
-                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+                return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
             }
         }
 
         if(!$it->save()){
             Yii::$app->session->addFlash('error', 'Failed to update item.');
-            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+            return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
         }
 
         Yii::$app->session->addFlash('success', 'Item updated.');
-        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
     }
 
     public function actionRubricItemDelete($id, $item)
@@ -1231,7 +1231,7 @@ class ProgramController extends Controller
 
         $it->delete();
         Yii::$app->session->addFlash('success', 'Item deleted.');
-        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1]);
+        return $this->redirect(['view-rubric', 'id' => $id, 'edit' => 1, 'cat' => $category->id]);
     }
 
     public function actionRubricCategorySort($id)
