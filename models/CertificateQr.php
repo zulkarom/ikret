@@ -47,55 +47,77 @@ class CertificateQr
 
     public function writeData()
     { 
-        $left = $this->template->textLeft(72);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetXY($left,89);
             $this->pdf->SetFont('iniriaserif', '', 10);
-            $this->pdf->SetXY($left,0);
         } else {
-            $html = $this->template->custom_html;
+            $this->writeTextBlock(0, $this->template->custom_html);
         }
     }
 
 
     public function html_name()
     {
+        $top = $this->template->textTop('name_mt', 350);
+        $size = $this->template->textSize('name_size', 28);
 
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</span>');
+    }
 
-        $margin_name = $this->template->textTop('name_mt', 0);
-
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            $size = $this->template->textSize('name_size', 28);
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->fullname) . '</td></tr>';
+    protected function writeTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        if ($this->align === 'center') {
+            $left = 0;
+            $right = 0;
+        } else {
+            $left = $this->horizontalMargin('margin_left');
+            $right = $this->horizontalMargin('margin_right');
+            if ($right <= 0) {
+                $right = $left;
+            }
         }
 
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
 
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
 
-        $html .= '</table>';
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
 
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
+        if ($value > $pageHeight) {
+            return $value / 3.779527559;
+        }
 
-$tbl = <<<EOD
-$html
-EOD;
+        return $value;
+    }
 
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+    protected function horizontalMargin($attribute)
+    {
+        return $this->template->$attribute === null || $this->template->$attribute === '' ? 0 : max(0, (float)$this->template->$attribute);
+    }
+
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
+
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     public function startPage()
