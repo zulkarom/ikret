@@ -43,6 +43,9 @@ CSS);
 
                     <?= $form->field($model, 'show_icreate_list_event')->checkbox() ?>
 
+                    <?= $form->field($model, 'grand_name')->textInput(['maxlength' => true])
+                        ->hint('Used on special session participant certificates when the session has no program selected.') ?>
+
                     <?= $form->field($model, 'programme_book_url')->textInput(['type' => 'url', 'placeholder' => 'https://...']) ?>
 
                     <?= $form->field($model, 'program_description')->textarea(['rows' => 6]) ?>

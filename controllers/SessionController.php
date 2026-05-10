@@ -244,6 +244,11 @@ class SessionController extends Controller
             return $this->render('empty');
         }
 
+        if(empty($session->program_name)){
+            $setting = Setting::findOne(1);
+            $session->program_name = $setting && !empty($setting->grand_name) ? $setting->grand_name : '';
+        }
+
         $pdf = new CertificateSession;
         $pdf->template = CertificateTemplate::findOne(7);
         $pdf->model = $session;

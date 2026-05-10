@@ -77,11 +77,9 @@ class CertificateSession
          */
         //$margin_name = $this->template->field1_mt;
         //echo $this->model->session_name;die();
-        $speaker = trim((string)$this->model->speaker);
-        $speakerHtml = $speaker === '' ? '' : '<br/><span style="font-size:16px">BY ' . strtoupper($speaker) . '</span>';
         $top = $this->template->textTop('field1_mt', 410);
         $size = $this->template->textSize('field1_size', 23);
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->session_name) . $speakerHtml . '</span>');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->session_name) . '</span>');
     }
 
     public function html_program()
@@ -92,7 +90,12 @@ class CertificateSession
         //$margin_name = $this->template->field1_mt;
         $top = $this->template->textTop('field2_mt', 480);
         $size = $this->template->textSize('field2_size', 23);
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->program_name) . '</span>');
+        $programName = trim((string)$this->model->program_name);
+        if($programName === ''){
+            return;
+        }
+
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($programName) . '</span>');
     }
 
     protected function writeTextBlock($top, $html)

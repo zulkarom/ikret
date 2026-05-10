@@ -9,6 +9,7 @@ use Yii;
  *
  * @property int $id
  * @property string|null $allow_cert_from
+ * @property string|null $grand_name
  */
 class Setting extends \yii\db\ActiveRecord
 {
@@ -50,6 +51,7 @@ class Setting extends \yii\db\ActiveRecord
             'banner_image' => 'Banner Image',
             'banner_file' => 'Banner Image',
             'show_icreate_list_event' => 'Show I-CREATE List Event',
+            'grand_name' => 'Grand Name',
             'programme_book_url' => 'Programme Book URL',
             'programme_book_qr' => 'Programme Book QR',
             'programme_book_qr_file' => 'Programme Book QR',
