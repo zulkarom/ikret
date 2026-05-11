@@ -3914,11 +3914,33 @@ class ProgramRegistrationController extends Controller
             }
         }
 
+        $rubrics = $role->program->programRubrics;
+        $stages = $role->program->programStages;
+        if($programSub){
+            $rubrics = $role->program->getProgramRubricsSub($sub)->all();
+        }
+
+        $firstRubric = null;
+        if($rubrics){
+            $firstRubric = $rubrics[0]->rubric_id;
+        }
+        $firstStage = null;
+        if($stages){
+            $firstStage = $stages[0]->id;
+        }
+
         $searchModel = new ManagerAnalysisSearch();
         $searchModel->program_id = $role->program_id;
         $searchModel->program_sub = $sub;
 
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        // Apply defaults like manager-analysis page (so suggestion works even when user didn't pick rubric/stage)
+        $queryParams = $this->request->queryParams;
+        $rubricFromGet = $queryParams['ManagerAnalysisSearch']['rubric'] ?? null;
+        $stageFromGet = $queryParams['ManagerAnalysisSearch']['stage'] ?? null;
+        $searchModel->rubric = $rubricFromGet !== null && $rubricFromGet !== '' ? (int)$rubricFromGet : $firstRubric;
+        $searchModel->stage = $stageFromGet !== null && $stageFromGet !== '' ? (int)$stageFromGet : $firstStage;
+
+        $dataProvider = $searchModel->search($queryParams);
         $models = $dataProvider->getModels();
 
         $achievementsQuery = ProgramAchievement::find()->where(['program_id' => (int)$role->program_id]);
