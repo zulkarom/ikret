@@ -3943,6 +3943,14 @@ class ProgramRegistrationController extends Controller
         $dataProvider = $searchModel->search($queryParams);
         $models = $dataProvider->getModels();
 
+        $registrationIds = [];
+        foreach($models as $m){
+            if(!empty($m->id)){
+                $registrationIds[] = (int)$m->id;
+            }
+        }
+        $registrationIds = array_values(array_unique(array_filter($registrationIds)));
+
         $achievementsQuery = ProgramAchievement::find()->where(['program_id' => (int)$role->program_id]);
         if($programSub){
             $achievementsQuery->andWhere(['program_sub' => (int)$programSub->id]);
@@ -3973,8 +3981,22 @@ class ProgramRegistrationController extends Controller
             }
         }
 
+        $globallySuggestedRegistrationIds = [];
+
         foreach($achievements as $achievement){
             $aid = (int)$achievement->id;
+
+            $alreadyAwardedIds = [];
+            if($registrationIds){
+                $alreadyAwardedIds = ParticipantAchieve::find()
+                    ->select(['program_reg_id'])
+                    ->where([
+                        'achieve_id' => $aid,
+                        'program_reg_id' => $registrationIds,
+                    ])
+                    ->column();
+                $alreadyAwardedIds = array_fill_keys(array_map('intval', $alreadyAwardedIds), true);
+            }
 
             $itemId = (int)($achievement->rubric_item_id ?? 0);
             $recommendColumn = ($itemId && isset($rubricItemColumnById[$itemId])) ? $rubricItemColumnById[$itemId] : null;
@@ -4008,6 +4030,7 @@ class ProgramRegistrationController extends Controller
                 $total = $avg + $recommendScore;
 
                 $rows[] = [
+                    'reg_id' => (int)$m->id,
                     'participant' => (string)$m->participantText,
                     'avg_score' => $avg,
                     'recommend_score' => $recommendScore,
@@ -4023,7 +4046,25 @@ class ProgramRegistrationController extends Controller
             });
 
             $winnerCount = max(0, (int)($achievement->winner_count ?? 0));
-            $rows = $winnerCount > 0 ? array_slice($rows, 0, $winnerCount) : array_slice($rows, 0, 10);
+            $limit = $winnerCount > 0 ? $winnerCount : 10;
+
+            $selected = [];
+            foreach($rows as $row){
+                $rid = (int)$row['reg_id'];
+                if(isset($alreadyAwardedIds[$rid])){
+                    continue;
+                }
+                if(isset($globallySuggestedRegistrationIds[$rid])){
+                    continue;
+                }
+                $selected[] = $row;
+                $globallySuggestedRegistrationIds[$rid] = true;
+                if(count($selected) >= $limit){
+                    break;
+                }
+            }
+
+            $rows = $selected;
 
             $suggestionsByAchievement[$aid] = $rows;
         }
