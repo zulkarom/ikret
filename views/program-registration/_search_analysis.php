@@ -22,8 +22,12 @@ use yii\helpers\Html;
         'method' => 'get',
     ]); ?>
     <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
-    <?= Html::activeHiddenInput($model, 'statFilter') ?>
-    <?= Html::activeHiddenInput($model, 'awardFilter') ?>
+    <?php if($model->hasProperty('statFilter')): ?>
+        <?= Html::activeHiddenInput($model, 'statFilter') ?>
+    <?php endif; ?>
+    <?php if($model->hasProperty('awardFilter')): ?>
+        <?= Html::activeHiddenInput($model, 'awardFilter') ?>
+    <?php endif; ?>
     <div class="row">
         <div class="col-md-6"><?= $form->field($model, 'rubric')->dropDownList(ArrayHelper::map($rubrics, 'rubric_id', 'rubric.rubric_name'))->label(false) ?></div>
 
