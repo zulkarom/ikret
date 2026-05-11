@@ -87,15 +87,10 @@ class Certificate
     protected function writeTextBlock($top, $html)
     {
         $top = $this->pdfTop($top);
-        if ($this->align === 'center') {
-            $left = 0;
-            $right = 0;
-        } else {
-            $left = $this->horizontalMargin('margin_left');
-            $right = $this->horizontalMargin('margin_right');
-            if ($right <= 0) {
-                $right = $left;
-            }
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
         }
 
         $width = $this->pdf->getPageWidth() - $left - $right;
@@ -165,11 +160,10 @@ class Certificate
         $this->pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
         // set margins
-        // $this->pdf->SetMargins(25, 10, PDF_MARGIN_RIGHT);
-
+        $left = $this->template->textLeft(10);
         $right = $this->template->textRight(10);
 
-        $this->pdf->SetMargins(0, 0, $right);
+        $this->pdf->SetMargins($left, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $this->pdf->SetHeaderMargin(0);
 
