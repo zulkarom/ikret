@@ -19,6 +19,7 @@ $programmeBookQr = Yii::getAlias('@web') . '/docs/qr-buku.png';
 if ($set && !empty($set->programme_book_qr)) {
   $programmeBookQr = Yii::getAlias('@web') . '/' . ltrim($set->programme_book_qr, '/');
 }
+$programmeBookCover = Yii::getAlias('@web') . '/images/programme-book-cover.png';
 
 $programDescription = "The International Convention on Resourceful Entrepreneurs Achieving Tomorrow’s Excellence (I-CREATE) serves as an academic nexus, consolidating diverse entrepreneurial innovation initiatives involving six sub-programs. COMEI 3.0 cultivates entrepreneurial zeal among students via workshops and pitch sessions, while JFED nurtures franchise business expertise, facilitating dialogue with industry elites. AIFIF augments student understanding of finance through seminars and career expos, harmonizing educational and industrial demands. NEWeek instills practical entrepreneurship by enabling students to enact theoretical concepts. IMPACT fosters community engagement and problem-solving acumen, while RISE provides a platform for showcasing innovative business concepts. At I-CREATE, these programs converge, fostering interdisciplinary discourse, creativity, and advancing entrepreneurship scholarship for future leaders.";
 if ($set && !empty($set->program_description)) {
@@ -43,7 +44,14 @@ $previous = $previous ?? null;
     </div><!-- End Page Title -->
 
     <div style="text-align: center; margin-top:5px" align="center">
-      <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank"><img src="<?= Html::encode($programmeBookQr) ?>" style="max-width:125px" width="90%" /></a>
+      <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap;">
+        <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">
+          <img src="<?= Html::encode($programmeBookCover) ?>" style="max-width:110px; width:100%; height:auto;" alt="Programme Book Cover" />
+        </a>
+        <a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">
+          <img src="<?= Html::encode($programmeBookQr) ?>" style="max-width:125px; width:100%; height:auto;" alt="Programme Book QR" />
+        </a>
+      </div>
       <div><a href="<?= Html::encode($programmeBookUrl) ?>" target="_blank">Programme Book</a></div>
     </div>
     

@@ -5,6 +5,7 @@ namespace app\models;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\ProgramRegistration;
+use app\models\ParticipantAchieve;
 use yii\db\Expression;
 
 /**
@@ -16,6 +17,8 @@ class ManagerAnalysisSearch extends ProgramRegistration
     public $dateSearch;
     public $stage = null;
     public $rubric;
+    public $statFilter;
+    public $awardFilter;
 
     /**
      * {@inheritdoc}
@@ -24,7 +27,8 @@ class ManagerAnalysisSearch extends ProgramRegistration
     {
         return [
             [['program_id', 'program_sub', 'stage', 'rubric'], 'integer'],
-            [['fullnameSearch','dateSearch'], 'string'],
+            [['fullnameSearch','dateSearch', 'statFilter'], 'string'],
+            [['awardFilter'], 'integer'],
         ];
     }
 
@@ -94,6 +98,27 @@ class ManagerAnalysisSearch extends ProgramRegistration
 
         $query->andFilterWhere(['like', 'a.submitted_at', $this->submitted_at])
         ->andFilterWhere(['like', 'u.fullname', $this->fullnameSearch]);
+
+        if($this->statFilter === 'awarded'){
+            $query->andHaving(['>=', new Expression('AVG(j.score)'), 10]);
+        }else if($this->statFilter === 'achievements'){
+            $query->andWhere([
+                'exists',
+                ParticipantAchieve::find()
+                    ->where('program_reg_achieve.program_reg_id = a.id'),
+            ]);
+        }
+
+        if($this->awardFilter){
+            $scoreExpression = new Expression('AVG(j.score)');
+            if((int)$this->awardFilter === 80){
+                $query->andHaving(['>=', $scoreExpression, 80]);
+            }else if((int)$this->awardFilter === 60){
+                $query->andHaving(['and', ['>=', $scoreExpression, 60], ['<', $scoreExpression, 80]]);
+            }else if((int)$this->awardFilter === 10){
+                $query->andHaving(['and', ['>=', $scoreExpression, 10], ['<', $scoreExpression, 60]]);
+            }
+        }
 
         return $dataProvider;
     }

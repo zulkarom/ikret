@@ -22,6 +22,8 @@ use yii\helpers\Html;
         'method' => 'get',
     ]); ?>
     <?= $form->field($model, 'fullnameSearch')->textInput(['placeholder' => 'Search Participant'])->label(false) ?>
+    <?= Html::activeHiddenInput($model, 'statFilter') ?>
+    <?= Html::activeHiddenInput($model, 'awardFilter') ?>
     <div class="row">
         <div class="col-md-6"><?= $form->field($model, 'rubric')->dropDownList(ArrayHelper::map($rubrics, 'rubric_id', 'rubric.rubric_name'))->label(false) ?></div>
 

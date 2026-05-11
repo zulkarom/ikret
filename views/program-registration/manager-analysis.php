@@ -1,8 +1,10 @@
 <?php
 
 use kartik\export\ExportMenu;
+use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\grid\GridView;
 
 /** @var yii\web\View $this */
@@ -16,6 +18,106 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
+
+$analysisModels = (clone $dataProvider->query)->all();
+$analysisUrl = function($extra = []) use($program, $programSub){
+    $params = Yii::$app->request->queryParams;
+    unset($params['page'], $params['per-page']);
+    $params[0] = '/program-registration/manager-analysis';
+    $params['id'] = $program->id;
+    if($programSub){
+        $params['sub'] = $programSub->id;
+    }else{
+        unset($params['sub']);
+    }
+    if(!isset($params['ManagerAnalysisSearch']) || !is_array($params['ManagerAnalysisSearch'])){
+        $params['ManagerAnalysisSearch'] = [];
+    }
+    unset($params['ManagerAnalysisSearch']['statFilter'], $params['ManagerAnalysisSearch']['awardFilter']);
+    foreach($extra as $key => $value){
+        if($value === null || $value === ''){
+            unset($params['ManagerAnalysisSearch'][$key]);
+        }else{
+            $params['ManagerAnalysisSearch'][$key] = $value;
+        }
+    }
+
+    return Url::to($params);
+};
+$isStatActive = function($statFilter = null, $awardFilter = null) use($searchModel){
+    return (string)$searchModel->statFilter === (string)$statFilter
+        && (string)$searchModel->awardFilter === (string)$awardFilter;
+};
+$analysisStats = [
+    'participants' => count($analysisModels),
+    'score_sum' => 0,
+    'score_count' => 0,
+    'awarded' => 0,
+    'achievements' => 0,
+    'awards' => [],
+];
+foreach(ProgramRegistration::listAward() as $awardValue){
+    $analysisStats['awards'][$awardValue] = 0;
+}
+foreach($analysisModels as $analysisModel){
+    $score = $analysisModel->purata;
+    if($score !== null && $score !== '' && is_numeric($score)){
+        $score = (float)$score;
+        $analysisStats['score_sum'] += $score;
+        $analysisStats['score_count']++;
+        $award = ProgramRegistration::calcAward($score);
+        $awardLabel = $award ? (ProgramRegistration::listAward()[$award] ?? '') : '';
+        if($awardLabel !== ''){
+            $analysisStats['awarded']++;
+            $analysisStats['awards'][$awardLabel]++;
+        }
+    }
+    $analysisStats['achievements'] += $analysisModel->achievements ? count($analysisModel->achievements) : 0;
+}
+$analysisAverageScore = $analysisStats['score_count'] > 0 ? $analysisStats['score_sum'] / $analysisStats['score_count'] : 0;
+
+$this->registerCss(<<<CSS
+.analysis-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: .85rem;
+    margin-bottom: 1rem;
+}
+.analysis-stat {
+    display: block;
+    background: #fff;
+    border: 1px solid #e4ebf3;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 20px rgba(20, 43, 69, .06);
+    text-decoration: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.analysis-stat:hover,
+.analysis-stat:focus {
+    border-color: #7aa7d8;
+    box-shadow: 0 10px 24px rgba(20, 43, 69, .1);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.analysis-stat.is-active {
+    border-color: #0d6efd;
+    box-shadow: 0 10px 26px rgba(13, 110, 253, .16);
+}
+.analysis-stat__value {
+    display: block;
+    color: #17324d;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+.analysis-stat__label {
+    display: block;
+    color: #6f8499;
+    font-size: .82rem;
+    margin-top: .25rem;
+}
+CSS);
 
 $recommendationValue = function($model, $asHtml = false){
     $items = [];
@@ -113,6 +215,30 @@ $achievementValue = function($model, $asHtml = false){
     <div class="form-group">
     <?=Html::button('<i class="bi bi-download"></i> Excel Analysis', ['id' => 'dwl-exl','class' => 'btn btn-success'])?>
 </div> 
+
+    <div class="analysis-stats mt-3">
+        <a class="analysis-stat <?= $isStatActive(null, null) ? 'is-active' : '' ?>" href="<?= Html::encode($analysisUrl()) ?>">
+            <span class="analysis-stat__value"><?= (int)$analysisStats['participants'] ?></span>
+            <span class="analysis-stat__label">Analyzed Participants</span>
+        </a>
+        <a class="analysis-stat <?= $isStatActive('awarded', null) ? 'is-active' : '' ?>" href="<?= Html::encode($analysisUrl(['statFilter' => 'awarded'])) ?>">
+            <span class="analysis-stat__value"><?= (int)$analysisStats['awarded'] ?></span>
+            <span class="analysis-stat__label">Awarded Participants</span>
+        </a>
+        <a class="analysis-stat <?= $isStatActive('achievements', null) ? 'is-active' : '' ?>" href="<?= Html::encode($analysisUrl(['statFilter' => 'achievements'])) ?>">
+            <span class="analysis-stat__value"><?= (int)$analysisStats['achievements'] ?></span>
+            <span class="analysis-stat__label">Achievements Assigned</span>
+        </a>
+        <?php foreach($analysisStats['awards'] as $awardLabel => $awardCount): ?>
+            <?php
+            $awardValue = array_search($awardLabel, ProgramRegistration::listAward(), true);
+            ?>
+            <a class="analysis-stat <?= $isStatActive(null, $awardValue) ? 'is-active' : '' ?>" href="<?= Html::encode($analysisUrl(['awardFilter' => $awardValue])) ?>">
+                <span class="analysis-stat__value"><?= (int)$awardCount ?></span>
+                <span class="analysis-stat__label"><?= Html::encode(ucwords(strtolower($awardLabel))) ?> Awards</span>
+            </a>
+        <?php endforeach; ?>
+    </div>
 
     <?php
     $exportColumns[] = ['class' => 'yii\grid\SerialColumn'];
