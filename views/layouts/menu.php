@@ -274,7 +274,9 @@ use yii\helpers\Url;
               ['name' => 'All Juries', 'url' => ['/certificate-template/juries']],
               ['name' => 'All Committees', 'url' => ['/certificate-template/committees']],
             ]];
+          }
 
+          if(Yii::$app->user->identity->isAdmin){
             $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
               ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
               ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],

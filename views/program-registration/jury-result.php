@@ -78,11 +78,13 @@ $statusSummaryQuery = JuryAssign::find()->alias('a')
     ->select(['a.status', 'total' => 'COUNT(*)'])
     ->joinWith(['registration r'])
     ->leftJoin('user u','u.id = r.user_id')
+    ->leftJoin('user ju','ju.id = a.user_id')
     ->where(['r.program_id' => $program->id, 'a.rubric_id' => $searchModel->rubric]);
 if($programSub){
     $statusSummaryQuery->andWhere(['r.program_sub' => $programSub->id]);
 }
 $statusSummaryQuery->andFilterWhere(['like', 'u.fullname', $searchModel->fullnameSearch]);
+$statusSummaryQuery->andFilterWhere(['like', 'ju.fullname', $searchModel->jurySearch]);
 $statusSummaryRows = $statusSummaryQuery->groupBy('a.status')->asArray()->all();
 $statusSummary = [0 => 0, 10 => 0, 20 => 0];
 foreach($statusSummaryRows as $row){
@@ -372,6 +374,7 @@ CSS);
         'rubrics' => $rubrics,
         'stages' =>$stages,
         'programSub' => $programSub,
+        'selectedRubric' => $selectedRubric,
         'action' => 'jury-result'
     ]) ?>
 </div></div>
