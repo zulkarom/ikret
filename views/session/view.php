@@ -11,7 +11,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Sessions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 $attendanceCount = (int)$model->getSessionAttendances()->count();
 $canDelete = (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdminRegistration) && $attendanceCount === 0;
-$canUpdate = Yii::$app->user->identity->isManager;
+$canUpdate = Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdminRegistration;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="session-view">

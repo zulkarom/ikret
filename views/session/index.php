@@ -10,7 +10,7 @@ use yii\grid\GridView;
 $this->title = 'Sessions';
 $this->params['breadcrumbs'][] = $this->title;
 $canCreateSession = Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdminRegistration;
-$canUpdateSession = Yii::$app->user->identity->isManager;
+$canUpdateSession = Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdminRegistration;
 ?>
 <div class="session-index">
 
