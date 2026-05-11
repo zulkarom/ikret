@@ -531,6 +531,15 @@ $achievementValue = function($model, $asHtml = false){
                         </tbody>
                     </table>
                 </div>
+                <div class="mt-3">
+                    <?php
+                    $suggestionUrl = Url::to(array_merge(
+                        ['manager-analysis-suggestion', 'id' => $role->program_id, 'sub' => $programSub ? $programSub->id : null],
+                        Yii::$app->request->queryParams
+                    ));
+                    ?>
+                    <?= Html::a('<i class="bi bi-lightbulb"></i> Show Suggestion', $suggestionUrl, ['class' => 'btn btn-outline-primary']) ?>
+                </div>
             <?php else: ?>
                 <span class="text-muted">No achievements assigned.</span>
             <?php endif; ?>

@@ -46,6 +46,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
+use app\models\RubricItem;
 
 /**
  * ProgramRegistrationController implements the CRUD actions for ProgramRegistration model.
@@ -3892,6 +3893,125 @@ class ProgramRegistrationController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+        ]);
+    }
+
+    public function actionManagerAnalysisSuggestion($id, $sub = null)
+    {
+        if(!Yii::$app->user->identity->isManager) return false;
+
+        $role = $this->findManagerRole($id, $sub);
+        if(!$role){
+            throw new ForbiddenHttpException('No access');
+        }
+
+        $programSub = null;
+        if($role->program->has_sub == 1){
+            if($sub){
+                $programSub = $role->programSub;
+            }else{
+                throw new NotFoundHttpException('Please provide sub program.');
+            }
+        }
+
+        $searchModel = new ManagerAnalysisSearch();
+        $searchModel->program_id = $role->program_id;
+        $searchModel->program_sub = $sub;
+
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        $models = $dataProvider->getModels();
+
+        $achievementsQuery = ProgramAchievement::find()->where(['program_id' => (int)$role->program_id]);
+        if($programSub){
+            $achievementsQuery->andWhere(['program_sub' => (int)$programSub->id]);
+        }else{
+            $achievementsQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+        }
+        $achievements = $achievementsQuery->orderBy(['name' => SORT_ASC])->all();
+
+        $suggestionsByAchievement = [];
+
+        // Map rubric_item_id => rubric_item.colum_ans so we can read the answer value from rubric_answer
+        $rubricItemIds = [];
+        foreach($achievements as $a){
+            if(!empty($a->rubric_item_id)){
+                $rubricItemIds[] = (int)$a->rubric_item_id;
+            }
+        }
+        $rubricItemIds = array_values(array_unique(array_filter($rubricItemIds)));
+
+        $rubricItemColumnById = [];
+        if($rubricItemIds){
+            $items = RubricItem::find()->where(['id' => $rubricItemIds])->all();
+            foreach($items as $it){
+                $col = trim((string)$it->colum_ans);
+                if($col !== ''){
+                    $rubricItemColumnById[(int)$it->id] = $col;
+                }
+            }
+        }
+
+        foreach($achievements as $achievement){
+            $aid = (int)$achievement->id;
+
+            $itemId = (int)($achievement->rubric_item_id ?? 0);
+            $recommendColumn = ($itemId && isset($rubricItemColumnById[$itemId])) ? $rubricItemColumnById[$itemId] : null;
+
+            $rows = [];
+            foreach($models as $m){
+                $avg = (float)($m->purata ?? 0);
+
+                $recommendScore = 0.0;
+                if($recommendColumn){
+                    $assignments = $m->juriesCompleted ?? [];
+                    $sum = 0.0;
+                    $count = 0;
+
+                    foreach($assignments as $as){
+                        $answer = $as->rubricAnswer;
+                        if($answer && $answer->hasAttribute($recommendColumn)){
+                            $val = $answer->$recommendColumn;
+                            if($val !== null && $val !== ''){
+                                $sum += (float)$val;
+                                $count++;
+                            }
+                        }
+                    }
+
+                    if($count > 0){
+                        $recommendScore = $sum / $count;
+                    }
+                }
+
+                $total = $avg + $recommendScore;
+
+                $rows[] = [
+                    'participant' => (string)$m->participantText,
+                    'avg_score' => $avg,
+                    'recommend_score' => $recommendScore,
+                    'total' => $total,
+                ];
+            }
+
+            usort($rows, function($a, $b){
+                if($a['total'] === $b['total']){
+                    return 0;
+                }
+                return ($a['total'] < $b['total']) ? 1 : -1;
+            });
+
+            $winnerCount = max(0, (int)($achievement->winner_count ?? 0));
+            $rows = $winnerCount > 0 ? array_slice($rows, 0, $winnerCount) : array_slice($rows, 0, 10);
+
+            $suggestionsByAchievement[$aid] = $rows;
+        }
+
+        return $this->render('manager-analysis-suggestion', [
+            'searchModel' => $searchModel,
+            'achievements' => $achievements,
+            'suggestionsByAchievement' => $suggestionsByAchievement,
+            'programSub' => $programSub,
+            'role' => $role,
         ]);
     }
 
