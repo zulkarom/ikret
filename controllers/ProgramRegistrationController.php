@@ -3905,6 +3905,108 @@ class ProgramRegistrationController extends Controller
             throw new ForbiddenHttpException('No access');
         }
 
+        if($this->request->isPost && (string)$this->request->post('action_type') === 'accept-suggestions'){
+            $accepted = (array)$this->request->post('accept', []);
+            $successCount = 0;
+            $skippedCount = 0;
+
+            $transaction = Yii::$app->db->beginTransaction();
+            try{
+                foreach($accepted as $achievementId => $titleMap){
+                    $achievementId = (int)$achievementId;
+                    if(!$achievementId){
+                        continue;
+                    }
+
+                    $achievement = ProgramAchievement::findOne([
+                        'id' => $achievementId,
+                        'program_id' => (int)$role->program_id,
+                    ]);
+                    if(!$achievement){
+                        $skippedCount++;
+                        continue;
+                    }
+                    if($role->program->has_sub == 1){
+                        if((int)$achievement->program_sub !== (int)$sub){
+                            $skippedCount++;
+                            continue;
+                        }
+                    }
+
+                    foreach((array)$titleMap as $winnerTitleId => $programRegId){
+                        $winnerTitleId = (int)$winnerTitleId;
+                        $programRegId = (int)$programRegId;
+                        if(!$programRegId){
+                            continue;
+                        }
+
+                        $registration = ProgramRegistration::findOne([
+                            'id' => $programRegId,
+                            'program_id' => (int)$role->program_id,
+                        ]);
+                        if(!$registration){
+                            $skippedCount++;
+                            continue;
+                        }
+                        if($role->program->has_sub == 1 && (int)$registration->program_sub !== (int)$sub){
+                            $skippedCount++;
+                            continue;
+                        }
+
+                        $participantAchieve = ParticipantAchieve::find()
+                            ->where([
+                                'program_reg_id' => $programRegId,
+                                'achieve_id' => $achievementId,
+                            ])
+                            ->one();
+
+                        if(!$participantAchieve){
+                            $participantAchieve = new ParticipantAchieve([
+                                'program_reg_id' => $programRegId,
+                                'achieve_id' => $achievementId,
+                                'achieved_at' => time(),
+                            ]);
+                        }
+
+                        if($winnerTitleId > 0 && $this->hasParticipantAchieveWinnerTitleColumn()){
+                            $winnerTitle = ProgramWinnerTitle::findOne([
+                                'id' => $winnerTitleId,
+                                'achievement_id' => $achievementId,
+                            ]);
+                            $participantAchieve->winner_title_id = $winnerTitle ? $winnerTitleId : null;
+                        }
+
+                        if($participantAchieve->isNewRecord){
+                            if($participantAchieve->save()){
+                                $successCount++;
+                            }else{
+                                $skippedCount++;
+                            }
+                        }else{
+                            // already exists; only update winner title if possible
+                            if($this->hasParticipantAchieveWinnerTitleColumn()){
+                                $participantAchieve->save(false, ['winner_title_id']);
+                            }
+                            $skippedCount++;
+                        }
+                    }
+                }
+
+                $transaction->commit();
+                if($successCount > 0){
+                    Yii::$app->session->addFlash('success', 'Accepted suggestion(s): ' . $successCount . '.');
+                }
+                if($skippedCount > 0){
+                    Yii::$app->session->addFlash('info', 'Skipped/unchanged suggestion(s): ' . $skippedCount . '.');
+                }
+            }catch(\Throwable $e){
+                $transaction->rollBack();
+                Yii::$app->session->addFlash('error', $e->getMessage());
+            }
+
+            return $this->refresh();
+        }
+
         $programSub = null;
         if($role->program->has_sub == 1){
             if($sub){
@@ -3983,6 +4085,20 @@ class ProgramRegistrationController extends Controller
 
         $globallySuggestedRegistrationIds = [];
 
+        $winnerTitlesByAchievement = [];
+        if($achievements){
+            $achievementIds = array_map(function($a){
+                return (int)$a->id;
+            }, $achievements);
+            $winnerTitles = ProgramWinnerTitle::find()
+                ->where(['achievement_id' => $achievementIds])
+                ->orderBy(['achievement_id' => SORT_ASC, 'winner_order' => SORT_ASC])
+                ->all();
+            foreach($winnerTitles as $wt){
+                $winnerTitlesByAchievement[(int)$wt->achievement_id][] = $wt;
+            }
+        }
+
         foreach($achievements as $achievement){
             $aid = (int)$achievement->id;
 
@@ -4032,6 +4148,7 @@ class ProgramRegistrationController extends Controller
                 $rows[] = [
                     'reg_id' => (int)$m->id,
                     'participant' => (string)$m->participantText,
+                    'group_name' => (string)($m->group_name ?? ''),
                     'avg_score' => $avg,
                     'recommend_score' => $recommendScore,
                     'total' => $total,
@@ -4045,23 +4162,47 @@ class ProgramRegistrationController extends Controller
                 return ($a['total'] < $b['total']) ? 1 : -1;
             });
 
-            $winnerCount = max(0, (int)($achievement->winner_count ?? 0));
-            $limit = $winnerCount > 0 ? $winnerCount : 10;
+            $winnerTitles = $winnerTitlesByAchievement[$aid] ?? [];
+            if(!$winnerTitles){
+                $fallbackCount = max(0, (int)($achievement->winner_count ?? 0));
+                $fallbackCount = $fallbackCount > 0 ? $fallbackCount : 1;
+                for($i = 1; $i <= $fallbackCount; $i++){
+                    $winnerTitles[] = new ProgramWinnerTitle([
+                        'id' => 0,
+                        'achievement_id' => $aid,
+                        'winner_order' => $i,
+                        'title_name' => 'Winner ' . $i,
+                    ]);
+                }
+            }
 
             $selected = [];
-            foreach($rows as $row){
-                $rid = (int)$row['reg_id'];
-                if(isset($alreadyAwardedIds[$rid])){
-                    continue;
-                }
-                if(isset($globallySuggestedRegistrationIds[$rid])){
-                    continue;
-                }
-                $selected[] = $row;
-                $globallySuggestedRegistrationIds[$rid] = true;
-                if(count($selected) >= $limit){
+            $cursor = 0;
+            foreach($winnerTitles as $wt){
+                $picked = null;
+                while($cursor < count($rows)){
+                    $candidate = $rows[$cursor];
+                    $cursor++;
+                    $rid = (int)$candidate['reg_id'];
+                    if(isset($alreadyAwardedIds[$rid])){
+                        continue;
+                    }
+                    if(isset($globallySuggestedRegistrationIds[$rid])){
+                        continue;
+                    }
+                    $picked = $candidate;
+                    $globallySuggestedRegistrationIds[$rid] = true;
                     break;
                 }
+
+                if(!$picked){
+                    continue;
+                }
+
+                $picked['winner_title_id'] = (int)($wt->id ?? 0);
+                $picked['winner_title_name'] = (string)($wt->title_name ?? '');
+                $picked['winner_order'] = (int)($wt->winner_order ?? 0);
+                $selected[] = $picked;
             }
 
             $rows = $selected;
