@@ -288,7 +288,7 @@ class SessionController extends Controller
      */
     public function actionUpdate($id)
     {
-        if(!Yii::$app->user->identity->isManager) return false;
+        if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminRegistration) return false;
 
         $model = $this->findModel($id);
 
