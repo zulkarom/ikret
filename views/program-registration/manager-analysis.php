@@ -566,8 +566,15 @@ $achievementValue = function($model, $asHtml = false){
             ['class' => 'yii\grid\SerialColumn'],
             [
                 'label' =>'Participant',
+                'format' => 'raw',
                 'value' => function($model){
-                    return $model->participantText;
+                    $name = Html::encode($model->participantText);
+                    $groupName = trim((string)($model->group_name ?? ''));
+                    if($groupName === ''){
+                        return $name;
+                    }
+                    $badge = Html::tag('span', Html::encode($groupName), ['class' => 'badge bg-secondary me-2']);
+                    return $badge . $name;
                 }
             ],
             [

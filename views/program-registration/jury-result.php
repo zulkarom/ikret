@@ -17,7 +17,7 @@ use yii\helpers\ArrayHelper;
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
 $sub_str = $programSub? ' / (' . $programSub->sub_abbr . ')' : '';
-$this->title = 'Result by Assignment - ' . $program->program_abbr . $sub_str;
+$this->title = 'Juries Judging Raw Input - ' . $program->program_abbr . $sub_str;
 $this->params['breadcrumbs'][] = [
     'label' => $program->program_abbr . ($programSub ? ' / ' . $programSub->sub_abbr : ''),
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
@@ -393,8 +393,16 @@ CSS);
             ['class' => 'yii\grid\SerialColumn'],
             [
                 'label' =>'Participant',
+                'format' => 'raw',
                 'value' => function($model){
-                   return $model->registration->participantText;
+                    $reg = $model->registration;
+                    $name = Html::encode($reg->participantText);
+                    $groupName = trim((string)($reg->group_name ?? ''));
+                    if($groupName === ''){
+                        return $name;
+                    }
+                    $badge = Html::tag('span', Html::encode($groupName), ['class' => 'badge bg-secondary me-2']);
+                    return $badge . $name;
                 }
             ],
             [

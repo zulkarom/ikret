@@ -33,12 +33,13 @@ class ProgramAchievement extends \yii\db\ActiveRecord
     {
         return [
             [['program_id', 'name'], 'required'],
-            [['program_id', 'program_sub', 'winner_count'], 'integer'],
+            [['program_id', 'program_sub', 'winner_count', 'rubric_item_id'], 'integer'],
             [['winner_count'], 'default', 'value' => null],
             [['winner_count'], 'integer', 'min' => 0],
             [['name'], 'string', 'max' => 255],
             [['program_id'], 'exist', 'skipOnError' => true, 'targetClass' => Program::class, 'targetAttribute' => ['program_id' => 'id']],
             [['program_sub'], 'exist', 'skipOnError' => true, 'targetClass' => ProgramSub::class, 'targetAttribute' => ['program_sub' => 'id']],
+            [['rubric_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => RubricItem::class, 'targetAttribute' => ['rubric_item_id' => 'id']],
         ];
     }
 
@@ -74,5 +75,10 @@ class ProgramAchievement extends \yii\db\ActiveRecord
     public function getWinnerTitles()
     {
         return $this->hasMany(ProgramWinnerTitle::class, ['achievement_id' => 'id'])->orderBy(['winner_order' => SORT_ASC]);
+    }
+
+    public function getRubricItem()
+    {
+        return $this->hasOne(RubricItem::class, ['id' => 'rubric_item_id']);
     }
 }

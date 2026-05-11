@@ -1761,6 +1761,31 @@ class ProgramController extends Controller
             $winnerCountRaw = trim((string)($post['winner_count'] ?? ''));
             $winnerCount = $winnerCountRaw === '' ? null : (int)$winnerCountRaw;
 
+            if($action === 'map-recommendation'){
+                $achievementQuery = ProgramAchievement::find()->where([
+                    'id' => $achievementId,
+                    'program_id' => (int)$id,
+                ]);
+                if($programSub){
+                    $achievementQuery->andWhere(['program_sub' => (int)$programSub->id]);
+                }else{
+                    $achievementQuery->andWhere(['program_sub' => null]);
+                }
+                $achievementModel = $achievementQuery->one();
+                if(!$achievementModel){
+                    throw new NotFoundHttpException('Achievement not found.');
+                }
+
+                $rubricItemId = (int)($post['rubric_item_id'] ?? 0);
+                $achievementModel->rubric_item_id = $rubricItemId > 0 ? $rubricItemId : null;
+                if($achievementModel->save()){
+                    Yii::$app->session->addFlash('success', 'Recommendation mapping updated.');
+                }else{
+                    Yii::$app->session->addFlash('error', implode('<br>', $achievementModel->getFirstErrors()));
+                }
+                return $this->redirect(['achievement', 'id' => $id, 'sub' => $sub]);
+            }
+
             if($action === 'add'){
                 $achievementModel = new ProgramAchievement([
                     'program_id' => (int)$id,
@@ -1840,6 +1865,30 @@ class ProgramController extends Controller
             $achievement = ProgramAchievement::find()->where(['program_id' => $id, 'program_sub' => null])->orderBy(['name' => SORT_ASC])->all();
         }
 
+        $recommendationItems = [];
+        $rubricIds = [];
+        $programRubricsQuery = ProgramRubric::find()->where(['program_id' => (int)$id]);
+        if($programSub){
+            $programRubricsQuery->andWhere(['program_sub' => (int)$programSub->id]);
+        }else{
+            $programRubricsQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+        }
+        $programRubrics = $programRubricsQuery->all();
+        foreach($programRubrics as $pr){
+            if($pr->rubric_id){
+                $rubricIds[] = (int)$pr->rubric_id;
+            }
+        }
+        $rubricIds = array_values(array_unique(array_filter($rubricIds)));
+        if($rubricIds){
+            $recommendationItems = RubricItem::find()->alias('i')
+                ->innerJoin('rubric_category c', 'c.id = i.category_id')
+                ->where(['c.rubric_id' => $rubricIds])
+                ->andWhere(['or', ['i.is_recommend' => 1], ['c.is_recommend' => 1]])
+                ->orderBy(['c.rubric_id' => SORT_ASC, 'c.id' => SORT_ASC, 'i.item_order' => SORT_ASC])
+                ->all();
+        }
+
         $hasWinnerTitleTable = $this->hasProgramWinnerTitleTable();
         $hasWinnerTitleAchievementColumn = $this->hasProgramWinnerTitleAchievementColumn();
         $winnerTitlesByAchievement = [];
@@ -1865,6 +1914,7 @@ class ProgramController extends Controller
             'hasWinnerTitleTable' => $hasWinnerTitleTable,
             'hasWinnerTitleAchievementColumn' => $hasWinnerTitleAchievementColumn,
             'winnerTitlesByAchievement' => $winnerTitlesByAchievement,
+            'recommendationItems' => $recommendationItems,
         ]);
     }
 

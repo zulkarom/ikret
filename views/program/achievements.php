@@ -10,6 +10,7 @@ use app\models\ParticipantAchieve;
 /** @var bool $hasWinnerTitleTable */
 /** @var bool $hasWinnerTitleAchievementColumn */
 /** @var array $winnerTitlesByAchievement */
+/** @var app\models\RubricItem[] $recommendationItems */
 
 $this->title = 'Achievement: ' . $model->program_name;
 
@@ -36,6 +37,65 @@ if($programSub){
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
+
+    <div class="card mb-3">
+            <div class="card-header">Achievement & Recommendation Mapping</div>
+            <div class="card-body pt-3">
+                <?php
+                $recommendationItems = $recommendationItems ?? [];
+                $recommendationMap = [];
+                if($recommendationItems){
+                    foreach($recommendationItems as $item){
+                        $label = trim((string)($item->item_short ?: $item->item_text));
+                        if($label === ''){
+                            $label = 'Item #' . (int)$item->id;
+                        }
+                        $recommendationMap[$item->id] = $label;
+                    }
+                }
+                ?>
+
+                <?php if(!$recommendationMap): ?>
+                    <div class="text-muted">No recommendation items found in the assigned rubric(s).</div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th style="min-width: 360px;">Achievement</th>
+                                    <th>Recommendation Item (Rubric)</th>
+                                    <th style="width: 220px;">Action</th>
+                                </tr>
+                                <?php if($achievement): ?>
+                                    <?php foreach($achievement as $a): ?>
+                                        <?php $formId = 'achievement-map-' . (int)$a->id; ?>
+                                        <tr>
+                                            <td><?= Html::encode($a->name) ?></td>
+                                            <td>
+                                                <?= Html::beginForm(Url::to(['program/achievement', 'id' => $model->id, 'sub' => $programSub ? $programSub->id : null]), 'post', ['id' => $formId]) ?>
+                                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                                <?= Html::hiddenInput('action_type', 'map-recommendation') ?>
+                                                <?= Html::hiddenInput('achievement_id', (int)$a->id) ?>
+                                                <?= Html::dropDownList('rubric_item_id', $a->rubric_item_id, $recommendationMap, [
+                                                    'class' => 'form-select form-select-sm',
+                                                    'prompt' => 'Not linked',
+                                                ]) ?>
+                                                <?= Html::endForm() ?>
+                                            </td>
+                                            <td>
+                                                <?= Html::submitButton('Save', ['class' => 'btn btn-primary btn-sm', 'form' => $formId]) ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr><td colspan="3" class="text-muted">No achievement found.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
 
     <div class="card mb-3">
             <div class="card-header">Achievement</div>
