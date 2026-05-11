@@ -58,7 +58,7 @@ $downloadButton = function ($url, $templateId) use ($publishedTemplates, $soonTe
           }
         }
 
-        if($medals){
+        if(!empty($publishedTemplates[4]) && $medals){
           foreach($medals as $a){
             echo ' <tr><td>'.$i.'. </td><td>Certificate of Achievement
             <br /><b>('.$a->awardTextColor().')</b>
@@ -70,7 +70,7 @@ $downloadButton = function ($url, $templateId) use ($publishedTemplates, $soonTe
           }
         }
 
-        if($excel){
+        if(!empty($publishedTemplates[5]) && $excel){
           foreach($excel as $b){
            //echo '<pre>';
            // print_r($b);
