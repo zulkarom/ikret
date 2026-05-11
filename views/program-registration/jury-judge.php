@@ -24,6 +24,14 @@ $canMarkNotNullified = !$write
     && !Yii::$app->user->isGuest
     && Yii::$app->user->identity->isAdminJury
     && (int)$assign->is_nullified === 1;
+$backToResultListUrl = null;
+if(!$write && $register){
+    $backToResultListUrl = [
+        '/program-registration/jury-result',
+        'id' => $register->program_id,
+        'sub' => $register->program_sub,
+    ];
+}
 $groupBadgeHtml = '';
 $participantInfoHtml = $register ? $register->shortFieldsHtml : '';
 $participantMembersHtml = '';
@@ -672,6 +680,9 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
                   <li>Full Score: <?=$total?></li>
                   <li>Score Earned: <?=$score?></li>
                   <li>Percentage: <?=$percent?>%</li>
+                  <?php if((int)$assign->is_nullified === 1): ?>
+                    <li>Nullified Reason: <?= trim((string)$assign->reason_nullified) !== '' ? Html::encode($assign->reason_nullified) : '<span class="text-muted">-</span>' ?></li>
+                  <?php endif; ?>
                 
                    <?php 
                   if($assign->status <= 10 && $model->updated_at){
@@ -691,6 +702,9 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
 <?php if($canReturnResultJudging){ ?>
     <div class="mb-3 d-flex flex-wrap gap-2">
+        <?php if($backToResultListUrl): ?>
+            <?= Html::a('<i class="bi bi-arrow-left"></i> Back to List', $backToResultListUrl, ['class' => 'btn btn-outline-secondary']) ?>
+        <?php endif; ?>
         <?= Html::beginForm(['return-result-judging', 'id' => $assign->id], 'post') ?>
             <?= Html::submitButton('Return as Judging', [
                 'class' => 'btn btn-warning',
@@ -707,7 +721,10 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
         <?php endif; ?>
     </div>
 <?php }elseif($canMarkNotNullified){ ?>
-    <div class="mb-3">
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <?php if($backToResultListUrl): ?>
+            <?= Html::a('<i class="bi bi-arrow-left"></i> Back to List', $backToResultListUrl, ['class' => 'btn btn-outline-secondary']) ?>
+        <?php endif; ?>
         <?= Html::beginForm(['mark-result-not-nullified', 'id' => $assign->id], 'post') ?>
             <?= Html::submitButton('Mark as Not Nullified', [
                 'class' => 'btn btn-outline-success',
