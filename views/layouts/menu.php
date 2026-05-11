@@ -244,7 +244,7 @@ use yii\helpers\Url;
         }
         
 
-        if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminJury || Yii::$app->user->identity->isAdminRegistration){
+        if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminJury || Yii::$app->user->identity->isAdminRegistration || Yii::$app->user->identity->isAdminCertificate){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
           if(Yii::$app->user->identity->isAdmin){
             $userAccessMenu = [];
@@ -266,7 +266,7 @@ use yii\helpers\Url;
             ]];
           }
 
-          if(Yii::$app->user->identity->isAdmin){
+          if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminCertificate){
             $menu[] = ['name' => 'Certification', 'url' => ['/'], 'icon' => 'bi bi-award', 'children' => [
               ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
               ['name' => 'All Participants', 'url' => ['/certificate-template/participants']],

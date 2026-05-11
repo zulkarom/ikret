@@ -41,7 +41,8 @@ class CertificateTemplateController extends Controller
                         'allow' => true,
                         'roles' => ['@'],
                         'matchCallback' => function () {
-                            return !Yii::$app->user->isGuest && Yii::$app->user->identity->isAdmin;
+                            return !Yii::$app->user->isGuest
+                                && (Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminCertificate);
                         },
                     ],
                 ],

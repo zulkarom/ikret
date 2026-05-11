@@ -99,9 +99,9 @@ class UserRole extends \yii\db\ActiveRecord
             'jury' => 'Jury',
             'committee' => 'Committee',
             'mentor' => 'Mentor',
-            'jury-management' => 'Jury Management',
             'admin-jury' => 'Admin Jury',
             'admin-registration' => 'Admin Registration',
+            'admin-certificate' => 'Admin Certificate',
             'superadmin' => 'Super Administrator',
         ];
     }

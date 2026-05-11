@@ -328,11 +328,15 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     public function getIsAdminJury(){
-        return $this->hasActiveRole(['admin-jury', 'jury-management', 'superadmin']);
+        return $this->hasActiveRole(['admin-jury', 'superadmin']);
     }
 
     public function getIsAdminRegistration(){
         return $this->hasActiveRole(['admin-registration', 'superadmin']);
+    }
+
+    public function getIsAdminCertificate(){
+        return $this->hasActiveRole(['admin-certificate', 'superadmin']);
     }
 
     public function getIsCommittee(){
