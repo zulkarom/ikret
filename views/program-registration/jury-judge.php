@@ -20,6 +20,10 @@ $canReturnResultJudging = !$write
     && !Yii::$app->user->isGuest
     && Yii::$app->user->identity->isAdminJury
     && (int)$assign->status === 20;
+$canMarkNotNullified = !$write
+    && !Yii::$app->user->isGuest
+    && Yii::$app->user->identity->isAdminJury
+    && (int)$assign->is_nullified === 1;
 $groupBadgeHtml = '';
 $participantInfoHtml = $register ? $register->shortFieldsHtml : '';
 $participantMembersHtml = '';
@@ -686,11 +690,28 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
         <?php } ?>
 
 <?php if($canReturnResultJudging){ ?>
-    <div class="mb-3">
+    <div class="mb-3 d-flex flex-wrap gap-2">
         <?= Html::beginForm(['return-result-judging', 'id' => $assign->id], 'post') ?>
             <?= Html::submitButton('Return as Judging', [
                 'class' => 'btn btn-warning',
                 'data-confirm' => 'Return this completed result to Judging so the jury can edit and submit again?',
+            ]) ?>
+        <?= Html::endForm() ?>
+        <?php if($canMarkNotNullified): ?>
+            <?= Html::beginForm(['mark-result-not-nullified', 'id' => $assign->id], 'post') ?>
+                <?= Html::submitButton('Mark as Not Nullified', [
+                    'class' => 'btn btn-outline-success',
+                    'data-confirm' => 'Mark this result as not nullified and restore its score from the rubric answers?',
+                ]) ?>
+            <?= Html::endForm() ?>
+        <?php endif; ?>
+    </div>
+<?php }elseif($canMarkNotNullified){ ?>
+    <div class="mb-3">
+        <?= Html::beginForm(['mark-result-not-nullified', 'id' => $assign->id], 'post') ?>
+            <?= Html::submitButton('Mark as Not Nullified', [
+                'class' => 'btn btn-outline-success',
+                'data-confirm' => 'Mark this result as not nullified and restore its score from the rubric answers?',
             ]) ?>
         <?= Html::endForm() ?>
     </div>
@@ -711,9 +732,8 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
 
 
     <?php $form = ActiveForm::begin(); 
-    $hide_form = $assign->is_nullified == 1 ? 'style="display: none;"' : '';
     ?>
-    <div id="con-form" class="jury-judge-form" <?=$hide_form?>>
+    <div id="con-form" class="jury-judge-form">
     <?php  
     $i = 1;
     if($rubric && $rubric->categories){
@@ -886,9 +906,7 @@ KOMEN JURI,Kekuatan,Ruang untuk juri...,Strengths,textarea,,0,0</div>
       $("#nullify").change(function(){
            if ($(this).prop("checked")==true){ 
               $("#con-nullified").slideDown();
-              $("#con-form").hide();
           }else{
-            $("#con-form").show();
               $("#con-nullified").slideUp();
           }
       });

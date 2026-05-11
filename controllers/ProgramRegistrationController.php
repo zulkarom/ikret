@@ -479,6 +479,65 @@ class ProgramRegistrationController extends Controller
         return $this->redirect(['view-result', 'id' => $assign->id]);
     }
 
+    public function actionMarkResultNotNullified($id)
+    {
+        if(!Yii::$app->user->identity->isAdminJury) return false;
+        if(!$this->request->isPost){
+            throw new \yii\web\MethodNotAllowedHttpException('Method Not Allowed.');
+        }
+
+        $assign = $this->findAssignment($id);
+        if((int)$assign->is_nullified !== 1){
+            Yii::$app->session->addFlash('info', 'This result is already not nullified.');
+            return $this->redirect(['view-result', 'id' => $assign->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try{
+            $answer = RubricAnswer::findOne([
+                'rubric_id' => $assign->rubric_id,
+                'assignment_id' => $assign->id,
+            ]);
+
+            $assign->is_nullified = 0;
+            $assign->reason_nullified = null;
+            if($answer && $answer->isComplete){
+                $assign->status = 20;
+                $assign->score = $answer->scoreValue;
+                if(!$answer->submitted_at){
+                    $answer->submitted_at = new Expression('NOW()');
+                    $answer->save(false, ['submitted_at']);
+                }
+            }else{
+                $assign->status = 10;
+                $assign->score = null;
+                if($answer){
+                    $answer->submitted_at = null;
+                    $answer->save(false, ['submitted_at']);
+                }
+            }
+            $assign->updated_at = time();
+            $assign->save(false, ['status', 'is_nullified', 'reason_nullified', 'score', 'updated_at']);
+
+            if($assign->registration){
+                $assign->registration->setScoreAndAward();
+                $assign->registration->save(false, ['score', 'award']);
+            }
+
+            $transaction->commit();
+            if($answer && $answer->isComplete){
+                Yii::$app->session->addFlash('success', 'Result marked as not nullified and kept as Complete.');
+            }else{
+                Yii::$app->session->addFlash('warning', 'Result marked as not nullified, but returned to Judging because required answers are incomplete.');
+            }
+        }catch(\Throwable $e){
+            $transaction->rollBack();
+            Yii::$app->session->addFlash('error', $e->getMessage());
+        }
+
+        return $this->redirect(['view-result', 'id' => $assign->id]);
+    }
+
     public function actionAchieveDelete($id){
         if(!Yii::$app->user->identity->isManager) return false;
         $model = $this->findAchievement($id);

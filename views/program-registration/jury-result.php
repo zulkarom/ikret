@@ -254,6 +254,9 @@ CSS);
     $exportColumns[] = [
         'label' =>'Score',
         'value' => function($model){
+            if((int)$model->is_nullified === 1){
+                return 'Nullified';
+            }
             return $model->score;
         }
     ];
@@ -408,6 +411,9 @@ CSS);
             [
                 'label' =>'Score',
                 'value' => function($model){
+                    if((int)$model->is_nullified === 1){
+                        return 'Nullified';
+                    }
                     if($model->rubricAnswer){
                         return $model->rubricAnswer->scoreValue;
                     }

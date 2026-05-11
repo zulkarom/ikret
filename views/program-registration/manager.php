@@ -242,6 +242,8 @@ CSS);
         <?=Html::button('Jury Assignment Form',['id' => 'btn-jury-form', 'class' => 'btn btn-primary'])?> 
         <?=Html::button('Juries Stats',['id' => 'btn-jury-stats', 'class' => 'btn btn-secondary'])?> 
         <?=Html::button('Applied Juries',['id' => 'btn-applied-juries', 'class' => 'btn btn-outline-primary'])?> 
+        <?=Html::a('<i class="bi bi-bar-chart-line"></i> Raw Input', ['jury-result', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-outline-secondary'])?> 
+        <?=Html::a('<i class="bi bi-trophy"></i> Analysis', ['manager-analysis', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-outline-success'])?> 
         <?=Html::a('<i class="bi bi-download"></i> Export Excel', ['manager-export-assignments', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null], ['class' => 'btn btn-success'])?> 
     </div> 
 

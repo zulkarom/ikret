@@ -153,11 +153,17 @@ $("#btn-hide-new-user").click(function(){
             ],
             ['class' => 'yii\grid\ActionColumn',
             //'contentOptions' => ['style' => 'width: 13%'],
-            'template' => '{view}',
+            'template' => '{view} {login}',
             //'visible' => false,
             'buttons'=>[
                 'view'=>function ($url, $model) {
                     return Html::a('Cert.',['/program-registration/jury-cert-page', 'u' => $model->id],['class'=>'btn btn-primary btn-sm']);
+                },
+                'login'=>function ($url, $model) {
+                    if(Yii::$app->user->identity->isAdminJury){
+                        return Html::a('Login as', ['login-as', 'id' => $model->id], ['class'=>'btn btn-warning btn-sm']);
+                    }
+                    return '';
                 },
             ],
         
