@@ -54,7 +54,7 @@ class JuryResultSearch extends User
         ->joinWith(['registration r'])
         ->leftJoin('user u','u.id = r.user_id')
         ->leftJoin('user ju','ju.id = a.user_id')
-        ->where(['r.program_id' => $this->program_id, 'rubric_id' => $this->rubric]);
+        ->where(['r.program_id' => $this->program_id, 'a.rubric_id' => $this->rubric]);
         if($this->program_sub){
             $query = $query->andWhere(
                 ['r.program_sub' => $this->program_sub]);

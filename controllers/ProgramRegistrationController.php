@@ -611,6 +611,14 @@ class ProgramRegistrationController extends Controller
         $post = $this->request->post();
         $action = (string)($post['action_type'] ?? '');
         if ($this->request->isPost && $action === 'achievement-add' && $achieve->load($post)) {
+            $exists = ParticipantAchieve::find()->where([
+                'program_reg_id' => (int)$achieve->program_reg_id,
+                'achieve_id' => (int)$achieve->achieve_id,
+            ])->exists();
+            if($exists){
+                Yii::$app->session->addFlash('error', 'This achievement has already been assigned to this participant.');
+                return $this->refresh();
+            }
             $achieve->achieved_at = time();
             if($achieve->save()){
                 Yii::$app->session->addFlash('success', "Achievement Added");
@@ -620,6 +628,7 @@ class ProgramRegistrationController extends Controller
 
         if($this->request->isPost && $action === 'achievement-title-update' && $this->hasParticipantAchieveWinnerTitleColumn()){
             $selectedTitles = $post['achievement_winner_title'] ?? [];
+            $conflicts = [];
             if($selectedTitles){
                 foreach($selectedTitles as $participantAchieveId => $winnerTitleId){
                     $participantAchieve = ParticipantAchieve::findOne([
@@ -637,13 +646,37 @@ class ProgramRegistrationController extends Controller
                         $winnerTitle = ProgramWinnerTitle::find()
                             ->where(['id' => $winnerTitleId, 'achievement_id' => (int)$participantAchieve->achieve_id])
                             ->one();
-                        $participantAchieve->winner_title_id = $winnerTitle ? (int)$winnerTitle->id : null;
+                        $winnerTitleId = $winnerTitle ? (int)$winnerTitle->id : 0;
+                        if($winnerTitleId > 0){
+                            $existing = ParticipantAchieve::find()
+                                ->where([
+                                    'achieve_id' => (int)$participantAchieve->achieve_id,
+                                    'winner_title_id' => $winnerTitleId,
+                                ])
+                                ->andWhere(['<>', 'id', (int)$participantAchieve->id])
+                                ->one();
+                            if($existing){
+                                $existingParticipant = $existing->registration ? $existing->registration->participantText : 'another participant';
+                                $titleName = $winnerTitle && trim((string)$winnerTitle->title_name) !== ''
+                                    ? trim((string)$winnerTitle->title_name)
+                                    : ('Winner ' . ($winnerTitle ? (int)$winnerTitle->winner_order : ''));
+                                $conflicts[] = $titleName . ' already assigned to ' . $existingParticipant . '.';
+                                continue;
+                            }
+                            $participantAchieve->winner_title_id = $winnerTitleId;
+                        }else{
+                            $participantAchieve->winner_title_id = null;
+                        }
                     }
                     $participantAchieve->save(false, ['winner_title_id']);
                 }
             }
 
-            Yii::$app->session->addFlash('success', "Winner title updated");
+            if($conflicts){
+                Yii::$app->session->addFlash('error', implode("\n", array_unique($conflicts)));
+            }else{
+                Yii::$app->session->addFlash('success', "Winner title updated");
+            }
             return $this->refresh();
         }
 
@@ -3762,15 +3795,20 @@ class ProgramRegistrationController extends Controller
         $programSub = null;
         $program = $role->program;
         $rubrics = $program->programRubrics;
+        $achievementsQuery = ProgramAchievement::find()->where(['program_id' => $role->program_id]);
 
         if($role->program->has_sub == 1){
             if($sub){
                 $programSub = $role->programSub;
                 $rubrics = $program->getProgramRubricsSub($sub)->all();
+                $achievementsQuery->andWhere(['program_sub' => $sub]);
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
+        }else{
+            $achievementsQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
         }
+        $achievements = $achievementsQuery->orderBy(['name' => SORT_ASC])->all();
         $firstRubric = null;
         if($rubrics){
             $firstRubric = $rubrics[0]->rubric_id;
@@ -3806,6 +3844,7 @@ class ProgramRegistrationController extends Controller
                 'model' => $model,
                 'programSub' => $programSub,
                 'rubrics' => $rubrics,
+                'achievements' => $achievements,
                 'stages' =>$stages,
                 'selectedRubric' => $selectedRubric
             ]);
