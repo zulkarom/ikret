@@ -244,9 +244,14 @@ use yii\helpers\Url;
         }
         
 
-        if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminJury || Yii::$app->user->identity->isAdminRegistration || Yii::$app->user->identity->isAdminCertificate){
+        $isSuperadmin = Yii::$app->user->identity->isSuperadmin;
+        $isAdminJury = Yii::$app->user->identity->isAdminJury;
+        $isAdminRegistration = Yii::$app->user->identity->isAdminRegistration;
+        $isAdminCertificate = Yii::$app->user->identity->isAdminCertificate;
+
+        if($isSuperadmin || $isAdminJury || $isAdminRegistration || $isAdminCertificate){
           $menu[] = ['name' => 'Admin Menu', 'heading' => true];
-          if(Yii::$app->user->identity->isAdmin){
+          if($isSuperadmin){
             $userAccessMenu = [];
             $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
             $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
@@ -255,7 +260,7 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => $userAccessMenu];
           }
 
-          if(Yii::$app->user->identity->isAdminJury){
+          if($isAdminJury){
             $menu[] = ['name' => 'Jury Management', 'url' => ['/'], 'icon' => 'bi bi-person-badge', 'children' => [
               ['name' => 'List of Juries', 'url' => ['/user/jury']],
               ['name' => 'Jury Profiles', 'url' => ['/jury-profile/index']],
@@ -266,7 +271,7 @@ use yii\helpers\Url;
             ]];
           }
 
-          if(Yii::$app->user->identity->isAdmin || Yii::$app->user->identity->isAdminCertificate){
+          if($isSuperadmin || $isAdminCertificate){
             $menu[] = ['name' => 'Certification', 'url' => ['/'], 'icon' => 'bi bi-award', 'children' => [
               ['name' => 'Certificate Config', 'url' => ['/certificate-template/index']],
               ['name' => 'All Participants', 'url' => ['/certificate-template/participants']],
@@ -276,7 +281,7 @@ use yii\helpers\Url;
             ]];
           }
 
-          if(Yii::$app->user->identity->isAdmin){
+          if($isSuperadmin){
             $menu[] = ['name' => 'Program & Configuration', 'url' => ['/'], 'icon' => 'bi bi-diagram-3', 'children' => [
               ['name' => 'Program/Sub Config', 'url' => ['/program/admin-program-subs']],
               ['name' => 'Registration Fields', 'url' => ['/program-reg-field/index']],
@@ -285,7 +290,7 @@ use yii\helpers\Url;
             ]];
           }
 
-          if(Yii::$app->user->identity->isAdminRegistration){
+          if($isAdminRegistration){
             $menu[] = ['name' => 'Registration', 'url' => ['/'], 'icon' => 'bi bi-list-stars', 'children' => [
               ['name' => 'All Registration', 'url' => ['/program-registration/index']],
               ['name' => 'All Program/Sub', 'url' => ['/program/admin-registration-status']],
@@ -294,7 +299,7 @@ use yii\helpers\Url;
             ]];
           }
 
-          if(Yii::$app->user->identity->isAdmin){
+          if($isSuperadmin){
             $menu[] = ['name' => 'Reports & Analytics', 'url' => ['/'], 'icon' => 'bi bi-bar-chart', 'children' => [
               ['name' => 'Program Stats', 'url' => ['/program/admin-program-stats']],
             ]];
