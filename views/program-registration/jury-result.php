@@ -255,7 +255,7 @@ CSS);
         'label' =>'Score',
         'value' => function($model){
             if((int)$model->is_nullified === 1){
-                return 'Nullified';
+                return (int)$model->status === 20 ? 'Nullified' : '-';
             }
             return $model->score;
         }
@@ -412,7 +412,7 @@ CSS);
                 'label' =>'Score',
                 'value' => function($model){
                     if((int)$model->is_nullified === 1){
-                        return 'Nullified';
+                        return (int)$model->status === 20 ? 'Nullified' : '-';
                     }
                     if($model->rubricAnswer){
                         return $model->rubricAnswer->scoreValue;
