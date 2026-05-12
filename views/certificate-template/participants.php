@@ -2,9 +2,16 @@
 
 use yii\grid\GridView;
 use yii\helpers\Html;
+use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+
+$name = $name ?? '';
+$programId = $programId ?? null;
+$programSubId = $programSubId ?? null;
+$programList = $programList ?? [];
+$programSubList = $programSubList ?? [];
 
 $this->title = 'All Participants';
 $this->params['breadcrumbs'][] = ['label' => 'Certificate Config', 'url' => ['index']];
@@ -20,6 +27,38 @@ $this->params['breadcrumbs'][] = $this->title;
 <section class="section dashboard">
     <div class="card">
         <div class="card-body pt-4">
+            <div class="mb-3">
+                <?php $form = ActiveForm::begin([
+                    'method' => 'get',
+                    'action' => ['participants'],
+                    'options' => ['class' => 'row g-2 align-items-end'],
+                ]); ?>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Name</label>
+                    <?= Html::textInput('name', $name, ['class' => 'form-control']) ?>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Program</label>
+                    <?= Html::dropDownList('program_id', $programId, $programList, ['class' => 'form-select', 'prompt' => '- All -']) ?>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Sub Program</label>
+                    <?= Html::dropDownList('program_sub', $programSubId, $programSubList, ['class' => 'form-select', 'prompt' => '- All -']) ?>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <?= Html::submitButton('Filter', ['class' => 'btn btn-primary w-100']) ?>
+                    <div class="mt-1">
+                        <?= Html::a('Reset', ['participants'], ['class' => 'btn btn-outline-secondary w-100']) ?>
+                    </div>
+                </div>
+
+                <?php ActiveForm::end(); ?>
+            </div>
+
             <div class="table-responsive">
                 <?= GridView::widget([
                     'dataProvider' => $dataProvider,

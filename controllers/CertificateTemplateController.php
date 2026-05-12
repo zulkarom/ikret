@@ -16,6 +16,7 @@ use app\models\UserRole;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\filters\AccessControl;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
@@ -82,18 +83,59 @@ class CertificateTemplateController extends Controller
 
     public function actionParticipants()
     {
+        $name = trim((string)Yii::$app->request->get('name', ''));
+        $programId = Yii::$app->request->get('program_id');
+        $programSubId = Yii::$app->request->get('program_sub');
+
+        $programId = ($programId === '' || $programId === null) ? null : (int)$programId;
+        $programSubId = ($programSubId === '' || $programSubId === null) ? null : (int)$programSubId;
+
+        $query = ProgramRegistration::find()->alias('a')
+            ->joinWith(['user u', 'program p', 'programSub ps'])
+            ->where(['>', 'a.status', 0]);
+
+        if ($name !== '') {
+            $query->andWhere(['like', 'u.fullname', $name]);
+        }
+
+        if ($programId !== null) {
+            $query->andWhere(['a.program_id' => $programId]);
+        }
+
+        if ($programSubId !== null) {
+            $query->andWhere(['a.program_sub' => $programSubId]);
+        }
+
         $dataProvider = new ActiveDataProvider([
-            'query' => ProgramRegistration::find()->alias('a')
-                ->joinWith(['user u', 'program p', 'programSub ps'])
-                ->where(['>', 'a.status', 0])
-                ->orderBy(['p.id' => SORT_ASC, 'ps.id' => SORT_ASC, 'a.group_name' => SORT_ASC, 'a.id' => SORT_ASC]),
+            'query' => $query->orderBy(['p.id' => SORT_ASC, 'ps.id' => SORT_ASC, 'a.group_name' => SORT_ASC, 'a.id' => SORT_ASC]),
             'pagination' => [
                 'pageSize' => 100,
             ],
         ]);
 
+        $programList = Program::listPrograms();
+
+        $subQuery = ProgramSub::find()->alias('ps')->joinWith(['program p']);
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if ($subTable && $subTable->getColumn('is_active')) {
+            $subQuery->andWhere(['ps.is_active' => 1]);
+        }
+        $programSubList = ArrayHelper::map(
+            $subQuery->orderBy(['p.id' => SORT_ASC, 'ps.id' => SORT_ASC])->all(),
+            'id',
+            function (ProgramSub $model) {
+                $programName = $model->program ? $model->program->program_name : '-';
+                return $programName . ' - ' . $model->subProgramText;
+            }
+        );
+
         return $this->render('participants', [
             'dataProvider' => $dataProvider,
+            'programList' => $programList,
+            'programSubList' => $programSubList,
+            'name' => $name,
+            'programId' => $programId,
+            'programSubId' => $programSubId,
         ]);
     }
 
