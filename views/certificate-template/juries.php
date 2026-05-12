@@ -1,6 +1,7 @@
 <?php
 
 use app\models\Program;
+use app\models\CertificateTemplate;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
@@ -14,6 +15,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="pagetitle">
     <h1><?= Html::encode($this->title) ?></h1>
+</div>
+
+<?php $published = CertificateTemplate::isPublished(3); ?>
+<div class="alert <?= $published ? 'alert-success' : 'alert-warning' ?>" role="alert">
+    Jury certificate template: <b><?= $published ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Note: Admin can view this page anytime. Jury certificate PDF is only available when the jury assignment is marked <b>COMPLETE</b>.
 </div>
 
 </div><!-- End Page Title -->
@@ -55,16 +62,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             'label' => 'Certificate',
                             'format' => 'raw',
                             'value' => function($model){
-                                if((int)$model->status !== 20){
-                                    return '<span class="text-muted">Not generated yet</span>';
-                                }
-
-                                return Html::a('Certificate', [
+                                $url = [
                                     '/program-registration/jury-cert-pdf',
                                     'p' => $model->program_id,
                                     's' => $model->program_sub,
                                     'u' => $model->user_id,
-                                ], ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']);
+                                ];
+
+                                if((int)$model->status !== 20){
+                                    $btn = Html::a('Certificate', $url, ['class' => 'btn btn-outline-primary btn-sm', 'target' => '_blank']);
+                                    return $btn . '<div class="small text-muted">Not generated for the jury yet</div>';
+                                }
+
+                                return Html::a('Certificate', $url, ['class' => 'btn btn-primary btn-sm', 'target' => '_blank']);
                             },
                         ],
                     ],

@@ -1,6 +1,7 @@
 <?php
 
 use app\models\SessionAttendance;
+use app\models\CertificateTemplate;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
@@ -15,6 +16,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="pagetitle">
     <h1><?= Html::encode($this->title) ?></h1>
+</div>
+
+<?php $published = CertificateTemplate::isPublished(7); ?>
+<div class="alert <?= $published ? 'alert-success' : 'alert-warning' ?>" role="alert">
+    Session participation certificate template: <b><?= $published ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Note: Admin can view this page anytime. Session certificate button is only available when the session has <b>session certificate enabled</b>.
 </div>
 
 </div><!-- End Page Title -->

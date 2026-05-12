@@ -1,5 +1,6 @@
 <?php
 
+use app\models\CertificateTemplate;
 use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
@@ -20,6 +21,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="pagetitle">
     <h1><?= Html::encode($this->title) ?></h1>
+</div>
+
+<?php
+    $publishedParticipation = CertificateTemplate::isPublished(1);
+    $publishedAchievement = CertificateTemplate::isPublished(4);
+    $publishedExcellence = CertificateTemplate::isPublished(5);
+?>
+
+<div class="alert <?= ($publishedParticipation && $publishedAchievement && $publishedExcellence) ? 'alert-success' : 'alert-warning' ?>" role="alert">
+    Participation template: <b><?= $publishedParticipation ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Achievement template: <b><?= $publishedAchievement ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Excellence template: <b><?= $publishedExcellence ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Note: Admin can view these pages anytime. Non-admin users can only view/download certificates when certificates are released and the template is published.
 </div>
 
 </div><!-- End Page Title -->

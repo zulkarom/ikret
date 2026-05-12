@@ -1577,7 +1577,10 @@ class ProgramController extends Controller
             $rubrics = ProgramRubric::find()
             ->where(['program_id' => $id, 'program_sub' => $sub])->all();
         }else{
-            $rubrics = ProgramRubric::find()->where(['program_id' => $id, 'program_sub' => null])->all();
+            $rubrics = ProgramRubric::find()
+                ->where(['program_id' => $id])
+                ->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]])
+                ->all();
         }
         
         $model = $this->findModel($id);
@@ -1615,6 +1618,18 @@ class ProgramController extends Controller
 
         if(!$hasSub){
             $sub = null;
+        }
+
+        $existingRubricQuery = ProgramRubric::find()->where(['program_id' => (int)$id]);
+        if($sub !== null && $sub !== ''){
+            $existingRubricQuery->andWhere(['program_sub' => (int)$sub]);
+        }else{
+            $existingRubricQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
+        }
+
+        if($existingRubricQuery->exists()){
+            Yii::$app->session->addFlash('error', 'Only one rubric is allowed for this program scope. Please delete the existing rubric first.');
+            return $this->redirect(['rubrics', 'id' => $id, 'sub' => $sub]);
         }
 
         $rubric = new Rubric();

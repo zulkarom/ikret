@@ -30,7 +30,7 @@ class CertificateTemplateController extends Controller
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'actions' => ['achievement-config', 'achievement-import'],
+                        'actions' => ['achievement-config', 'achievement-import', 'achievement-list'],
                         'allow' => true,
                         'roles' => ['@'],
                         'matchCallback' => function () {
@@ -49,6 +49,100 @@ class CertificateTemplateController extends Controller
                 ],
             ],
         ];
+    }
+
+    public function actionAchievementList()
+    {
+        $name = trim((string)Yii::$app->request->get('name', ''));
+        $programId = Yii::$app->request->get('program_id');
+        $programSubId = Yii::$app->request->get('program_sub');
+        $achievementId = Yii::$app->request->get('achievement_id');
+
+        $programId = ($programId === '' || $programId === null) ? null : (int)$programId;
+        $programSubId = ($programSubId === '' || $programSubId === null) ? null : (int)$programSubId;
+        $achievementId = ($achievementId === '' || $achievementId === null) ? null : (int)$achievementId;
+
+        $query = ParticipantAchieve::find()->alias('pa')
+            ->joinWith([
+                'registration r',
+                'registration.user u',
+                'registration.program p',
+                'registration.programSub ps',
+                'achieve a',
+                'winnerTitle wt',
+            ])
+            ->where(['>', 'r.status', 0]);
+
+        if($name !== ''){
+            $query->andWhere(['like', 'u.fullname', $name]);
+        }
+
+        if($programId !== null){
+            $query->andWhere(['r.program_id' => $programId]);
+        }
+
+        if($programSubId !== null){
+            $query->andWhere(['r.program_sub' => $programSubId]);
+        }
+
+        if($achievementId !== null){
+            $query->andWhere(['pa.achieve_id' => $achievementId]);
+        }
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query->orderBy([
+                'p.id' => SORT_ASC,
+                'ps.id' => SORT_ASC,
+                'u.fullname' => SORT_ASC,
+                'r.id' => SORT_ASC,
+                'a.name' => SORT_ASC,
+                'wt.winner_order' => SORT_ASC,
+                'pa.id' => SORT_ASC,
+            ]),
+            'pagination' => [
+                'pageSize' => 100,
+            ],
+        ]);
+
+        $programList = Program::listPrograms();
+
+        $subQuery = ProgramSub::find()->alias('ps')->joinWith(['program p']);
+        $subTable = Yii::$app->db->schema->getTableSchema(ProgramSub::tableName());
+        if($subTable && $subTable->getColumn('is_active')){
+            $subQuery->andWhere(['ps.is_active' => 1]);
+        }
+        $programSubList = ArrayHelper::map(
+            $subQuery->orderBy(['p.id' => SORT_ASC, 'ps.id' => SORT_ASC])->all(),
+            'id',
+            function(ProgramSub $model){
+                $programName = $model->program ? $model->program->program_name : '-';
+                return $programName . ' - ' . $model->subProgramText;
+            }
+        );
+
+        $achievementList = ArrayHelper::map(
+            ProgramAchievement::find()->alias('a')
+                ->joinWith(['program p', 'programSub ps'])
+                ->orderBy(['p.id' => SORT_ASC, 'ps.id' => SORT_ASC, 'a.name' => SORT_ASC])
+                ->all(),
+            'id',
+            function(ProgramAchievement $model){
+                $programLabel = $model->program ? ($model->program->program_abbr ?: $model->program->program_name) : '-';
+                $subLabel = $model->programSub ? (' / ' . $model->programSub->sub_name) : '';
+                return $programLabel . $subLabel . ' - ' . $model->name;
+            }
+        );
+
+        return $this->render('achievement-list', [
+            'dataProvider' => $dataProvider,
+            'programList' => $programList,
+            'programSubList' => $programSubList,
+            'achievementList' => $achievementList,
+            'name' => $name,
+            'programId' => $programId,
+            'programSubId' => $programSubId,
+            'achievementId' => $achievementId,
+        ]);
     }
 
     public function actionIndex()

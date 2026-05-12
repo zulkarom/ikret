@@ -1,5 +1,6 @@
 <?php
 
+use app\models\CertificateTemplate;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
@@ -13,6 +14,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <div class="pagetitle">
     <h1><?= Html::encode($this->title) ?></h1>
+</div>
+
+<?php $published = CertificateTemplate::isPublished(2); ?>
+<div class="alert <?= $published ? 'alert-success' : 'alert-warning' ?>" role="alert">
+    Committee certificate template: <b><?= $published ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    Note: Admin can view this page anytime. Non-admin users can only view/download certificates when certificates are released and the template is published.
 </div>
 
 </div><!-- End Page Title -->

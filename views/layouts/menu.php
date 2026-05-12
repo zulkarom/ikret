@@ -268,6 +268,7 @@ use yii\helpers\Url;
               ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
               ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
               ['name' => 'Achievement Config', 'url' => ['/certificate-template/achievement-config']],
+              ['name' => 'Achievement List', 'url' => ['/certificate-template/achievement-list']],
             ]];
           }
 
@@ -278,6 +279,7 @@ use yii\helpers\Url;
               ['name' => 'All Session Participants', 'url' => ['/certificate-template/session-participants']],
               ['name' => 'All Juries', 'url' => ['/certificate-template/juries']],
               ['name' => 'All Committees', 'url' => ['/certificate-template/committees']],
+              ['name' => 'Achievement List', 'url' => ['/certificate-template/achievement-list']],
             ]];
           }
 
