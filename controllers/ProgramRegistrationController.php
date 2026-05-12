@@ -893,9 +893,9 @@ class ProgramRegistrationController extends Controller
 
         $rubricTable = Yii::$app->db->schema->getTableSchema(Rubric::tableName());
         if($rubricTable && $rubricTable->getColumn('is_active')){
-            $rubricsQuery->andWhere([Rubric::tableName() . '.is_active' => 1]);
+            $rubricsQuery->andWhere(['r.is_active' => 1]);
         }else if($rubricTable && $rubricTable->getColumn('status')){
-            $rubricsQuery->andWhere([Rubric::tableName() . '.status' => 10]);
+            $rubricsQuery->andWhere(['r.status' => 10]);
         }
 
         $rubrics = $rubricsQuery->orderBy([ProgramRubric::tableName() . '.id' => SORT_ASC])->all();
