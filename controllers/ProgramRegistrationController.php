@@ -3831,20 +3831,40 @@ class ProgramRegistrationController extends Controller
         }
         $programSub = null;
         $program = $role->program;
-        $rubrics = $program->programRubrics;
+        $rubricsQuery = $program->getProgramRubrics()->joinWith(['rubric r']);
         $achievementsQuery = ProgramAchievement::find()->where(['program_id' => $role->program_id]);
 
         if($role->program->has_sub == 1){
             if($sub){
                 $programSub = $role->programSub;
-                $rubrics = $program->getProgramRubricsSub($sub)->all();
+                $rubricsQuery = $program->getProgramRubricsSub($sub)->joinWith(['rubric r']);
                 $achievementsQuery->andWhere(['program_sub' => $sub]);
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
         }else{
+            $rubricsQuery->andWhere(['or',
+                [ProgramRubric::tableName() . '.program_sub' => null],
+                [ProgramRubric::tableName() . '.program_sub' => 0],
+            ]);
             $achievementsQuery->andWhere(['or', ['program_sub' => null], ['program_sub' => 0]]);
         }
+
+        $programRubricTable = Yii::$app->db->schema->getTableSchema(ProgramRubric::tableName());
+        if($programRubricTable && $programRubricTable->getColumn('is_active')){
+            $rubricsQuery->andWhere([ProgramRubric::tableName() . '.is_active' => 1]);
+        }else if($programRubricTable && $programRubricTable->getColumn('status')){
+            $rubricsQuery->andWhere([ProgramRubric::tableName() . '.status' => 10]);
+        }
+
+        $rubricTable = Yii::$app->db->schema->getTableSchema(Rubric::tableName());
+        if($rubricTable && $rubricTable->getColumn('is_active')){
+            $rubricsQuery->andWhere(['r.is_active' => 1]);
+        }else if($rubricTable && $rubricTable->getColumn('status')){
+            $rubricsQuery->andWhere(['r.status' => 10]);
+        }
+
+        $rubrics = $rubricsQuery->orderBy([ProgramRubric::tableName() . '.id' => SORT_ASC])->all();
         $achievements = $achievementsQuery->orderBy(['name' => SORT_ASC])->all();
         $firstRubric = null;
         if($rubrics){
@@ -3866,11 +3886,24 @@ class ProgramRegistrationController extends Controller
             $searchModel->program_id = $role->program_id;
             $searchModel->program_sub = $sub;
 
-            $searchModel->rubric = $firstRubric;
+            $allowedRubricIds = $rubrics ? ArrayHelper::getColumn($rubrics, 'rubric_id') : [];
+
+            $queryParams = $this->request->queryParams;
+            $formName = $searchModel->formName();
+            $requestedRubric = $queryParams[$formName]['rubric'] ?? null;
+            $requestedRubric = ($requestedRubric === '' || $requestedRubric === null) ? null : (int)$requestedRubric;
+
+            if($requestedRubric !== null && in_array($requestedRubric, $allowedRubricIds, true)){
+                $searchModel->rubric = $requestedRubric;
+            }else{
+                $searchModel->rubric = $firstRubric;
+            }
+
             $searchModel->stage = $firstStage;
             //TODO: set klu ada get request yg pilih lain
             
-            $dataProvider = $searchModel->search($this->request->queryParams);
+            $queryParams[$formName]['rubric'] = $searchModel->rubric;
+            $dataProvider = $searchModel->search($queryParams);
 
             $selectedRubric = Rubric::findOne($searchModel->rubric);
     
