@@ -882,6 +882,11 @@ class ProgramRegistrationController extends Controller
             }else{
                 throw new NotFoundHttpException('Please provide sub program.');
             }
+        }else{
+            $rubricsQuery->andWhere(['or',
+                [ProgramRubric::tableName() . '.program_sub' => null],
+                [ProgramRubric::tableName() . '.program_sub' => 0],
+            ]);
         }
 
         $programRubricTable = Yii::$app->db->schema->getTableSchema(ProgramRubric::tableName());
