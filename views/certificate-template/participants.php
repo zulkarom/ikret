@@ -27,12 +27,15 @@ $this->params['breadcrumbs'][] = $this->title;
     $publishedParticipation = CertificateTemplate::isPublished(1);
     $publishedAchievement = CertificateTemplate::isPublished(4);
     $publishedExcellence = CertificateTemplate::isPublished(5);
+    $participationName = CertificateTemplate::displayName(1, 'Participation Certificate');
+    $achievementName = CertificateTemplate::displayName(4, 'Achievement Certificate');
+    $excellenceName = CertificateTemplate::displayName(5, 'Excellence Certificate');
 ?>
 
 <div class="alert <?= ($publishedParticipation && $publishedAchievement && $publishedExcellence) ? 'alert-success' : 'alert-warning' ?>" role="alert">
-    Participation template: <b><?= $publishedParticipation ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
-    Achievement template: <b><?= $publishedAchievement ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
-    Excellence template: <b><?= $publishedExcellence ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    <?= Html::encode($participationName) ?>: <b><?= $publishedParticipation ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    <?= Html::encode($achievementName) ?>: <b><?= $publishedAchievement ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
+    <?= Html::encode($excellenceName) ?>: <b><?= $publishedExcellence ? 'PUBLISHED' : 'NOT PUBLISHED' ?></b><br>
     Note: Admin can view these pages anytime. Non-admin users can only view/download certificates when certificates are released and the template is published.
 </div>
 
@@ -98,14 +101,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'label' => 'Certificates',
                             'format' => 'raw',
-                            'value' => function($model){
+                            'value' => function($model) use ($participationName, $achievementName, $excellenceName){
                                 $links = [];
-                                $links[] = Html::a('Participation', ['/program/cert-participation', 'reg' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
+                                $links[] = Html::a(Html::encode($participationName), ['/program/cert-participation', 'reg' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
 
                                 if($model->achievements){
                                     foreach($model->achievements as $achievement){
-                                        $label = $achievement->achieve ? 'Achievement: ' . $achievement->achieve->name : 'Achievement';
+                                        $label = $achievement->achieve ? $achievementName . ': ' . $achievement->achieve->name : $achievementName;
                                         $links[] = Html::a(Html::encode($label), ['/program/cert-achievement', 'reg' => $model->id, 'achieve' => $achievement->achieve_id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
+
+                                        $excellenceLabel = $achievement->achieve ? $excellenceName . ': ' . $achievement->achieve->name : $excellenceName;
+                                        $links[] = Html::a(Html::encode($excellenceLabel), ['/program/cert-excellence', 'reg' => $model->id, 'achieve' => $achievement->achieve_id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
                                     }
                                 }
 

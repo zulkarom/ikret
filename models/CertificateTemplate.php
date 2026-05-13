@@ -129,6 +129,16 @@ class CertificateTemplate extends \yii\db\ActiveRecord
         return $model && (int)$model->published === 1;
     }
 
+    public static function displayName($id, $fallback = 'Certificate')
+    {
+        $model = static::findOne((int)$id);
+        if($model && trim((string)$model->template_name) !== ''){
+            return ucwords((string)$model->template_name);
+        }
+
+        return $fallback;
+    }
+
     public function textLeft($default)
     {
         return $this->margin_left === null || $this->margin_left === '' || (float)$this->margin_left <= 0 ? $default : (float)$this->margin_left;

@@ -258,6 +258,8 @@ class SessionController extends Controller
 
     private function ensureCertificateAvailable($templateId, $allowPrivileged = true)
     {
+        $certificateName = CertificateTemplate::displayName($templateId, 'Certificate');
+
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
@@ -265,14 +267,14 @@ class SessionController extends Controller
         if(!Setting::areCertificatesReleased()){
             $releaseDate = Setting::certificateReleaseText();
             $message = $releaseDate
-                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-                : 'The certificates are expected to be released soon.';
+                ? $certificateName . ' will be released from ' . $releaseDate . '.'
+                : $certificateName . ' is expected to be released soon.';
             Yii::$app->session->addFlash('info', $message);
             return false;
         }
 
         if(!CertificateTemplate::isPublished($templateId)){
-            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            Yii::$app->session->addFlash('info', $certificateName . ' has not been published.');
             return false;
         }
 

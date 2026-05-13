@@ -129,6 +129,8 @@ class ProgramRegistrationController extends Controller
 
     private function ensureCertificatesReleased($allowPrivileged = true, $templateId = null)
     {
+        $certificateName = $templateId === null ? 'Certificates and awards' : CertificateTemplate::displayName($templateId, 'Certificate');
+
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
@@ -136,15 +138,15 @@ class ProgramRegistrationController extends Controller
         if(!Setting::areCertificatesReleased()){
             $releaseDate = Setting::certificateReleaseText();
             $message = $releaseDate
-                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-                : 'Certificates have not been published.';
+                ? $certificateName . ' will be released from ' . $releaseDate . '.'
+                : $certificateName . ' has not been published.';
             Yii::$app->session->addFlash('info', $message);
 
             return false;
         }
 
         if($templateId !== null && !CertificateTemplate::isPublished($templateId)){
-            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            Yii::$app->session->addFlash('info', $certificateName . ' has not been published.');
             return false;
         }
 

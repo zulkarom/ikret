@@ -3127,13 +3127,14 @@ class ProgramController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    protected function findRegistrationExcellence($id)
+    protected function findRegistrationExcellence($id, $achievementId = null)
     {
         $model = ProgramRegistration::find()->alias('a')
         ->select('a.*, v.name as achieve_name')
         ->innerJoin('program_reg_achieve e', 'e.program_reg_id = a.id')
         ->innerJoin('program_achievement v', 'v.id = e.achieve_id')
         ->where(['a.id' => $id])
+        ->andFilterWhere(['e.achieve_id' => $achievementId])
         ->one();
         if ($model !== null) {
             return $model;
@@ -3182,6 +3183,8 @@ class ProgramController extends Controller
 
     private function ensureCertificatesReleased($allowPrivileged = true, $templateId = null)
     {
+        $certificateName = $templateId === null ? 'Certificates and awards' : CertificateTemplate::displayName($templateId, 'Certificate');
+
         if($allowPrivileged && !Yii::$app->user->isGuest && (Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin)){
             return true;
         }
@@ -3189,15 +3192,15 @@ class ProgramController extends Controller
         if(!Setting::areCertificatesReleased()){
             $releaseDate = Setting::certificateReleaseText();
             $message = $releaseDate
-                ? 'Certificates and awards will be released from ' . $releaseDate . '.'
-                : 'The certificates are expected to be released soon.';
+                ? $certificateName . ' will be released from ' . $releaseDate . '.'
+                : $certificateName . ' is expected to be released soon.';
             Yii::$app->session->addFlash('info', $message);
 
             return false;
         }
 
         if($templateId !== null && !CertificateTemplate::isPublished($templateId)){
-            Yii::$app->session->addFlash('info', 'This certificate type has not been published.');
+            Yii::$app->session->addFlash('info', $certificateName . ' has not been published.');
             return false;
         }
 
@@ -3256,13 +3259,13 @@ class ProgramController extends Controller
         exit;
     }
 
-    public function actionCertExcellence($reg){
+    public function actionCertExcellence($reg, $achieve = null){
         if(!$this->ensureCertificatesReleased(true, 5)){
             return $this->render('empty');
         }
 
         $pdf = new CertificateExcellence;
-        $reg = $this->findRegistrationExcellence($reg);
+        $reg = $this->findRegistrationExcellence($reg, $achieve);
         $mentor = $this->meAsMentor($reg);
         if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin || $mentor){
             $pdf->template = CertificateTemplate::findOne(5);
