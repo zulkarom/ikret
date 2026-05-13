@@ -19,7 +19,7 @@ class SessionQr
         $this->writeIntro();
         $this->writeQr();
         $this->writeFooter();
-        $this->pdf->Output('I-CREATE ATTENDANCE.pdf', 'I');
+        $this->pdf->Output($this->outputFilename(), 'I');
     }
 
     public function writeIntro(){
@@ -109,6 +109,32 @@ $yp = $this->yp;
 
         $this->yp = $this->pdf->getY();
 
+    }
+
+    protected function outputFilename()
+    {
+        $name = trim((string)$this->model->session_name);
+        if($name === ''){
+            $name = 'I-CREATE_ATTENDANCE';
+        }
+
+        $name = preg_replace('/[^A-Za-z0-9]+/', '_', $name);
+        $name = trim($name, '_');
+        if($name === ''){
+            $name = 'I-CREATE_ATTENDANCE';
+        }
+
+        $date = '';
+        if($this->model->datetime_start){
+            try {
+                $start = new \DateTimeImmutable((string)$this->model->datetime_start, new \DateTimeZone('Asia/Kuala_Lumpur'));
+                $date = '_' . $start->format('Ymd');
+            } catch(\Exception $e) {
+                $date = '';
+            }
+        }
+
+        return $name . $date . '.pdf';
     }
 
     public function writeFooter(){
