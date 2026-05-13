@@ -26,6 +26,10 @@ $canUpdateSession = Yii::$app->user->identity->isManager || Yii::$app->user->ide
 
     <div class="card mt-3">
         <div class="card-body pt-4">
+            <?= $this->render('_search', [
+                'model' => $searchModel,
+            ]) ?>
+            <hr>
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 'layout' => "{summary}\n<div class=\"table-responsive\">{items}</div>\n{pager}",

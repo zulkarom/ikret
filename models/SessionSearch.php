@@ -17,8 +17,8 @@ class SessionSearch extends Session
     public function rules()
     {
         return [
-            [['id', 'session_name', 'program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
-            [['datetime_start', 'datetime_end', 'token'], 'safe'],
+            [['id', 'program_id', 'program_sub', 'allow_scan_outside_duration', 'allow_scan_1_hour_after_event'], 'integer'],
+            [['session_name', 'datetime_start', 'datetime_end', 'token'], 'safe'],
         ];
     }
 
@@ -46,6 +46,9 @@ class SessionSearch extends Session
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'pagination' => [
+                'pageSize' => 100,
+            ],
             'sort' => [
                 'defaultOrder' => [
                     'datetime_start' => SORT_ASC,
@@ -65,7 +68,6 @@ class SessionSearch extends Session
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'session_name' => $this->session_name,
             'program_id' => $this->program_id,
             'program_sub' => $this->program_sub,
             'allow_scan_outside_duration' => $this->allow_scan_outside_duration,
@@ -74,6 +76,7 @@ class SessionSearch extends Session
             'datetime_end' => $this->datetime_end,
         ]);
 
+        $query->andFilterWhere(['like', 'session_name', $this->session_name]);
         $query->andFilterWhere(['like', 'token', $this->token]);
 
         return $dataProvider;

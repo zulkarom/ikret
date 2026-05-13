@@ -2,6 +2,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\Html;
 
 class SessionQr
 {
@@ -22,24 +23,18 @@ class SessionQr
     }
 
     public function writeIntro(){
-        $start = $this->model->datetime_start;
-        $end = $this->model->datetime_end;
-        $date_start = date('Y-m-d', strtotime($start));
-        $date_end = date('Y-m-d', strtotime($end));
-        $date = Common::dateStartEndFormat($date_start,$date_end);
-        $time_start = date('h:i A', strtotime($start));
-        $time_end = date('h:i A', strtotime($end));
+        $dateTime = $this->formatDateTimeRange($this->model->datetime_start, $this->model->datetime_end);
 
         $program = '';
         if($this->model->program){
-            $program = '<br />('.$this->model->programNameShort . ')';
+            $program = '<br />(' . Html::encode($this->model->programNameShort) . ')';
         }
         
 
         $html = '<br /><br /><div align="center"><img src="images/logo-sm.png" width="400" />
-        <h2>'.$this->model->session_name.$program.'</h2>
+        <h2>' . Html::encode($this->model->session_name) . $program . '</h2>
         <div><i>Date Time</i><br />
-        '.$date.' '.$time_start.' - '.$time_end.'
+        ' . Html::encode($dateTime) . '
 
         </div><br />
 
@@ -54,6 +49,45 @@ EOD;
         
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
         $this->yp = $this->pdf->getY();
+    }
+
+    protected function formatDateTimeRange($startValue, $endValue)
+    {
+        $timezone = new \DateTimeZone('Asia/Kuala_Lumpur');
+        $start = $this->createLocalDateTime($startValue, $timezone);
+        $end = $this->createLocalDateTime($endValue, $timezone);
+
+        if(!$start && !$end){
+            return '';
+        }
+
+        if(!$start){
+            return $end->format('d M Y, h:i A');
+        }
+
+        if(!$end){
+            return $start->format('d M Y, h:i A');
+        }
+
+        if($start->format('Y-m-d') === $end->format('Y-m-d')){
+            return $start->format('d M Y, h:i A') . ' - ' . $end->format('h:i A');
+        }
+
+        return $start->format('d M Y, h:i A') . ' - ' . $end->format('d M Y, h:i A');
+    }
+
+    protected function createLocalDateTime($value, \DateTimeZone $timezone)
+    {
+        $value = trim((string)$value);
+        if($value === ''){
+            return null;
+        }
+
+        try {
+            return (new \DateTimeImmutable($value, $timezone))->setTimezone($timezone);
+        } catch(\Exception $e) {
+            return null;
+        }
     }
 
     public function writeQr()
