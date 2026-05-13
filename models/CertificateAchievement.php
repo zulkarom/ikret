@@ -81,12 +81,14 @@ class CertificateAchievement
     public function html_achievement_sentence()
     {
         $title = $this->achievementWinnerTitle();
-        $text = $title === '' ? 'have achieved' : 'have achieved ' . strtoupper($title) . ' in';
+        $text = $title === ''
+            ? Html::encode('have achieved')
+            : 'have achieved <b>' . Html::encode(strtoupper($title)) . '</b> in';
         $top = $this->template->textTop('field1_mt', 101);
         $size = $this->template->textSize('field1_size', 20);
 
         $this->pdf->SetFont('iniriaserif', '', 0);
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . Html::encode($text) . '</span>');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . $text . '</span>');
     }
 
     public function html_achievement_name()
@@ -95,7 +97,7 @@ class CertificateAchievement
         $size = $this->template->textSize('field2_size', 24);
         $text = strtoupper($this->achievementName());
 
-        $this->pdf->SetFont('iniriaserif', '', 0);
+        $this->pdf->SetFont('iniriaserif', 'b', 0);
         $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . Html::encode($text) . '</span>');
     }
 
