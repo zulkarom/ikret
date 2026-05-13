@@ -9,18 +9,58 @@ use yii\widgets\ActiveForm;
 
 $this->title = 'Update Certificate Config';
 
-$field1Hint = 'Vertical position/top spacing for secondary text.';
-$field2Hint = 'Vertical position/top spacing for additional text.';
-$field3Hint = 'Vertical position/top spacing for third text.';
+$textConfig = [
+    'section' => 'Additional Text',
+    'name' => 'Recipient / Member Names',
+    'fields' => [
+        1 => ['label' => 'Additional Text 1', 'hint' => 'Vertical position/top spacing for secondary text.'],
+        2 => ['label' => 'Additional Text 2', 'hint' => 'Vertical position/top spacing for additional text.'],
+        3 => ['label' => 'Additional Text 3', 'hint' => 'Vertical position/top spacing for third text.'],
+    ],
+];
+
 if ((int)$model->id === 4) {
-    $field1Hint = 'Vertical position/top spacing for "have achieved..." sentence.';
-    $field2Hint = 'Vertical position/top spacing for achievement name.';
-    $field3Hint = 'Vertical position/top spacing for program/sub name.';
+    $textConfig = [
+        'section' => 'Achievement Certificate Text',
+        'name' => 'Participant / Group Member Names',
+        'fields' => [
+            1 => ['label' => 'Achievement Sentence', 'hint' => 'Example: have achieved FIRST PLACE in.'],
+            2 => ['label' => 'Achievement Name', 'hint' => 'Example: THE MOST ATTRACTIVE BOOTH COMPETITION.'],
+            3 => ['label' => 'Program / Sub Program Name', 'hint' => 'Program and sub program printed below the achievement name.'],
+        ],
+    ];
+} elseif ((int)$model->id === 5) {
+    $textConfig = [
+        'section' => 'Medal Certificate Text',
+        'name' => 'Participant / Group Member Names',
+        'fields' => [
+            1 => ['label' => 'Medal Award Name', 'hint' => 'Example: GOLD AWARD, SILVER AWARD, or BRONZE AWARD.'],
+            2 => ['label' => 'Program / Sub Program Name', 'hint' => 'Program and sub program printed below the medal award.'],
+        ],
+    ];
+} elseif ((int)$model->id === 7) {
+    $textConfig = [
+        'section' => 'Session Certificate Text',
+        'name' => 'Participant Name',
+        'fields' => [
+            1 => ['label' => 'Session Name and Speaker', 'hint' => 'Session name and speaker line.'],
+            2 => ['label' => 'Program Name', 'hint' => 'Program name printed below the session details.'],
+        ],
+    ];
 }
-if ((int)$model->id === 7) {
-    $field1Hint = 'Vertical position/top spacing for session name and speaker.';
-    $field2Hint = 'Vertical position/top spacing for program name.';
-}
+
+$renderTextFieldPair = static function($form, $model, $fieldNo, $config){
+    $topAttribute = 'field' . $fieldNo . '_mt';
+    $sizeAttribute = 'field' . $fieldNo . '_size';
+    $label = $config['label'];
+    $hint = $config['hint'];
+
+    return '<div class="col-md-3">'
+        . $form->field($model, $topAttribute)->textInput(['type' => 'number', 'step' => '0.1'])->label($label . ' Top')->hint($hint)
+        . '</div><div class="col-md-3">'
+        . $form->field($model, $sizeAttribute)->textInput(['type' => 'number', 'step' => '0.1'])->label($label . ' Size')
+        . '</div>';
+};
 ?>
 
 <div class="certificate-template-update">
@@ -58,42 +98,24 @@ if ((int)$model->id === 7) {
 
                     <hr>
 
-                    <h5 class="card-title">Name Text</h5>
+                    <h5 class="card-title"><?= Html::encode($textConfig['name']) ?></h5>
                     <div class="row">
                         <div class="col-md-4">
                             <?= $form->field($model, 'margin_left')->textInput(['type' => 'number', 'step' => '0.1'])->hint('Horizontal X position.') ?>
                         </div>
                         <div class="col-md-4">
-                            <?= $form->field($model, 'name_mt')->textInput(['type' => 'number', 'step' => '0.1'])->hint('Vertical position/top spacing for the name.') ?>
+                            <?= $form->field($model, 'name_mt')->textInput(['type' => 'number', 'step' => '0.1'])->label($textConfig['name'] . ' Top')->hint('Vertical position/top spacing for names.') ?>
                         </div>
                         <div class="col-md-4">
-                            <?= $form->field($model, 'name_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
+                            <?= $form->field($model, 'name_size')->textInput(['type' => 'number', 'step' => '0.1'])->label($textConfig['name'] . ' Size') ?>
                         </div>
                     </div>
 
-                    <h5 class="card-title">Other Text</h5>
+                    <h5 class="card-title"><?= Html::encode($textConfig['section']) ?></h5>
                     <div class="row">
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field1_mt')->textInput(['type' => 'number', 'step' => '0.1'])->hint($field1Hint) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field1_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field2_mt')->textInput(['type' => 'number', 'step' => '0.1'])->hint($field2Hint) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field2_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field3_mt')->textInput(['type' => 'number', 'step' => '0.1'])->hint($field3Hint) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'field3_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
-                        </div>
+                        <?php foreach($textConfig['fields'] as $fieldNo => $fieldConfig): ?>
+                            <?= $renderTextFieldPair($form, $model, $fieldNo, $fieldConfig) ?>
+                        <?php endforeach; ?>
                     </div>
 
                     <div class="row">
