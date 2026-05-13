@@ -95,7 +95,7 @@ class CertificateAchievement
         $size = $this->template->textSize('field2_size', 24);
         $text = strtoupper($this->achievementName());
 
-        $this->pdf->SetFont('helvetica', 'b', 0);
+        $this->pdf->SetFont('iniriaserif', '', 0);
         $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . Html::encode($text) . '</span>');
     }
 
