@@ -60,13 +60,18 @@ $downloadButton = function ($url, $templateId) use ($publishedTemplates, $soonTe
 
         if(!empty($publishedTemplates[4]) && $medals){
           foreach($medals as $a){
-            echo ' <tr><td>'.$i.'. </td><td>Certificate of Achievement
-            <br /><b>('.$a->awardTextColor().')</b>
-            </td><td>'.$a->programNameLong;
-            echo '<div style="font-size:12px;">';
-            echo $a->memberStr;
-            echo '</div></td><td>' . $downloadButton(['cert-achievement','reg' => $a->id], 4) . '</td></tr>';
-            $i++;
+            if($a->achievements){
+              foreach($a->achievements as $achievement){
+                $achievementName = $achievement->achieve ? $achievement->achieve->name : 'Achievement';
+                echo ' <tr><td>'.$i.'. </td><td>Certificate of Achievement
+                <br /><b>('.Html::encode($achievementName).')</b>
+                </td><td>'.$a->programNameLong;
+                echo '<div style="font-size:12px;">';
+                echo $a->memberStr;
+                echo '</div></td><td>' . $downloadButton(['cert-achievement','reg' => $a->id, 'achieve' => $achievement->achieve_id], 4) . '</td></tr>';
+                $i++;
+              }
+            }
           }
         }
 

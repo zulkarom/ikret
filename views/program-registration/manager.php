@@ -180,6 +180,10 @@ CSS);
         $statusColors = JuryAssign::getStatusColor();
         $selectedStatus = $searchModel->jury_status;
         $isUnassignedActive = (int)$searchModel->unassigned === 1;
+        $totalAssignments = 0;
+        if(isset($juryStatusSummary) && is_array($juryStatusSummary)){
+            $totalAssignments = array_sum(array_map('intval', $juryStatusSummary));
+        }
         ?>
         <div class="manager-summary-grid">
             <div class="jury-summary-card">
@@ -212,6 +216,12 @@ CSS);
             ) ?>
             <?php foreach($statusList as $status => $label): ?>
                 <?php
+                $displayLabel = $label;
+                if((int)$status === 20){
+                    $completeCount = (int)($juryStatusSummary[$status] ?? 0);
+                    $percentage = $totalAssignments > 0 ? (int)round(($completeCount / $totalAssignments) * 100) : 0;
+                    $displayLabel = $label . ' (' . $percentage . '%)';
+                }
                 $summaryUrlParams = Yii::$app->request->queryParams;
                 unset($summaryUrlParams['page'], $summaryUrlParams['per-page']);
                 $summaryUrlParams[0] = 'manager';
@@ -224,7 +234,7 @@ CSS);
                 $isActive = (string)$selectedStatus !== '' && (int)$selectedStatus === (int)$status;
                 ?>
                 <?= Html::a(
-                    '<div class="jury-summary-label">' . Html::encode($label) . '</div>' .
+                    '<div class="jury-summary-label">' . Html::encode($displayLabel) . '</div>' .
                     '<div class="jury-summary-count text-' . Html::encode($statusColors[$status] ?? 'secondary') . '">' . Html::encode($juryStatusSummary[$status] ?? 0) . '</div>',
                     Url::to($summaryUrlParams),
                     ['class' => 'jury-summary-card' . ($isActive ? ' active' : '')]

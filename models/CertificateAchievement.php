@@ -2,6 +2,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\Html;
 
 class CertificateAchievement
 {
@@ -14,6 +15,7 @@ class CertificateAchievement
     public $width;
     public $height;
     public $align = 'center';
+    public $achievementId;
 
     public $frontend = false;
 
@@ -47,17 +49,13 @@ class CertificateAchievement
 
     public function writeData()
     { 
-        $left = $this->template->textLeft(70);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
             $this->html_name();
-            $this->pdf->SetXY($left,$this->template->textTop('field1_mt', 101));
-            $this->html_award();
-            $this->pdf->SetX($left);
-
+            $this->html_achievement_sentence();
+            $this->html_achievement_name();
             $this->html_program();
             
         } else {
@@ -77,62 +75,28 @@ class CertificateAchievement
             $size = min($size, 20.5);
         }
 
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            //$size = $this->template->name_size;
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>');
     }
 
-    public function html_award()
+    public function html_achievement_sentence()
     {
-        //$a->awardTextColor()
-        /* echo $this->model->committee->com_name_en;
-        die();
-         */
-        //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-    //$size = $this->template->field1_size;
+        $title = $this->achievementWinnerTitle();
+        $text = $title === '' ? 'have achieved' : 'have achieved ' . strtoupper($title) . ' in';
+        $top = $this->template->textTop('field1_mt', 101);
+        $size = $this->template->textSize('field1_size', 20);
 
-            $html .= '
-<tr><td></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field1_size', 30) . 'px">
-' . strtoupper($this->model->awardTextColor()) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
+        $this->pdf->SetFont('iniriaserif', '', 0);
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . Html::encode($text) . '</span>');
+    }
 
-$tbl = <<<EOD
-$html
-EOD;
+    public function html_achievement_name()
+    {
+        $top = $this->template->textTop('field2_mt', 123);
+        $size = $this->template->textSize('field2_size', 24);
+        $text = strtoupper($this->achievementName());
+
         $this->pdf->SetFont('helvetica', 'b', 0);
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . Html::encode($text) . '</span>');
     }
 
     public function html_program()
@@ -141,27 +105,99 @@ EOD;
         /* echo $this->model->committee->com_name_en;
         die();
          */
-        //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
-       
-    //$size = $this->template->field1_size;
+        $top = $this->template->textTop('field3_mt', 155);
+        $size = $this->template->textSize('field3_size', 20);
 
-            $html .= '
-<tr><td height="53"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field2_size', 20) . 'px">
-' . strtoupper($this->model->programNameLong) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
         $this->pdf->SetFont('iniriaserif', '', 0);
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->programNameLong) . '</span>');
+    }
+
+    protected function achievement()
+    {
+        if(!$this->model->achievements){
+            return null;
+        }
+
+        foreach($this->model->achievements as $achievement){
+            if($this->achievementId && (int)$achievement->achieve_id !== (int)$this->achievementId){
+                continue;
+            }
+            return $achievement;
+        }
+
+        return null;
+    }
+
+    protected function achievementWinnerTitle()
+    {
+        $achievement = $this->achievement();
+        if(!$achievement || !$achievement->winnerTitle){
+            return '';
+        }
+
+        return trim((string)$achievement->winnerTitle->title_name);
+    }
+
+    protected function achievementName()
+    {
+        $achievement = $this->achievement();
+        if(!$achievement || !$achievement->achieve){
+            return '';
+        }
+
+        return trim((string)$achievement->achieve->name);
+    }
+
+    protected function writeTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        $left = $this->horizontalMargin('margin_left', 70);
+        $right = $this->horizontalMargin('margin_right', 11);
+        if ($right <= 0) {
+            $right = $left;
+        }
+
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
+
+        if ($value > $pageHeight) {
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
+    protected function horizontalMargin($attribute, $default)
+    {
+        if($attribute === 'margin_left'){
+            return max(0, (float)$this->template->textLeft($default));
+        }
+
+        return max(0, (float)$this->template->textRight($default));
+    }
+
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
+
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     

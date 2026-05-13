@@ -102,14 +102,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 $links = [];
                                 $links[] = Html::a('Participation', ['/program/cert-participation', 'reg' => $model->id], ['class' => 'btn btn-primary btn-sm mb-1', 'target' => '_blank']);
 
-                                if($model->award > 0){
-                                    $links[] = Html::a('Achievement', ['/program/cert-achievement', 'reg' => $model->id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
-                                }
-
                                 if($model->achievements){
                                     foreach($model->achievements as $achievement){
-                                        $label = $achievement->achieve ? 'Excellence: ' . $achievement->achieve->name : 'Excellence';
-                                        $links[] = Html::a(Html::encode($label), ['/program/cert-excellence', 'reg' => $model->id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
+                                        $label = $achievement->achieve ? 'Achievement: ' . $achievement->achieve->name : 'Achievement';
+                                        $links[] = Html::a(Html::encode($label), ['/program/cert-achievement', 'reg' => $model->id, 'achieve' => $achievement->achieve_id], ['class' => 'btn btn-outline-primary btn-sm mb-1', 'target' => '_blank']);
                                     }
                                 }
 

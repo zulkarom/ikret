@@ -11,6 +11,12 @@ $this->title = 'Update Certificate Config';
 
 $field1Hint = 'Vertical position/top spacing for secondary text.';
 $field2Hint = 'Vertical position/top spacing for additional text.';
+$field3Hint = 'Vertical position/top spacing for third text.';
+if ((int)$model->id === 4) {
+    $field1Hint = 'Vertical position/top spacing for "have achieved..." sentence.';
+    $field2Hint = 'Vertical position/top spacing for achievement name.';
+    $field3Hint = 'Vertical position/top spacing for program/sub name.';
+}
 if ((int)$model->id === 7) {
     $field1Hint = 'Vertical position/top spacing for session name and speaker.';
     $field2Hint = 'Vertical position/top spacing for program name.';
@@ -78,6 +84,15 @@ if ((int)$model->id === 7) {
                         </div>
                         <div class="col-md-3">
                             <?= $form->field($model, 'field2_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <?= $form->field($model, 'field3_mt')->textInput(['type' => 'number', 'step' => '0.1'])->hint($field3Hint) ?>
+                        </div>
+                        <div class="col-md-3">
+                            <?= $form->field($model, 'field3_size')->textInput(['type' => 'number', 'step' => '0.1']) ?>
                         </div>
                     </div>
 
