@@ -76,16 +76,13 @@ $downloadButton = function ($url, $templateId) use ($publishedTemplates, $soonTe
         }
 
         if(!empty($publishedTemplates[5]) && $excel){
-          foreach($excel as $b){
-           //echo '<pre>';
-           // print_r($b);
-            $reg = ProgramRegistration::findOne($b["id"]);
-            echo ' <tr><td>'.$i.'. </td><td>Certificate of Excellence
-            <br /><b>(<span style="color:#DA9100">'.strtoupper($b["achieve_name"]).'</span>)</b>
+          foreach($excel as $reg){
+            echo ' <tr><td>'.$i.'. </td><td>Certificate of Medal
+            <br /><b>('.$reg->awardTextColor().')</b>
             </td><td>'.$reg->programNameLong;
             echo '<div style="font-size:12px;">';
             echo $reg->memberStr;
-            echo '</div></td><td>' . $downloadButton(['cert-excellence','reg' => $reg->id], 5) . '</td></tr>';
+            echo '</div></td><td>' . $downloadButton(['cert-medal','reg' => $reg->id], 5) . '</td></tr>';
             $i++;
           }
         }

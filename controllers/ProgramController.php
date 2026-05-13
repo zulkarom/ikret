@@ -4,7 +4,7 @@ namespace app\controllers;
 
 use app\models\Certificate;
 use app\models\CertificateAchievement;
-use app\models\CertificateExcellence;
+use app\models\CertificateMedal;
 use app\models\CertificateSession;
 use app\models\CertificateTemplate;
 use app\models\JuryAssign;
@@ -2418,14 +2418,12 @@ class ProgramController extends Controller
         ->distinct()
         ->all();
 
-        // ni utk excellence
+        // ni utk medal
 
-        $query = new Query();
-        $excel = $query->select('a.*, v.name as achieve_name')
-        ->from('program_reg a')
-        ->innerJoin('program_reg_achieve e', 'e.program_reg_id = a.id')
-        ->innerJoin('program_achievement v', 'v.id = e.achieve_id')
-        ->where(['a.user_id' => Yii::$app->user->identity->id, 'a.status' => 10])
+        $excel = ProgramRegistration::find()->alias('a')
+        ->joinWith(['program p'])
+        ->where(['a.user_id' => Yii::$app->user->identity->id, 'a.status' => 10, 'p.program_type' => 1])
+        ->andWhere(['>', 'a.award', 0])
         ->all();
         
        // echo count($excel);die();
@@ -3127,14 +3125,12 @@ class ProgramController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    protected function findRegistrationExcellence($id, $achievementId = null)
+    protected function findRegistrationMedal($id)
     {
         $model = ProgramRegistration::find()->alias('a')
-        ->select('a.*, v.name as achieve_name')
-        ->innerJoin('program_reg_achieve e', 'e.program_reg_id = a.id')
-        ->innerJoin('program_achievement v', 'v.id = e.achieve_id')
+        ->joinWith(['program p'])
         ->where(['a.id' => $id])
-        ->andFilterWhere(['e.achieve_id' => $achievementId])
+        ->andWhere(['>', 'a.award', 0])
         ->one();
         if ($model !== null) {
             return $model;
@@ -3259,13 +3255,13 @@ class ProgramController extends Controller
         exit;
     }
 
-    public function actionCertExcellence($reg, $achieve = null){
+    public function actionCertMedal($reg){
         if(!$this->ensureCertificatesReleased(true, 5)){
             return $this->render('empty');
         }
 
-        $pdf = new CertificateExcellence;
-        $reg = $this->findRegistrationExcellence($reg, $achieve);
+        $pdf = new CertificateMedal;
+        $reg = $this->findRegistrationMedal($reg);
         $mentor = $this->meAsMentor($reg);
         if($reg->user_id == Yii::$app->user->identity->id || Yii::$app->user->identity->isManager || Yii::$app->user->identity->isAdmin || $mentor){
             $pdf->template = CertificateTemplate::findOne(5);
@@ -3273,6 +3269,10 @@ class ProgramController extends Controller
             $pdf->generatePdf();
         }
         exit;
+    }
+
+    public function actionCertExcellence($reg, $achieve = null){
+        return $this->actionCertMedal($reg);
     }
 
 }

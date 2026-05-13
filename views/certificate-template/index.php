@@ -14,7 +14,7 @@ $certificateDescriptions = [
     2 => 'Committee member certificate.',
     3 => 'Jury certificate for assigned program judging.',
     4 => 'Achievement certificate for participants with an award.',
-    5 => 'Excellence certificate for imported excellence achievements.',
+    5 => 'Medal certificate for participants with Gold, Silver, or Bronze awards.',
     6 => 'General attendance certificate. Uses the user name after at least one QR/session attendance scan.',
     7 => 'Per session attendance certificate. Uses attended session details.',
 ];

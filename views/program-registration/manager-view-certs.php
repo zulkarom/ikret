@@ -70,13 +70,7 @@ $colums[] = [
 
         if($reg->award > 0 ){ //&& $reg->score > 0
             $str .= '<li>' . Html::a('Cert. of Achievement ('.$reg->awardTextColor().')',['/program/cert-achievement', 'reg' => $reg->id],['target' => '_blank']) . '</li>';
-        }
-        if($reg->achievements){
-            foreach($reg->achievements as $v){
-                //
-                $str .= '<li>' . Html::a('Cert. of Excellence (<span style="color:#DA9100">'.$v->achieve->name.'</span>)',['/program/cert-excellence', 'reg' => $reg->id],['target' => '_blank']) . '</li>';
-            }
-            
+            $str .= '<li>' . Html::a('Cert. of Medal ('.$reg->awardTextColor().')',['/program/cert-medal', 'reg' => $reg->id],['target' => '_blank']) . '</li>';
         }
 
 
