@@ -59,16 +59,15 @@ if(isset($analysisModels) && $analysisModels){
             if(!isset($assignedWinners[$aid])){
                 $assignedWinners[$aid] = [];
             }
-            $titleId = $pa->winner_title_id ? (int)$pa->winner_title_id : 0;
-            if(!isset($assignedWinners[$aid][$titleId])){
-                $assignedWinners[$aid][$titleId] = [];
-            }
             $participantName = Html::encode((string)$analysisModel->participantText);
             $groupName = trim((string)($analysisModel->group_name ?? ''));
             if($groupName !== ''){
                 $participantName = Html::tag('span', Html::encode($groupName), ['class' => 'badge bg-secondary me-2']) . $participantName;
             }
-            $assignedWinners[$aid][$titleId][] = $participantName;
+            if($pa->winnerTitle && trim((string)$pa->winnerTitle->title_name) !== ''){
+                $participantName .= ' <span class="text-muted">(' . Html::encode((string)$pa->winnerTitle->title_name) . ')</span>';
+            }
+            $assignedWinners[$aid][] = $participantName;
         }
     }
 }
@@ -79,7 +78,7 @@ if(isset($achievements) && $achievements){
         $achievementSummary[$aid] = [
             'name' => (string)$a->name,
             'winner_count' => (int)$a->winner_count,
-            'assigned_count' => isset($assignedWinners[$aid]) ? array_sum(array_map('count', $assignedWinners[$aid])) : 0,
+            'assigned_count' => isset($assignedWinners[$aid]) ? count($assignedWinners[$aid]) : 0,
             'titles' => $a->winnerTitles,
         ];
     }
@@ -494,7 +493,7 @@ $achievementValue = function($model, $asHtml = false){
                             <tr>
                                 <th style="min-width: 420px;">Achievement Name</th>
                                 <th style="width: 180px;">Number of Winner</th>
-                                <th style="min-width: 380px;">Winner's Title</th>
+                                <th style="min-width: 380px;">Awarded Participants</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -513,21 +512,11 @@ $achievementValue = function($model, $asHtml = false){
                                 </td>
                                 <td>
                                     <?php
-                                    $titles = $row['titles'] ?? [];
-                                    if($titles){
-                                        echo '<table class="table table-bordered mb-0">';
-                                        foreach($titles as $t){
-                                            $participants = $assignedWinners[$aid][(int)$t->id] ?? [];
-                                            $who = $participants ? implode('<br />', $participants) : '<span class="text-muted">-</span>';
-                                            echo '<tr>';
-                                            echo '<td style="width: 54px;" class="text-center">' . (int)$t->winner_order . '</td>';
-                                            echo '<td style="min-width: 180px;">' . Html::encode($t->title_name) . '</td>';
-                                            echo '<td>' . $who . '</td>';
-                                            echo '</tr>';
-                                        }
-                                        echo '</table>';
+                                    $participants = $assignedWinners[$aid] ?? [];
+                                    if($participants){
+                                        echo implode('<br />', $participants);
                                     }else{
-                                        echo '<span class="text-muted">No winner title configured.</span>';
+                                        echo '<span class="text-muted">-</span>';
                                     }
                                     ?>
                                 </td>
