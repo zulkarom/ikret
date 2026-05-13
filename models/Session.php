@@ -100,6 +100,21 @@ class Session extends \yii\db\ActiveRecord
         
     }
 
+    public function formatLocalDateTime($attribute)
+    {
+        $value = trim((string)$this->$attribute);
+        if($value === ''){
+            return null;
+        }
+
+        try {
+            $date = new \DateTimeImmutable($value, new \DateTimeZone('Asia/Kuala_Lumpur'));
+            return $date->format('d M Y h:i A');
+        } catch(\Exception $e) {
+            return $value;
+        }
+    }
+
     /**
      * Gets query for [[ProgramSub]].
      *

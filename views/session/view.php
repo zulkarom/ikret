@@ -66,11 +66,11 @@ $canUpdate = Yii::$app->user->identity->isManager || Yii::$app->user->identity->
                     ],
                     [
                         'attribute' => 'datetime_start',
-                        'format' => ['datetime', 'php:d M Y h:i A'],
+                        'value' => $model->formatLocalDateTime('datetime_start'),
                     ],
                     [
                         'attribute' => 'datetime_end',
-                        'format' => ['datetime', 'php:d M Y h:i A'],
+                        'value' => $model->formatLocalDateTime('datetime_end'),
                     ],
                     [
                         'label' => 'Attendance Records',

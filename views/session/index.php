@@ -50,11 +50,15 @@ $canUpdateSession = Yii::$app->user->identity->isManager || Yii::$app->user->ide
                     ],
                     [
                         'attribute' => 'datetime_start',
-                        'format' => ['datetime', 'php:d M Y h:i A'],
+                        'value' => function($model){
+                            return $model->formatLocalDateTime('datetime_start');
+                        },
                     ],
                     [
                         'attribute' => 'datetime_end',
-                        'format' => ['datetime', 'php:d M Y h:i A'],
+                        'value' => function($model){
+                            return $model->formatLocalDateTime('datetime_end');
+                        },
                     ],
                     [
                         'label' => 'Scan Window',
