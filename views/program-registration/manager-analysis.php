@@ -4,7 +4,6 @@ use kartik\export\ExportMenu;
 use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
-use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\grid\GridView;
 
@@ -49,32 +48,17 @@ $analysisUrl = function($extra = []) use($program, $programSub){
 };
 $achievementSummary = [];
 $assignedWinners = [];
-$achievementOptions = ['' => 'Select Achievement'];
-if(isset($achievements) && $achievements){
-    foreach($achievements as $achievementOption){
-        $achievementOptions[(int)$achievementOption->id] = (string)$achievementOption->name;
-    }
-}
-$winnerTitleOptionsByAchievement = [];
-if(isset($winnerTitlesByAchievement) && $winnerTitlesByAchievement){
-    foreach($winnerTitlesByAchievement as $achievementId => $winnerTitles){
-        $winnerTitleOptionsByAchievement[(int)$achievementId] = [
-            ['id' => '', 'text' => 'No winner title'],
-        ];
-        foreach($winnerTitles as $winnerTitle){
-            $title = trim((string)$winnerTitle->title_name);
-            if($title === ''){
-                $title = 'Winner ' . (int)$winnerTitle->winner_order . ' (no title)';
-            }
-            $winnerTitleOptionsByAchievement[(int)$achievementId][] = [
-                'id' => (int)$winnerTitle->id,
-                'text' => $title,
-            ];
-        }
-    }
-}
+$participantOptions = ['' => 'Select Group'];
 if(isset($analysisModels) && $analysisModels){
     foreach($analysisModels as $analysisModel){
+        $label = trim((string)($analysisModel->group_name ?? ''));
+        if($label === ''){
+            $label = (string)$analysisModel->participantText;
+        }else{
+            $label .= ' - ' . (string)$analysisModel->participantText;
+        }
+        $participantOptions[(int)$analysisModel->id] = $label;
+
         if(!$analysisModel->achievements){
             continue;
         }
@@ -486,35 +470,7 @@ $achievementValue = function($model, $asHtml = false){
 </div>
 
         <?php
-        $winnerTitleOptionsJson = Json::htmlEncode($winnerTitleOptionsByAchievement);
         $this->registerJs('
-        var achievementWinnerTitleOptions = ' . $winnerTitleOptionsJson . ';
-
-        function refreshAchievementWinnerTitle($achievementSelect){
-            var targetId = $achievementSelect.data("target");
-            var $winnerTitleSelect = $("#" + targetId);
-            var selected = $winnerTitleSelect.data("selected");
-            var achievementId = $achievementSelect.val();
-            var options = achievementWinnerTitleOptions[achievementId] || [{id: "", text: "No winner title"}];
-
-            $winnerTitleSelect.empty();
-            $.each(options, function(_, option){
-                $("<option>").val(option.id).text(option.text).appendTo($winnerTitleSelect);
-            });
-            $winnerTitleSelect.val(selected);
-            if($winnerTitleSelect.val() === null){
-                $winnerTitleSelect.val("");
-            }
-        }
-
-        $(".achievement-form-achievement").each(function(){
-            refreshAchievementWinnerTitle($(this));
-        }).on("change", function(){
-            var $winnerTitleSelect = $("#" + $(this).data("target"));
-            $winnerTitleSelect.data("selected", "");
-            refreshAchievementWinnerTitle($(this));
-        });
-
         $("#dwl-exl").click(function(){
             $("#w0-xls")[0].click();
         });
@@ -619,69 +575,61 @@ $achievementValue = function($model, $asHtml = false){
     <div class="card" id="achievement-form-card">
         <div class="card-header">Achievement Form</div>
         <div class="card-body pt-4">
-            <?php if($analysisModels && count($achievementOptions) > 1): ?>
-                <?php $form = ActiveForm::begin(); ?>
-                <?= Html::hiddenInput('action_type', 'analysis-achievement-save') ?>
+            <?php if($analysisModels && $achievements): ?>
+                <?= Html::beginForm('', 'post') ?>
+                <?= Html::hiddenInput('action_type', 'analysis-achievement-add') ?>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
                             <tr>
-                                <th style="min-width: 260px;">Participant</th>
                                 <th style="min-width: 320px;">Achievement</th>
+                                <th style="min-width: 280px;">Add Group</th>
                                 <th style="min-width: 260px;">Winner Title</th>
+                                <th style="width: 120px;"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach($analysisModels as $analysisModel): ?>
+                            <?php foreach($achievements as $achievement): ?>
                                 <?php
-                                $currentParticipantAchievement = null;
-                                if($analysisModel->achievements){
-                                    foreach($analysisModel->achievements as $participantAchievement){
-                                        $currentParticipantAchievement = $participantAchievement;
-                                        break;
+                                $winnerTitleOptions = ['' => 'No winner title'];
+                                if($hasWinnerTitleSelection && isset($winnerTitlesByAchievement[(int)$achievement->id])){
+                                    foreach($winnerTitlesByAchievement[(int)$achievement->id] as $winnerTitle){
+                                        $title = trim((string)$winnerTitle->title_name);
+                                        if($title === ''){
+                                            $title = 'Winner ' . (int)$winnerTitle->winner_order . ' (no title)';
+                                        }
+                                        $winnerTitleOptions[(int)$winnerTitle->id] = $title;
                                     }
-                                }
-                                $selectedAchievementId = $currentParticipantAchievement ? (int)$currentParticipantAchievement->achieve_id : '';
-                                $selectedWinnerTitleId = $currentParticipantAchievement && $currentParticipantAchievement->winner_title_id ? (int)$currentParticipantAchievement->winner_title_id : '';
-                                $participantName = Html::encode((string)$analysisModel->participantText);
-                                $groupName = trim((string)($analysisModel->group_name ?? ''));
-                                if($groupName !== ''){
-                                    $participantName = Html::tag('span', Html::encode($groupName), ['class' => 'badge bg-secondary me-2']) . $participantName;
                                 }
                                 ?>
                                 <tr>
-                                    <td><?= $participantName ?></td>
+                                    <td><?= Html::encode((string)$achievement->name) ?></td>
                                     <td>
                                         <?= Html::dropDownList(
-                                            'achievement_form[' . (int)$analysisModel->id . '][achieve_id]',
-                                            $selectedAchievementId,
-                                            $achievementOptions,
-                                            [
-                                                'class' => 'form-select achievement-form-achievement',
-                                                'data-target' => 'achievement-winner-title-' . (int)$analysisModel->id,
-                                            ]
+                                            'achievement_form[' . (int)$achievement->id . '][program_reg_id]',
+                                            '',
+                                            $participantOptions,
+                                            ['class' => 'form-select']
                                         ) ?>
                                     </td>
                                     <td>
                                         <?= Html::dropDownList(
-                                            'achievement_form[' . (int)$analysisModel->id . '][winner_title_id]',
-                                            $selectedWinnerTitleId,
-                                            ['' => 'No winner title'],
+                                            'achievement_form[' . (int)$achievement->id . '][winner_title_id]',
+                                            '',
+                                            $winnerTitleOptions,
                                             [
-                                                'class' => 'form-select achievement-form-winner-title',
-                                                'id' => 'achievement-winner-title-' . (int)$analysisModel->id,
-                                                'data-selected' => (string)$selectedWinnerTitleId,
+                                                'class' => 'form-select',
                                                 'disabled' => !$hasWinnerTitleSelection,
                                             ]
                                         ) ?>
                                     </td>
+                                    <td><?= Html::submitButton('<i class="bi bi-plus-circle"></i> Add', ['class' => 'btn btn-primary btn-sm', 'name' => 'achievement_add', 'value' => (int)$achievement->id]) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
-                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> Save Achievement Form', ['class' => 'btn btn-primary']) ?>
-                <?php ActiveForm::end(); ?>
+                <?= Html::endForm() ?>
             <?php else: ?>
                 <span class="text-muted">No participants or achievements found for the current filter.</span>
             <?php endif; ?>
