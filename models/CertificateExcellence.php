@@ -14,6 +14,7 @@ class CertificateExcellence
     public $width;
     public $height;
     public $align = 'center';
+    protected $nameBoundary = null;
 
     public $frontend = false;
 
@@ -59,6 +60,7 @@ class CertificateExcellence
             $this->pdf->SetX($left);
 
             $this->html_program();
+            $this->drawStoredNameBoundary();
             
         } else {
             $html = $this->template->custom_html;
@@ -78,7 +80,7 @@ class CertificateExcellence
         }
 
         $sideMargin = $this->nameSideMargin($margin_name, $size);
-        $this->drawNameBoundary($margin_name, $sideMargin, 18);
+        $this->nameBoundary = [$margin_name, $sideMargin, 18];
         $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
@@ -244,6 +246,16 @@ EOD;
         $this->pdf->Rect($left, $top, $width, $height, 'D');
         $this->pdf->SetLineWidth(0.2);
         $this->pdf->SetDrawColor(0, 0, 0);
+    }
+
+    protected function drawStoredNameBoundary()
+    {
+        if($this->nameBoundary === null){
+            return;
+        }
+
+        [$nameTop, $sideMargin, $bottomPadding] = $this->nameBoundary;
+        $this->drawNameBoundary($nameTop, $sideMargin, $bottomPadding);
     }
 
     protected function pdfTop($value)

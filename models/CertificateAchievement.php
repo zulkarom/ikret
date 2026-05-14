@@ -16,6 +16,7 @@ class CertificateAchievement
     public $height;
     public $align = 'center';
     public $achievementId;
+    protected $nameBoundary = null;
 
     public $frontend = false;
 
@@ -57,6 +58,7 @@ class CertificateAchievement
             $this->html_achievement_sentence();
             $this->html_achievement_name();
             $this->html_program();
+            $this->drawStoredNameBoundary();
             
         } else {
             $html = $this->template->custom_html;
@@ -76,7 +78,7 @@ class CertificateAchievement
         }
 
         $sideMargin = $this->nameSideMargin($margin_name, $size);
-        $this->drawNameBoundary($margin_name, $sideMargin, 8);
+        $this->nameBoundary = [$margin_name, $sideMargin, 8];
         $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
@@ -231,8 +233,20 @@ class CertificateAchievement
         }
 
         $this->pdf->SetDrawColor(220, 53, 69);
+        $this->pdf->SetLineWidth(0.4);
         $this->pdf->Rect($left, $top, $width, $height, 'D');
+        $this->pdf->SetLineWidth(0.2);
         $this->pdf->SetDrawColor(0, 0, 0);
+    }
+
+    protected function drawStoredNameBoundary()
+    {
+        if($this->nameBoundary === null){
+            return;
+        }
+
+        [$nameTop, $sideMargin, $bottomPadding] = $this->nameBoundary;
+        $this->drawNameBoundary($nameTop, $sideMargin, $bottomPadding);
     }
 
     protected function pdfTop($value)
