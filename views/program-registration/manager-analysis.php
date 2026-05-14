@@ -1,6 +1,8 @@
 <?php
 
 use kartik\export\ExportMenu;
+use kartik\select2\Select2;
+use kartik\select2\Select2Asset;
 use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
@@ -15,6 +17,7 @@ use yii\grid\GridView;
 $program = $role->program;
 $sub_text = $programSub ? ' / ' .$programSub->sub_abbr:'';
 $this->title = 'Analysis & Achievement ('.$program->program_abbr. $sub_text . ')';
+Select2Asset::register($this);
 $this->params['breadcrumbs'][] = [
     'label' => $program->program_abbr . $sub_text,
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
@@ -528,10 +531,20 @@ $achievementValue = function($model, $asHtml = false){
             row.find("[name]").each(function(){
                 $(this).attr("name", $(this).attr("name").replace("__INDEX__", "extra_" + nextIndex));
             });
+            row.find("[id]").each(function(){
+                $(this).attr("id", $(this).attr("id").replace("__INDEX__", "extra-" + nextIndex));
+            });
             row.find(".achievement-new-input").prop("disabled", false);
             table.find(".achievement-empty-row").hide();
             template.before(row);
             table.data("next-index", nextIndex + 1);
+            if($.fn.select2){
+                row.find(".achievement-participant-select").select2({
+                    allowClear: true,
+                    placeholder: "Select Participant",
+                    width: "100%"
+                });
+            }
             row.find(".achievement-new-input").first().focus();
         });
 
@@ -632,12 +645,20 @@ $achievementValue = function($model, $asHtml = false){
                                                     <?php foreach($existingAchievementRows as $participantAchievement): ?>
                                                         <tr>
                                                             <td>
-                                                                <?= Html::dropDownList(
-                                                                    'achievement_form[' . $achievementId . '][rows][' . (int)$participantAchievement->id . '][program_reg_id]',
-                                                                    (int)$participantAchievement->program_reg_id,
-                                                                    $participantOptions,
-                                                                    ['class' => 'form-select']
-                                                                ) ?>
+                                                                <?= Select2::widget([
+                                                                    'name' => 'achievement_form[' . $achievementId . '][rows][' . (int)$participantAchievement->id . '][program_reg_id]',
+                                                                    'value' => (int)$participantAchievement->program_reg_id,
+                                                                    'data' => $participantOptions,
+                                                                    'options' => [
+                                                                        'id' => 'achievement-participant-' . $achievementId . '-' . (int)$participantAchievement->id,
+                                                                        'class' => 'achievement-participant-select',
+                                                                        'placeholder' => 'Select Participant',
+                                                                    ],
+                                                                    'pluginOptions' => [
+                                                                        'allowClear' => true,
+                                                                        'width' => '100%',
+                                                                    ],
+                                                                ]) ?>
                                                             </td>
                                                             <td>
                                                                 <?= Html::dropDownList(
@@ -667,12 +688,20 @@ $achievementValue = function($model, $asHtml = false){
                                                 <?php for($slotIndex = 1; $slotIndex <= $emptyWinnerSlotCount; $slotIndex++): ?>
                                                     <tr>
                                                         <td>
-                                                            <?= Html::dropDownList(
-                                                                'achievement_form[' . $achievementId . '][rows][new_' . $slotIndex . '][program_reg_id]',
-                                                                '',
-                                                                $participantOptions,
-                                                                ['class' => 'form-select']
-                                                            ) ?>
+                                                            <?= Select2::widget([
+                                                                'name' => 'achievement_form[' . $achievementId . '][rows][new_' . $slotIndex . '][program_reg_id]',
+                                                                'value' => '',
+                                                                'data' => $participantOptions,
+                                                                'options' => [
+                                                                    'id' => 'achievement-participant-' . $achievementId . '-new-' . $slotIndex,
+                                                                    'class' => 'achievement-participant-select',
+                                                                    'placeholder' => 'Select Participant',
+                                                                ],
+                                                                'pluginOptions' => [
+                                                                    'allowClear' => true,
+                                                                    'width' => '100%',
+                                                                ],
+                                                            ]) ?>
                                                         </td>
                                                         <td>
                                                             <?= Html::dropDownList(
@@ -699,7 +728,12 @@ $achievementValue = function($model, $asHtml = false){
                                                             'achievement_form[' . $achievementId . '][rows][__INDEX__][program_reg_id]',
                                                             '',
                                                             $participantOptions,
-                                                            ['class' => 'form-select achievement-new-input', 'disabled' => true]
+                                                            [
+                                                                'id' => 'achievement-participant-' . $achievementId . '-__INDEX__',
+                                                                'class' => 'form-select achievement-new-input achievement-participant-select',
+                                                                'disabled' => true,
+                                                                'prompt' => 'Select Participant',
+                                                            ]
                                                         ) ?>
                                                     </td>
                                                     <td>
