@@ -233,17 +233,19 @@ EOD;
         }
 
         $top = $this->pdfTop($nameTop);
-        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101) - (float)$bottomPadding);
-        $height = max(4, $bottom - $top);
+        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+        $height = max(8, $bottom - $top);
         $left = max(0, (float)$sideMargin);
         $width = $this->pdf->getPageWidth() - ($left * 2);
         if($width <= 0){
             return;
         }
 
-        $this->pdf->SetDrawColor(220, 53, 69);
-        $this->pdf->SetLineWidth(0.4);
+        $this->pdf->SetDrawColor(255, 0, 0);
+        $this->pdf->SetLineWidth(1);
         $this->pdf->Rect($left, $top, $width, $height, 'D');
+        $this->pdf->Line($left, $top, $left + $width, $top);
+        $this->pdf->Line($left, $top + $height, $left + $width, $top + $height);
         $this->pdf->SetLineWidth(0.2);
         $this->pdf->SetDrawColor(0, 0, 0);
     }
