@@ -677,9 +677,11 @@ $achievementValue = function($model, $asHtml = false){
                                                                     0,
                                                                     ['class' => 'achievement-remove-input']
                                                                 ) ?>
-                                                                <?= Html::button('<i class="bi bi-trash"></i> Remove', [
+                                                                <?= Html::button('<i class="bi bi-trash"></i>', [
                                                                     'class' => 'btn btn-outline-danger btn-sm achievement-remove-row',
                                                                     'type' => 'button',
+                                                                    'title' => 'Remove',
+                                                                    'aria-label' => 'Remove',
                                                                 ]) ?>
                                                             </td>
                                                         </tr>
