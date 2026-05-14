@@ -187,10 +187,12 @@ class CertificateAchievement
         $nameLength = strlen($plainName);
 
         $candidates = [
-            $pageWidth * 0.34,
             $pageWidth * 0.30,
             $pageWidth * 0.26,
             $pageWidth * 0.22,
+            $pageWidth * 0.18,
+            $pageWidth * 0.14,
+            $pageWidth * 0.10,
             $defaultSide,
         ];
 
@@ -201,7 +203,7 @@ class CertificateAchievement
                 continue;
             }
 
-            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.18)));
+            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
             $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
             if($estimatedLines <= $maxLines){
                 return $side;
