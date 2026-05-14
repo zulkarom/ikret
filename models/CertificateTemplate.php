@@ -10,6 +10,8 @@ use Yii;
  * @property int $id
  * @property string|null $template_name
  * @property float|null $name_mt
+ * @property float|null $name_limit_y
+ * @property int|null $show_name_border
  * @property float|null $name_size
  * @property float|null $field1_mt
  * @property float|null $field1_size
@@ -50,9 +52,18 @@ class CertificateTemplate extends \yii\db\ActiveRecord
      */
     public function rules()
     {
+        $numberAttributes = ['name_mt', 'name_size', 'field1_mt', 'field1_size', 'field2_mt', 'field2_size', 'field3_mt', 'field3_size', 'field4_mt', 'field4_size', 'field5_mt', 'field5_size', 'margin_right', 'margin_left'];
+        if($this->hasAttribute('name_limit_y')){
+            $numberAttributes[] = 'name_limit_y';
+        }
+        $integerAttributes = ['set_type', 'published', 'is_portrait', 'align'];
+        if($this->hasAttribute('show_name_border')){
+            $integerAttributes[] = 'show_name_border';
+        }
+
         return [
-            [['name_mt', 'name_size', 'field1_mt', 'field1_size', 'field2_mt', 'field2_size', 'field3_mt', 'field3_size', 'field4_mt', 'field4_size', 'field5_mt', 'field5_size', 'margin_right', 'margin_left'], 'number'],
-            [['set_type', 'published', 'is_portrait', 'align'], 'integer'],
+            [$numberAttributes, 'number'],
+            [$integerAttributes, 'integer'],
             [['custom_html', 'template_file'], 'string'],
             [['updated_at', 'published_at', 'publish_date'], 'safe'],
             [['template_name'], 'string', 'max' => 255],
@@ -69,6 +80,8 @@ class CertificateTemplate extends \yii\db\ActiveRecord
             'id' => 'ID',
             'template_name' => 'Template Name',
             'name_mt' => 'Name Mt',
+            'name_limit_y' => 'Name Bottom Limit',
+            'show_name_border' => 'Show Name Boundary',
             'name_size' => 'Name Size',
             'field1_mt' => 'Field1 Mt',
             'field1_size' => 'Field1 Size',
@@ -162,5 +175,19 @@ class CertificateTemplate extends \yii\db\ActiveRecord
     public function textSize($attribute, $default)
     {
         return $this->$attribute === null || $this->$attribute === '' ? $default : (float)$this->$attribute;
+    }
+
+    public function nameLimitY($fallbackAttribute = 'field1_mt', $fallbackDefault = 101)
+    {
+        if($this->hasAttribute('name_limit_y') && $this->name_limit_y !== null && $this->name_limit_y !== '' && (float)$this->name_limit_y > 0){
+            return (float)$this->name_limit_y;
+        }
+
+        return $this->textTop($fallbackAttribute, $fallbackDefault);
+    }
+
+    public function showNameBorder()
+    {
+        return $this->hasAttribute('show_name_border') && (int)$this->show_name_border === 1;
     }
 }

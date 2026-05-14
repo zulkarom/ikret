@@ -100,16 +100,28 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
 
                     <h5 class="card-title"><?= Html::encode($textConfig['name']) ?></h5>
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="<?= $model->hasAttribute('name_limit_y') ? 'col-md-3' : 'col-md-4' ?>">
                             <?= $form->field($model, 'margin_left')->textInput(['type' => 'number', 'step' => '0.1'])->hint('Horizontal X position.') ?>
                         </div>
-                        <div class="col-md-4">
+                        <div class="<?= $model->hasAttribute('name_limit_y') ? 'col-md-3' : 'col-md-4' ?>">
                             <?= $form->field($model, 'name_mt')->textInput(['type' => 'number', 'step' => '0.1'])->label($textConfig['name'] . ' Top')->hint('Vertical position/top spacing for names.') ?>
                         </div>
-                        <div class="col-md-4">
+                        <?php if($model->hasAttribute('name_limit_y')): ?>
+                            <div class="col-md-3">
+                                <?= $form->field($model, 'name_limit_y')->textInput(['type' => 'number', 'step' => '0.1'])->hint('Lowest Y position allowed for wrapped names. Leave blank to use the first text field top.') ?>
+                            </div>
+                        <?php endif; ?>
+                        <div class="<?= $model->hasAttribute('name_limit_y') ? 'col-md-3' : 'col-md-4' ?>">
                             <?= $form->field($model, 'name_size')->textInput(['type' => 'number', 'step' => '0.1'])->label($textConfig['name'] . ' Size') ?>
                         </div>
                     </div>
+                    <?php if($model->hasAttribute('show_name_border')): ?>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <?= $form->field($model, 'show_name_border')->checkbox()->hint('Development aid: draws a red box around the allowed name area in generated PDFs.') ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <h5 class="card-title"><?= Html::encode($textConfig['section']) ?></h5>
                     <div class="row">

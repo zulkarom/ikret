@@ -75,7 +75,9 @@ class CertificateAchievement
             $size = min($size, 20.5);
         }
 
-        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $this->nameSideMargin($margin_name, $size));
+        $sideMargin = $this->nameSideMargin($margin_name, $size);
+        $this->drawNameBoundary($margin_name, $sideMargin, 8);
+        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
     public function html_achievement_sentence()
@@ -179,7 +181,7 @@ class CertificateAchievement
         $defaultLeft = $this->horizontalMargin('margin_left', 70);
         $defaultRight = $this->horizontalMargin('margin_right', 11);
         $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
-        $fieldTop = $this->template->textTop('field1_mt', 101);
+        $fieldTop = $this->template->nameLimitY('field1_mt', 101);
         $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 8);
         $lineHeight = max(6.5, (float)$fontSize * 0.42);
         $maxLines = max(1, (int)floor($availableHeight / $lineHeight));
@@ -211,6 +213,26 @@ class CertificateAchievement
         }
 
         return $defaultSide;
+    }
+
+    protected function drawNameBoundary($nameTop, $sideMargin, $bottomPadding)
+    {
+        if(!$this->template->showNameBorder()){
+            return;
+        }
+
+        $top = $this->pdfTop($nameTop);
+        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101)) - (float)$bottomPadding;
+        $height = max(4, $bottom - $top);
+        $left = max(0, (float)$sideMargin);
+        $width = $this->pdf->getPageWidth() - ($left * 2);
+        if($width <= 0){
+            return;
+        }
+
+        $this->pdf->SetDrawColor(220, 53, 69);
+        $this->pdf->Rect($left, $top, $width, $height, 'D');
+        $this->pdf->SetDrawColor(0, 0, 0);
     }
 
     protected function pdfTop($value)

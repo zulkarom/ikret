@@ -70,8 +70,6 @@ class CertificateExcellence
 
     public function html_name()
     {
-
-
         $margin_name = $this->template->textTop('name_mt', 0);
         $size = $this->template->textSize('name_size', 23);
         $kira = $this->model->memberCountAll;
@@ -79,33 +77,13 @@ class CertificateExcellence
             $size = min($size, 21);
         }
 
-        $html = '<table border="0">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="0" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            //$size = $this->template->name_size;
-            $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $sideMargin = $this->nameSideMargin($margin_name, $size);
+        $this->drawNameBoundary($margin_name, $sideMargin, 18);
+        $this->writeTextBlock(
+            $margin_name,
+            '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>',
+            $sideMargin
+        );
     }
 
     public function html_award()
@@ -164,6 +142,114 @@ $html
 EOD;
         $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
+    }
+
+    protected function writeTextBlock($top, $html, $sideMargin = null)
+    {
+        $top = $this->pdfTop($top);
+        if($sideMargin !== null){
+            $left = max(0, (float)$sideMargin);
+            $right = $left;
+        }else{
+            $left = $this->template->textLeft(70);
+            $right = $this->template->textRight(11);
+            if($right <= 0){
+                $right = $left;
+            }
+        }
+
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if($width <= 0){
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function nameSideMargin($nameTop, $fontSize)
+    {
+        $pageWidth = $this->pdf->getPageWidth();
+        $defaultLeft = $this->template->textLeft(70);
+        $defaultRight = $this->template->textRight(11);
+        $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
+        $fieldTop = $this->template->nameLimitY('field1_mt', 101);
+        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 18);
+        $lineHeight = max(6.5, (float)$fontSize * 0.42);
+        $maxLines = max(1, (int)floor($availableHeight / $lineHeight));
+        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
+        $nameLength = strlen($plainName);
+
+        $candidates = [
+            $pageWidth * 0.30,
+            $pageWidth * 0.26,
+            $pageWidth * 0.22,
+            $pageWidth * 0.18,
+            $pageWidth * 0.14,
+            $pageWidth * 0.10,
+            $defaultSide,
+        ];
+
+        foreach($candidates as $side){
+            $side = max(0, min((float)$side, ($pageWidth / 2) - 20));
+            $width = $pageWidth - ($side * 2);
+            if($width <= 0){
+                continue;
+            }
+
+            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
+            $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
+            if($estimatedLines <= $maxLines){
+                return $side;
+            }
+        }
+
+        return $defaultSide;
+    }
+
+    protected function drawNameBoundary($nameTop, $sideMargin, $bottomPadding)
+    {
+        if(!$this->template->showNameBorder()){
+            return;
+        }
+
+        $top = $this->pdfTop($nameTop);
+        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101)) - (float)$bottomPadding;
+        $height = max(4, $bottom - $top);
+        $left = max(0, (float)$sideMargin);
+        $width = $this->pdf->getPageWidth() - ($left * 2);
+        if($width <= 0){
+            return;
+        }
+
+        $this->pdf->SetDrawColor(220, 53, 69);
+        $this->pdf->Rect($left, $top, $width, $height, 'D');
+        $this->pdf->SetDrawColor(0, 0, 0);
+    }
+
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
+
+        if($value > $pageHeight){
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
+    protected function tcpdfAlign()
+    {
+        if($this->align === 'left'){
+            return 'L';
+        }
+
+        if($this->align === 'right'){
+            return 'R';
+        }
+
+        return 'C';
     }
 
     
