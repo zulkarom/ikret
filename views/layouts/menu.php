@@ -268,6 +268,7 @@ use yii\helpers\Url;
               ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
               ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
               ['name' => 'Achievement Config', 'url' => ['/certificate-template/achievement-config']],
+              ['name' => 'Achievement Summary', 'url' => ['/program-registration/achievement-summary']],
               ['name' => 'Achievement List', 'url' => ['/certificate-template/achievement-list']],
             ]];
           }

@@ -3925,6 +3925,73 @@ class ProgramRegistrationController extends Controller
         
     }
 
+    public function actionAchievementSummary()
+    {
+        if(!Yii::$app->user->identity->isAdminJury) return false;
+
+        $achievements = ProgramAchievement::find()
+            ->with(['program', 'programSub'])
+            ->joinWith(['program p', 'programSub ps'])
+            ->orderBy([
+                'p.id' => SORT_ASC,
+                'ps.id' => SORT_ASC,
+                ProgramAchievement::tableName() . '.name' => SORT_ASC,
+            ])
+            ->all();
+
+        $assignedWinners = [];
+        $participantAchievements = ParticipantAchieve::find()
+            ->with(['registration.user', 'winnerTitle'])
+            ->joinWith(['registration r'])
+            ->where(['>', 'r.status', 0])
+            ->all();
+
+        foreach($participantAchievements as $pa){
+            if(!$pa->achieve_id || !$pa->registration){
+                continue;
+            }
+
+            $aid = (int)$pa->achieve_id;
+            if(!isset($assignedWinners[$aid])){
+                $assignedWinners[$aid] = [];
+            }
+
+            $registration = $pa->registration;
+            $participantName = \yii\helpers\Html::encode((string)$registration->participantText);
+            $groupName = trim((string)($registration->group_name ?? ''));
+            if($groupName !== ''){
+                $participantName = \yii\helpers\Html::tag('span', \yii\helpers\Html::encode($groupName), ['class' => 'badge bg-secondary me-2']) . $participantName;
+            }
+            if($pa->winnerTitle && trim((string)$pa->winnerTitle->title_name) !== ''){
+                $participantName .= ' <span class="text-muted">(' . \yii\helpers\Html::encode((string)$pa->winnerTitle->title_name) . ')</span>';
+            }
+
+            $assignedWinners[$aid][] = $participantName;
+        }
+
+        $rows = [];
+        foreach($achievements as $achievement){
+            $aid = (int)$achievement->id;
+            $programName = $achievement->program ? ($achievement->program->program_abbr ?: $achievement->program->program_name) : '-';
+            if($achievement->programSub){
+                $programName .= ' / ' . $achievement->programSub->sub_name;
+            }
+
+            $participants = $assignedWinners[$aid] ?? [];
+            $rows[] = [
+                'program' => $programName,
+                'name' => (string)$achievement->name,
+                'winner_count' => (int)$achievement->winner_count,
+                'assigned_count' => count($participants),
+                'participants' => $participants,
+            ];
+        }
+
+        return $this->render('achievement-summary', [
+            'rows' => $rows,
+        ]);
+    }
+
     /**
      * Creates a new ProgramRegistration model.
      * If creation is successful, the browser will be redirected to the 'view' page.
