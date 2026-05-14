@@ -83,7 +83,7 @@ class CertificateAchievement
         $title = $this->achievementWinnerTitle();
         $text = $title === ''
             ? Html::encode('have achieved')
-            : 'have achieved <b>' . Html::encode(strtoupper($title)) . '</b> in';
+            : 'have achieved the title of <b>' . Html::encode(strtoupper($title)) . '</b> in';
         $top = $this->template->textTop('field1_mt', 101);
         $size = $this->template->textSize('field1_size', 20);
 
