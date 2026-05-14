@@ -80,6 +80,7 @@ class CertificateExcellence
         }
 
         $sideMargin = $this->nameSideMargin($margin_name, $size);
+        $this->nameBoundary = [$margin_name, $sideMargin, 18];
         $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
@@ -174,17 +175,11 @@ EOD;
         }
 
         $topSpacer = max(0, $this->pdfTop($topSpacer));
-        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
-        $nameAreaHeight = max(8, $limitBottom - $topSpacer);
-        $cellStyle = $this->template->showNameBorder()
-            ? 'border:3px solid #ff0000; color:#000000;'
-            : '';
-
         $content = '<table border="0" cellpadding="0" cellspacing="0" width="100%">';
         if($topSpacer > 0){
             $content .= '<tr><td height="' . $topSpacer . '"></td></tr>';
         }
-        $content .= '<tr><td align="' . $this->align . '" height="' . $nameAreaHeight . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
+        $content .= '<tr><td align="' . $this->align . '">' . $html . '</td></tr></table>';
 
         $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTMLCell($width, 0, $left, 0, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
