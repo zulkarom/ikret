@@ -582,9 +582,10 @@ $achievementValue = function($model, $asHtml = false){
                     <table class="table align-middle">
                         <thead>
                             <tr>
-                                <th style="min-width: 320px;">Achievement</th>
-                                <th style="min-width: 280px;">Add Group</th>
-                                <th style="min-width: 260px;">Winner Title</th>
+                                <th style="min-width: 280px;">Achievement</th>
+                                <th style="min-width: 340px;">Existing Groups</th>
+                                <th style="min-width: 260px;">Add Group</th>
+                                <th style="min-width: 240px;">Winner Title</th>
                                 <th style="width: 120px;"></th>
                             </tr>
                         </thead>
@@ -604,6 +605,16 @@ $achievementValue = function($model, $asHtml = false){
                                 ?>
                                 <tr>
                                     <td><?= Html::encode((string)$achievement->name) ?></td>
+                                    <td>
+                                        <?php
+                                        $existingGroups = $assignedWinners[(int)$achievement->id] ?? [];
+                                        if($existingGroups){
+                                            echo implode('<br />', $existingGroups);
+                                        }else{
+                                            echo '<span class="text-muted">No group added yet.</span>';
+                                        }
+                                        ?>
+                                    </td>
                                     <td>
                                         <?= Html::dropDownList(
                                             'achievement_form[' . (int)$achievement->id . '][program_reg_id]',
