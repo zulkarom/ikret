@@ -3884,82 +3884,144 @@ class ProgramRegistrationController extends Controller
         }
 
         $post = $this->request->post();
-        if($this->request->isPost && (string)($post['action_type'] ?? '') === 'analysis-achievement-add'){
+        if($this->request->isPost && (string)($post['action_type'] ?? '') === 'analysis-achievement-bulk'){
             Yii::$app->session->set('managerAnalysisOpenCard', 'achievement-form');
             $assignment = (array)($post['achievement_form'] ?? []);
             $allowedAchievementIds = $achievements ? array_map('intval', ArrayHelper::getColumn($achievements, 'id')) : [];
             $conflicts = [];
+            $modelsToSave = [];
+            $seenParticipants = [];
+            $seenWinnerTitles = [];
 
-            $achievementId = (int)($post['achievement_add'] ?? 0);
-            $row = (array)($assignment[$achievementId] ?? []);
-            $registrationId = (int)($row['program_reg_id'] ?? 0);
-            if($registrationId <= 0 || $achievementId <= 0 || !in_array($achievementId, $allowedAchievementIds, true)){
-                Yii::$app->session->addFlash('error', 'Please select a participant group and achievement.');
-                return $this->refresh();
-            }
-
-            $registration = ProgramRegistration::findOne($registrationId);
-            if(!$registration || (int)$registration->program_id !== (int)$role->program_id){
-                throw new ForbiddenHttpException('No access');
-            }
-            if($role->program->has_sub == 1 && (int)$registration->program_sub !== (int)$sub){
-                throw new ForbiddenHttpException('No access');
-            }
-
-            $participantAchieve = ParticipantAchieve::findOne([
-                'program_reg_id' => $registrationId,
-                'achieve_id' => $achievementId,
-            ]);
-            if(!$participantAchieve){
-                $participantAchieve = new ParticipantAchieve([
-                    'program_reg_id' => $registrationId,
-                    'achieve_id' => $achievementId,
-                ]);
-                if($participantAchieve->hasAttribute('achieved_at')){
-                    $participantAchieve->achieved_at = time();
+            foreach($assignment as $achievementId => $achievementRows){
+                $achievementId = (int)$achievementId;
+                if($achievementId <= 0 || !in_array($achievementId, $allowedAchievementIds, true)){
+                    continue;
                 }
-            }
 
-            if($hasWinnerTitleSelection){
-                $winnerTitleId = (int)($row['winner_title_id'] ?? 0);
-                if($winnerTitleId <= 0){
-                    $participantAchieve->winner_title_id = null;
-                }else{
-                    $winnerTitle = ProgramWinnerTitle::find()
-                        ->where(['id' => $winnerTitleId, 'achievement_id' => $achievementId])
-                        ->one();
-                    if($winnerTitle){
-                        $existing = ParticipantAchieve::find()
-                            ->where([
-                                'achieve_id' => $achievementId,
-                                'winner_title_id' => (int)$winnerTitle->id,
-                            ]);
-                        if(!$participantAchieve->isNewRecord){
-                            $existing->andWhere(['<>', 'id', (int)$participantAchieve->id]);
+                $rows = (array)($achievementRows['rows'] ?? []);
+                foreach($rows as $rowKey => $row){
+                    $row = (array)$row;
+                    $registrationId = (int)($row['program_reg_id'] ?? 0);
+                    $winnerTitleId = (int)($row['winner_title_id'] ?? 0);
+                    $participantAchieve = null;
+
+                    if(is_numeric($rowKey) && (int)$rowKey > 0){
+                        $participantAchieve = ParticipantAchieve::findOne([
+                            'id' => (int)$rowKey,
+                            'achieve_id' => $achievementId,
+                        ]);
+                        if(!$participantAchieve){
+                            $conflicts[] = 'One achievement row could not be found.';
+                            continue;
                         }
-                        $existing = $existing->one();
-                        if($existing){
-                            $existingParticipant = $existing->registration ? $existing->registration->participantText : 'another participant';
-                            $titleName = trim((string)$winnerTitle->title_name);
-                            if($titleName === ''){
-                                $titleName = 'Winner ' . (int)$winnerTitle->winner_order;
-                            }
-                            $conflicts[] = $titleName . ' already assigned to ' . $existingParticipant . '.';
-                        }else{
-                            $participantAchieve->winner_title_id = (int)$winnerTitle->id;
-                        }
-                    }else{
-                        $participantAchieve->winner_title_id = null;
+                    }else if($registrationId <= 0 && $winnerTitleId <= 0){
+                        continue;
                     }
+
+                    if($registrationId <= 0){
+                        $conflicts[] = 'Please select a participant group for each achievement row.';
+                        continue;
+                    }
+
+                    $registration = ProgramRegistration::findOne($registrationId);
+                    if(!$registration || (int)$registration->program_id !== (int)$role->program_id){
+                        throw new ForbiddenHttpException('No access');
+                    }
+                    if($role->program->has_sub == 1 && (int)$registration->program_sub !== (int)$sub){
+                        throw new ForbiddenHttpException('No access');
+                    }
+
+                    if(!$participantAchieve){
+                        $participantAchieve = new ParticipantAchieve([
+                            'achieve_id' => $achievementId,
+                        ]);
+                        if($participantAchieve->hasAttribute('achieved_at')){
+                            $participantAchieve->achieved_at = time();
+                        }
+                    }
+
+                    $seenParticipantKey = $achievementId . ':' . $registrationId;
+                    if(isset($seenParticipants[$seenParticipantKey])){
+                        $conflicts[] = $registration->participantText . ' is selected more than once for the same achievement.';
+                        continue;
+                    }
+                    $seenParticipants[$seenParticipantKey] = true;
+
+                    $existingParticipantAchieve = ParticipantAchieve::find()
+                        ->where([
+                            'program_reg_id' => $registrationId,
+                            'achieve_id' => $achievementId,
+                        ]);
+                    if(!$participantAchieve->isNewRecord){
+                        $existingParticipantAchieve->andWhere(['<>', 'id', (int)$participantAchieve->id]);
+                    }
+                    if($existingParticipantAchieve->exists()){
+                        $conflicts[] = $registration->participantText . ' already has this achievement.';
+                        continue;
+                    }
+
+                    $participantAchieve->program_reg_id = $registrationId;
+                    if($hasWinnerTitleSelection){
+                        if($winnerTitleId <= 0){
+                            $participantAchieve->winner_title_id = null;
+                        }else{
+                            $winnerTitle = ProgramWinnerTitle::find()
+                                ->where(['id' => $winnerTitleId, 'achievement_id' => $achievementId])
+                                ->one();
+                            if(!$winnerTitle){
+                                $participantAchieve->winner_title_id = null;
+                            }else{
+                                $seenTitleKey = $achievementId . ':' . $winnerTitleId;
+                                if(isset($seenWinnerTitles[$seenTitleKey])){
+                                    $conflicts[] = 'The same winner title is selected more than once for one achievement.';
+                                    continue;
+                                }
+                                $seenWinnerTitles[$seenTitleKey] = true;
+
+                                $existing = ParticipantAchieve::find()
+                                    ->where([
+                                        'achieve_id' => $achievementId,
+                                        'winner_title_id' => (int)$winnerTitle->id,
+                                    ]);
+                                if(!$participantAchieve->isNewRecord){
+                                    $existing->andWhere(['<>', 'id', (int)$participantAchieve->id]);
+                                }
+                                $existing = $existing->one();
+                                if($existing){
+                                    $existingParticipant = $existing->registration ? $existing->registration->participantText : 'another participant';
+                                    $titleName = trim((string)$winnerTitle->title_name);
+                                    if($titleName === ''){
+                                        $titleName = 'Winner ' . (int)$winnerTitle->winner_order;
+                                    }
+                                    $conflicts[] = $titleName . ' already assigned to ' . $existingParticipant . '.';
+                                }else{
+                                    $participantAchieve->winner_title_id = (int)$winnerTitle->id;
+                                }
+                            }
+                        }
+                    }
+
+                    $modelsToSave[] = $participantAchieve;
                 }
             }
 
             if($conflicts){
                 Yii::$app->session->addFlash('error', implode("\n", array_unique($conflicts)));
-            }else if($participantAchieve->save()){
-                Yii::$app->session->addFlash('success', 'Achievement saved for ' . $registration->participantText . '.');
             }else{
-                Yii::$app->session->addFlash('error', implode("\n", $participantAchieve->getFirstErrors()));
+                $transaction = Yii::$app->db->beginTransaction();
+                try{
+                    foreach($modelsToSave as $participantAchieve){
+                        if(!$participantAchieve->save()){
+                            throw new \RuntimeException(implode("\n", $participantAchieve->getFirstErrors()));
+                        }
+                    }
+                    $transaction->commit();
+                    Yii::$app->session->addFlash('success', count($modelsToSave) . ' achievement row(s) saved.');
+                }catch(\Throwable $e){
+                    $transaction->rollBack();
+                    Yii::$app->session->addFlash('error', $e->getMessage());
+                }
             }
 
             return $this->refresh();

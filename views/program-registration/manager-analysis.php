@@ -1,7 +1,6 @@
 <?php
 
 use kartik\export\ExportMenu;
-use kartik\select2\Select2;
 use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
@@ -56,7 +55,8 @@ $achievementFilterUrl = function($achievementId)use($analysisUrl){
 };
 $achievementSummary = [];
 $assignedWinners = [];
-$participantOptions = ['' => 'Select Group'];
+$assignedAchievementRows = [];
+$participantOptions = ['' => 'Select Participant'];
 if(isset($analysisModels) && $analysisModels){
     foreach($analysisModels as $analysisModel){
         $label = trim((string)($analysisModel->group_name ?? ''));
@@ -78,6 +78,10 @@ if(isset($analysisModels) && $analysisModels){
             if(!isset($assignedWinners[$aid])){
                 $assignedWinners[$aid] = [];
             }
+            if(!isset($assignedAchievementRows[$aid])){
+                $assignedAchievementRows[$aid] = [];
+            }
+            $assignedAchievementRows[$aid][] = $pa;
             $participantName = Html::encode((string)$analysisModel->participantText);
             $groupName = trim((string)($analysisModel->group_name ?? ''));
             if($groupName !== ''){
@@ -512,6 +516,18 @@ $achievementValue = function($model, $asHtml = false){
             });
         });
 
+        $(".achievement-add-row").click(function(){
+            var table = $(this).siblings(".achievement-sub-table");
+            if(parseInt(table.data("existing-count"), 10) > 0){
+                alert("This achievement already has an existing list. Please update the existing row instead.");
+                return;
+            }
+
+            table.find(".achievement-empty-row").hide();
+            table.find(".achievement-new-row").show();
+            table.find(".achievement-new-input").prop("disabled", false).first().focus();
+        });
+
         setAnalysisCard(defaultOpenCard);
         ');
         ?>
@@ -548,22 +564,20 @@ $achievementValue = function($model, $asHtml = false){
                     <?= Html::a('<i class="bi bi-lightbulb"></i> Show Suggestion', $suggestionUrl, ['class' => 'btn btn-outline-primary']) ?>
                 </div>
                 <?= Html::beginForm('', 'post') ?>
-                <?= Html::hiddenInput('action_type', 'analysis-achievement-add') ?>
+                <?= Html::hiddenInput('action_type', 'analysis-achievement-bulk') ?>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
                             <tr>
                                 <th style="min-width: 280px;">Achievement</th>
                                 <th style="width: 180px;">Number of Winner</th>
-                                <th style="min-width: 340px;">Existing Groups</th>
-                                <th style="min-width: 260px;">Add Group</th>
-                                <th style="min-width: 240px;">Winner Title</th>
-                                <th style="width: 120px;"></th>
+                                <th style="min-width: 520px;">Existing Groups</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach($achievements as $achievement): ?>
                                 <?php
+                                $achievementId = (int)$achievement->id;
                                 $achievementRow = $achievementSummary[(int)$achievement->id] ?? [
                                     'assigned_count' => 0,
                                     'winner_count' => (int)$achievement->winner_count,
@@ -578,6 +592,7 @@ $achievementValue = function($model, $asHtml = false){
                                         $winnerTitleOptions[(int)$winnerTitle->id] = $title;
                                     }
                                 }
+                                $existingAchievementRows = $assignedAchievementRows[$achievementId] ?? [];
                                 ?>
                                 <tr>
                                     <td><?= Html::encode((string)$achievement->name) ?></td>
@@ -590,47 +605,77 @@ $achievementValue = function($model, $asHtml = false){
                                         <span class="text-muted ms-2">/ <?= (int)$achievementRow['winner_count'] ?></span>
                                     </td>
                                     <td>
-                                        <?php
-                                        $existingGroups = $assignedWinners[(int)$achievement->id] ?? [];
-                                        if($existingGroups){
-                                            echo implode('<br />', $existingGroups);
-                                        }else{
-                                            echo '<span class="text-muted">No group added yet.</span>';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?= Select2::widget([
-                                            'name' => 'achievement_form[' . (int)$achievement->id . '][program_reg_id]',
-                                            'value' => '',
-                                            'data' => $participantOptions,
-                                            'options' => [
-                                                'id' => 'achievement-group-' . (int)$achievement->id,
-                                                'placeholder' => 'Select Group',
-                                            ],
-                                            'pluginOptions' => [
-                                                'allowClear' => true,
-                                                'width' => '100%',
-                                            ],
+                                        <table class="table table-sm mb-2 achievement-sub-table" data-existing-count="<?= count($existingAchievementRows) ?>">
+                                            <thead>
+                                                <tr>
+                                                    <th>Participant</th>
+                                                    <th style="width: 260px;">Winner Title</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php if($existingAchievementRows): ?>
+                                                    <?php foreach($existingAchievementRows as $participantAchievement): ?>
+                                                        <tr>
+                                                            <td>
+                                                                <?= Html::dropDownList(
+                                                                    'achievement_form[' . $achievementId . '][rows][' . (int)$participantAchievement->id . '][program_reg_id]',
+                                                                    (int)$participantAchievement->program_reg_id,
+                                                                    $participantOptions,
+                                                                    ['class' => 'form-select']
+                                                                ) ?>
+                                                            </td>
+                                                            <td>
+                                                                <?= Html::dropDownList(
+                                                                    'achievement_form[' . $achievementId . '][rows][' . (int)$participantAchievement->id . '][winner_title_id]',
+                                                                    $hasWinnerTitleSelection ? (int)$participantAchievement->winner_title_id : '',
+                                                                    $winnerTitleOptions,
+                                                                    [
+                                                                        'class' => 'form-select',
+                                                                        'disabled' => !$hasWinnerTitleSelection,
+                                                                    ]
+                                                                ) ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr class="achievement-empty-row">
+                                                        <td colspan="2" class="text-muted">No group added yet.</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                                <tr class="achievement-new-row" style="display:none;">
+                                                    <td>
+                                                        <?= Html::dropDownList(
+                                                            'achievement_form[' . $achievementId . '][rows][new][program_reg_id]',
+                                                            '',
+                                                            $participantOptions,
+                                                            ['class' => 'form-select achievement-new-input', 'disabled' => true]
+                                                        ) ?>
+                                                    </td>
+                                                    <td>
+                                                        <?= Html::dropDownList(
+                                                            'achievement_form[' . $achievementId . '][rows][new][winner_title_id]',
+                                                            '',
+                                                            $winnerTitleOptions,
+                                                            [
+                                                                'class' => $hasWinnerTitleSelection ? 'form-select achievement-new-input' : 'form-select',
+                                                                'disabled' => !$hasWinnerTitleSelection,
+                                                            ]
+                                                        ) ?>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <?= Html::button('<i class="bi bi-plus-circle"></i> Add', [
+                                            'class' => 'btn btn-outline-primary btn-sm achievement-add-row',
+                                            'type' => 'button',
                                         ]) ?>
                                     </td>
-                                    <td>
-                                        <?= Html::dropDownList(
-                                            'achievement_form[' . (int)$achievement->id . '][winner_title_id]',
-                                            '',
-                                            $winnerTitleOptions,
-                                            [
-                                                'class' => 'form-select',
-                                                'disabled' => !$hasWinnerTitleSelection,
-                                            ]
-                                        ) ?>
-                                    </td>
-                                    <td><?= Html::submitButton('<i class="bi bi-plus-circle"></i> Add', ['class' => 'btn btn-primary btn-sm', 'name' => 'achievement_add', 'value' => (int)$achievement->id]) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
+                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> Save', ['class' => 'btn btn-primary']) ?>
                 <?= Html::endForm() ?>
             <?php else: ?>
                 <span class="text-muted">No participants or achievements found for the current filter.</span>
