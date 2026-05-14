@@ -232,13 +232,8 @@ class CertificateAchievement
             return;
         }
 
-        $this->pdf->SetDrawColor(255, 0, 0);
-        $this->pdf->SetLineWidth(1);
-        $this->pdf->Rect($left, $top, $width, $height, 'D');
-        $this->pdf->Line($left, $top, $left + $width, $top);
-        $this->pdf->Line($left, $top + $height, $left + $width, $top + $height);
-        $this->pdf->SetLineWidth(0.2);
-        $this->pdf->SetDrawColor(0, 0, 0);
+        $html = '<table cellpadding="0" cellspacing="0" style="border:3px solid #ff0000;"><tr><td style="height:' . $height . 'mm;">&nbsp;</td></tr></table>';
+        $this->pdf->writeHTMLCell($width, $height, $left, $top, $html, 0, 0, false, true, '', true);
     }
 
     protected function drawStoredNameBoundary()
