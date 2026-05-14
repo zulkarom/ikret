@@ -176,13 +176,14 @@ EOD;
         $topSpacer = max(0, $this->pdfTop($topSpacer));
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
         $nameAreaHeight = max(8, $limitBottom - $topSpacer);
-        $cellStyle = $this->template->showNameBorder()
-            ? 'border:3px solid #ff0000; color:#000000;'
-            : '';
+        $showNameBorder = $this->template->showNameBorder();
+        $tableBorder = $showNameBorder ? '1' : '0';
+        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
+        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
 
-        $content = '<table border="0" cellpadding="0" cellspacing="0" width="100%">';
+        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '">';
         if($topSpacer > 0){
-            $content .= '<tr><td height="' . $topSpacer . '"></td></tr>';
+            $content .= '<tr><td height="' . $topSpacer . '" style="' . $cellStyle . '"></td></tr>';
         }
         $content .= '<tr><td align="' . $this->align . '" height="' . $nameAreaHeight . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
 
