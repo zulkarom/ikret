@@ -78,8 +78,7 @@ class CertificateAchievement
         }
 
         $sideMargin = $this->nameSideMargin($margin_name, $size);
-        $this->nameBoundary = [$margin_name, $sideMargin, 8];
-        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
+        $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
     public function html_achievement_sentence()
@@ -175,6 +174,27 @@ class CertificateAchievement
         }
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function writeNameBlock($top, $html, $sideMargin)
+    {
+        $top = $this->pdfTop($top);
+        $left = max(0, (float)$sideMargin);
+        $width = $this->pdf->getPageWidth() - ($left * 2);
+        if($width <= 0){
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+        $nameAreaHeight = max(8, $limitBottom - $top);
+        $cellStyle = $this->template->showNameBorder()
+            ? 'border:3px solid #ff0000; color:#000000;'
+            : '';
+        $content = '<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td align="' . $this->align . '" height="' . $nameAreaHeight . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
+
+        $this->pdf->SetFont('iniriaserif', '', 0);
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
     }
 
     protected function nameSideMargin($nameTop, $fontSize)
