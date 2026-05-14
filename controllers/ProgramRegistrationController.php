@@ -3890,6 +3890,7 @@ class ProgramRegistrationController extends Controller
             $allowedAchievementIds = $achievements ? array_map('intval', ArrayHelper::getColumn($achievements, 'id')) : [];
             $conflicts = [];
             $modelsToSave = [];
+            $modelsToDelete = [];
             $seenParticipants = [];
             $seenWinnerTitles = [];
 
@@ -3913,6 +3914,16 @@ class ProgramRegistrationController extends Controller
                         ]);
                         if(!$participantAchieve){
                             $conflicts[] = 'One achievement row could not be found.';
+                            continue;
+                        }
+                        if((int)($row['remove'] ?? 0) === 1){
+                            if(!$participantAchieve->registration || (int)$participantAchieve->registration->program_id !== (int)$role->program_id){
+                                throw new ForbiddenHttpException('No access');
+                            }
+                            if($role->program->has_sub == 1 && (int)$participantAchieve->registration->program_sub !== (int)$sub){
+                                throw new ForbiddenHttpException('No access');
+                            }
+                            $modelsToDelete[] = $participantAchieve;
                             continue;
                         }
                     }else if($registrationId <= 0 && $winnerTitleId <= 0){
@@ -4011,13 +4022,18 @@ class ProgramRegistrationController extends Controller
             }else{
                 $transaction = Yii::$app->db->beginTransaction();
                 try{
+                    foreach($modelsToDelete as $participantAchieve){
+                        if($participantAchieve->delete() === false){
+                            throw new \RuntimeException('Unable to remove achievement row.');
+                        }
+                    }
                     foreach($modelsToSave as $participantAchieve){
                         if(!$participantAchieve->save()){
                             throw new \RuntimeException(implode("\n", $participantAchieve->getFirstErrors()));
                         }
                     }
                     $transaction->commit();
-                    Yii::$app->session->addFlash('success', count($modelsToSave) . ' achievement row(s) saved.');
+                    Yii::$app->session->addFlash('success', count($modelsToSave) . ' achievement row(s) saved. ' . count($modelsToDelete) . ' row(s) removed.');
                 }catch(\Throwable $e){
                     $transaction->rollBack();
                     Yii::$app->session->addFlash('error', $e->getMessage());

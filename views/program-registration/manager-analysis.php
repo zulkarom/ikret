@@ -535,6 +535,12 @@ $achievementValue = function($model, $asHtml = false){
             row.find(".achievement-new-input").first().focus();
         });
 
+        $(document).on("click", ".achievement-remove-row", function(){
+            var row = $(this).closest("tr");
+            row.find(".achievement-remove-input").val("1");
+            row.hide();
+        });
+
         setAnalysisCard(defaultOpenCard);
         ');
         ?>
@@ -618,6 +624,7 @@ $achievementValue = function($model, $asHtml = false){
                                                 <tr>
                                                     <th>Participant</th>
                                                     <th style="width: 260px;">Winner Title</th>
+                                                    <th style="width: 100px;"></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -643,6 +650,17 @@ $achievementValue = function($model, $asHtml = false){
                                                                     ]
                                                                 ) ?>
                                                             </td>
+                                                            <td>
+                                                                <?= Html::hiddenInput(
+                                                                    'achievement_form[' . $achievementId . '][rows][' . (int)$participantAchievement->id . '][remove]',
+                                                                    0,
+                                                                    ['class' => 'achievement-remove-input']
+                                                                ) ?>
+                                                                <?= Html::button('<i class="bi bi-trash"></i> Remove', [
+                                                                    'class' => 'btn btn-outline-danger btn-sm achievement-remove-row',
+                                                                    'type' => 'button',
+                                                                ]) ?>
+                                                            </td>
                                                         </tr>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
@@ -667,11 +685,12 @@ $achievementValue = function($model, $asHtml = false){
                                                                 ]
                                                             ) ?>
                                                         </td>
+                                                        <td></td>
                                                     </tr>
                                                 <?php endfor; ?>
                                                 <?php if(!$existingAchievementRows && $emptyWinnerSlotCount === 0): ?>
                                                     <tr class="achievement-empty-row">
-                                                        <td colspan="2" class="text-muted">No group added yet.</td>
+                                                        <td colspan="3" class="text-muted">No group added yet.</td>
                                                     </tr>
                                                 <?php endif; ?>
                                                 <tr class="achievement-template-row" style="display:none;">
@@ -694,6 +713,7 @@ $achievementValue = function($model, $asHtml = false){
                                                             ]
                                                         ) ?>
                                                     </td>
+                                                    <td></td>
                                                 </tr>
                                             </tbody>
                                         </table>
