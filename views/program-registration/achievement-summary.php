@@ -7,6 +7,20 @@ use yii\helpers\Html;
 
 $this->title = 'Achievement Summary';
 $this->params['breadcrumbs'][] = $this->title;
+
+$programRowspans = [];
+$previousProgram = null;
+$currentStart = null;
+foreach($rows as $index => $row){
+    $program = (string)$row['program'];
+    if($program !== $previousProgram){
+        $currentStart = $index;
+        $programRowspans[$currentStart] = 1;
+        $previousProgram = $program;
+    }else{
+        $programRowspans[$currentStart]++;
+    }
+}
 ?>
 
 <div class="pagetitle">
@@ -29,9 +43,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach($rows as $row): ?>
+                            <?php foreach($rows as $index => $row): ?>
                                 <tr>
-                                    <td><?= Html::encode($row['program']) ?></td>
+                                    <?php if(isset($programRowspans[$index])): ?>
+                                        <td rowspan="<?= (int)$programRowspans[$index] ?>"><?= Html::encode($row['program']) ?></td>
+                                    <?php endif; ?>
                                     <td><?= Html::encode($row['name']) ?></td>
                                     <td>
                                         <span class="badge bg-primary"><?= (int)$row['assigned_count'] ?></span>
