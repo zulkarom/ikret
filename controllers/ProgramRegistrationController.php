@@ -3868,6 +3868,108 @@ class ProgramRegistrationController extends Controller
 
         $rubrics = $rubricsQuery->orderBy([ProgramRubric::tableName() . '.id' => SORT_ASC])->all();
         $achievements = $achievementsQuery->orderBy(['name' => SORT_ASC])->all();
+        $hasWinnerTitleSelection = $this->hasParticipantAchieveWinnerTitleColumn()
+            && $this->hasProgramWinnerTitleAchievementColumn();
+        $winnerTitlesByAchievement = [];
+        if($hasWinnerTitleSelection && $achievements){
+            $achievementIds = ArrayHelper::getColumn($achievements, 'id');
+            $this->ensureWinnerTitleRows($achievementIds);
+            $winnerTitles = ProgramWinnerTitle::find()
+                ->where(['achievement_id' => $achievementIds])
+                ->orderBy(['achievement_id' => SORT_ASC, 'winner_order' => SORT_ASC])
+                ->all();
+            foreach($winnerTitles as $winnerTitle){
+                $winnerTitlesByAchievement[(int)$winnerTitle->achievement_id][] = $winnerTitle;
+            }
+        }
+
+        $post = $this->request->post();
+        if($this->request->isPost && (string)($post['action_type'] ?? '') === 'analysis-achievement-save'){
+            $assignments = (array)($post['achievement_form'] ?? []);
+            $allowedAchievementIds = $achievements ? array_map('intval', ArrayHelper::getColumn($achievements, 'id')) : [];
+            $saved = 0;
+            $conflicts = [];
+
+            foreach($assignments as $registrationId => $row){
+                $registrationId = (int)$registrationId;
+                $achievementId = (int)($row['achieve_id'] ?? 0);
+                if($registrationId <= 0 || $achievementId <= 0 || !in_array($achievementId, $allowedAchievementIds, true)){
+                    continue;
+                }
+
+                $registration = ProgramRegistration::findOne($registrationId);
+                if(!$registration || (int)$registration->program_id !== (int)$role->program_id){
+                    continue;
+                }
+                if($role->program->has_sub == 1 && (int)$registration->program_sub !== (int)$sub){
+                    continue;
+                }
+
+                $participantAchieve = ParticipantAchieve::findOne([
+                    'program_reg_id' => $registrationId,
+                    'achieve_id' => $achievementId,
+                ]);
+                if(!$participantAchieve){
+                    $participantAchieve = new ParticipantAchieve([
+                        'program_reg_id' => $registrationId,
+                        'achieve_id' => $achievementId,
+                    ]);
+                    if($participantAchieve->hasAttribute('achieved_at')){
+                        $participantAchieve->achieved_at = time();
+                    }
+                }
+
+                if($hasWinnerTitleSelection){
+                    $winnerTitleId = (int)($row['winner_title_id'] ?? 0);
+                    if($winnerTitleId <= 0){
+                        $participantAchieve->winner_title_id = null;
+                    }else{
+                        $winnerTitle = ProgramWinnerTitle::find()
+                            ->where(['id' => $winnerTitleId, 'achievement_id' => $achievementId])
+                            ->one();
+                        if($winnerTitle){
+                            $existing = ParticipantAchieve::find()
+                                ->where([
+                                    'achieve_id' => $achievementId,
+                                    'winner_title_id' => (int)$winnerTitle->id,
+                                ]);
+                            if(!$participantAchieve->isNewRecord){
+                                $existing->andWhere(['<>', 'id', (int)$participantAchieve->id]);
+                            }
+                            $existing = $existing->one();
+                            if($existing){
+                                $existingParticipant = $existing->registration ? $existing->registration->participantText : 'another participant';
+                                $titleName = trim((string)$winnerTitle->title_name);
+                                if($titleName === ''){
+                                    $titleName = 'Winner ' . (int)$winnerTitle->winner_order;
+                                }
+                                $conflicts[] = $titleName . ' already assigned to ' . $existingParticipant . '.';
+                                continue;
+                            }
+                            $participantAchieve->winner_title_id = (int)$winnerTitle->id;
+                        }else{
+                            $participantAchieve->winner_title_id = null;
+                        }
+                    }
+                }
+
+                if($participantAchieve->save()){
+                    $saved++;
+                }
+            }
+
+            if($saved > 0){
+                Yii::$app->session->addFlash('success', 'Achievement form saved for ' . $saved . ' participant(s).');
+            }
+            if($conflicts){
+                Yii::$app->session->addFlash('error', implode("\n", array_unique($conflicts)));
+            }else if($saved === 0){
+                Yii::$app->session->addFlash('info', 'No achievement changes were saved.');
+            }
+
+            return $this->refresh();
+        }
+
         $firstRubric = null;
         if($rubrics){
             $firstRubric = $rubrics[0]->rubric_id;
@@ -3918,7 +4020,9 @@ class ProgramRegistrationController extends Controller
                 'rubrics' => $rubrics,
                 'achievements' => $achievements,
                 'stages' =>$stages,
-                'selectedRubric' => $selectedRubric
+                'selectedRubric' => $selectedRubric,
+                'hasWinnerTitleSelection' => $hasWinnerTitleSelection,
+                'winnerTitlesByAchievement' => $winnerTitlesByAchievement,
             ]);
         }
 

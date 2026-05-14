@@ -4,12 +4,15 @@ use kartik\export\ExportMenu;
 use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use yii\helpers\Url;
 use yii\grid\GridView;
 
 /** @var yii\web\View $this */
 /** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var bool $hasWinnerTitleSelection */
+/** @var array $winnerTitlesByAchievement */
 $program = $role->program;
 $sub_text = $programSub ? ' / ' .$programSub->sub_abbr:'';
 $this->title = 'Analysis & Achievement ('.$program->program_abbr. $sub_text . ')';
@@ -46,6 +49,30 @@ $analysisUrl = function($extra = []) use($program, $programSub){
 };
 $achievementSummary = [];
 $assignedWinners = [];
+$achievementOptions = ['' => 'Select Achievement'];
+if(isset($achievements) && $achievements){
+    foreach($achievements as $achievementOption){
+        $achievementOptions[(int)$achievementOption->id] = (string)$achievementOption->name;
+    }
+}
+$winnerTitleOptionsByAchievement = [];
+if(isset($winnerTitlesByAchievement) && $winnerTitlesByAchievement){
+    foreach($winnerTitlesByAchievement as $achievementId => $winnerTitles){
+        $winnerTitleOptionsByAchievement[(int)$achievementId] = [
+            ['id' => '', 'text' => 'No winner title'],
+        ];
+        foreach($winnerTitles as $winnerTitle){
+            $title = trim((string)$winnerTitle->title_name);
+            if($title === ''){
+                $title = 'Winner ' . (int)$winnerTitle->winner_order . ' (no title)';
+            }
+            $winnerTitleOptionsByAchievement[(int)$achievementId][] = [
+                'id' => (int)$winnerTitle->id,
+                'text' => $title,
+            ];
+        }
+    }
+}
 if(isset($analysisModels) && $analysisModels){
     foreach($analysisModels as $analysisModel){
         if(!$analysisModel->achievements){
@@ -301,6 +328,7 @@ $achievementValue = function($model, $asHtml = false){
     <div class="d-flex align-items-center gap-2 mt-3">
         <?=Html::button('<i class="bi bi-download"></i> Excel Analysis', ['id' => 'dwl-exl','class' => 'btn btn-success'])?>
         <?= Html::button('<i class="bi bi-funnel"></i> Hide Filter Form', ['id' => 'toggle-filter-form', 'class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::button('<i class="bi bi-ui-checks"></i> Achievement Form', ['id' => 'toggle-achievement-form', 'class' => 'btn btn-outline-secondary']) ?>
         <?= Html::button('<i class="bi bi-award"></i> Achievements & Winners', ['id' => 'toggle-achievements-winners', 'class' => 'btn btn-outline-secondary']) ?>
         <?php if($hasActiveFilters()): ?>
             <?= Html::a('<i class="bi bi-x-circle"></i> Clear Filter', $clearFilterUrl(), ['class' => 'btn btn-outline-secondary']) ?>
@@ -458,7 +486,35 @@ $achievementValue = function($model, $asHtml = false){
 </div>
 
         <?php
+        $winnerTitleOptionsJson = Json::htmlEncode($winnerTitleOptionsByAchievement);
         $this->registerJs('
+        var achievementWinnerTitleOptions = ' . $winnerTitleOptionsJson . ';
+
+        function refreshAchievementWinnerTitle($achievementSelect){
+            var targetId = $achievementSelect.data("target");
+            var $winnerTitleSelect = $("#" + targetId);
+            var selected = $winnerTitleSelect.data("selected");
+            var achievementId = $achievementSelect.val();
+            var options = achievementWinnerTitleOptions[achievementId] || [{id: "", text: "No winner title"}];
+
+            $winnerTitleSelect.empty();
+            $.each(options, function(_, option){
+                $("<option>").val(option.id).text(option.text).appendTo($winnerTitleSelect);
+            });
+            $winnerTitleSelect.val(selected);
+            if($winnerTitleSelect.val() === null){
+                $winnerTitleSelect.val("");
+            }
+        }
+
+        $(".achievement-form-achievement").each(function(){
+            refreshAchievementWinnerTitle($(this));
+        }).on("change", function(){
+            var $winnerTitleSelect = $("#" + $(this).data("target"));
+            $winnerTitleSelect.data("selected", "");
+            refreshAchievementWinnerTitle($(this));
+        });
+
         $("#dwl-exl").click(function(){
             $("#w0-xls")[0].click();
         });
@@ -470,6 +526,12 @@ $achievementValue = function($model, $asHtml = false){
             $target.toggle();
             var isVisible = $target.is(":visible");
             $(this).html((isVisible ? "<i class=\"bi bi-funnel\"></i> Hide Filter Form" : "<i class=\"bi bi-funnel\"></i> Show Filter Form"));
+        });
+
+        $("#toggle-achievement-form").html("<i class=\"bi bi-ui-checks\"></i> Achievement Form");
+        $("#achievement-form-card").hide();
+        $("#toggle-achievement-form").click(function(){
+            $("#achievement-form-card").toggle();
         });
 
         $("#toggle-achievements-winners").html("<i class=\"bi bi-award\"></i> Achievements & Winners");
@@ -553,6 +615,78 @@ $achievementValue = function($model, $asHtml = false){
         'action' => 'manager-analysis'
     ]) ?>
 </div></div>
+
+    <div class="card" id="achievement-form-card">
+        <div class="card-header">Achievement Form</div>
+        <div class="card-body pt-4">
+            <?php if($analysisModels && count($achievementOptions) > 1): ?>
+                <?php $form = ActiveForm::begin(); ?>
+                <?= Html::hiddenInput('action_type', 'analysis-achievement-save') ?>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 260px;">Participant</th>
+                                <th style="min-width: 320px;">Achievement</th>
+                                <th style="min-width: 260px;">Winner Title</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($analysisModels as $analysisModel): ?>
+                                <?php
+                                $currentParticipantAchievement = null;
+                                if($analysisModel->achievements){
+                                    foreach($analysisModel->achievements as $participantAchievement){
+                                        $currentParticipantAchievement = $participantAchievement;
+                                        break;
+                                    }
+                                }
+                                $selectedAchievementId = $currentParticipantAchievement ? (int)$currentParticipantAchievement->achieve_id : '';
+                                $selectedWinnerTitleId = $currentParticipantAchievement && $currentParticipantAchievement->winner_title_id ? (int)$currentParticipantAchievement->winner_title_id : '';
+                                $participantName = Html::encode((string)$analysisModel->participantText);
+                                $groupName = trim((string)($analysisModel->group_name ?? ''));
+                                if($groupName !== ''){
+                                    $participantName = Html::tag('span', Html::encode($groupName), ['class' => 'badge bg-secondary me-2']) . $participantName;
+                                }
+                                ?>
+                                <tr>
+                                    <td><?= $participantName ?></td>
+                                    <td>
+                                        <?= Html::dropDownList(
+                                            'achievement_form[' . (int)$analysisModel->id . '][achieve_id]',
+                                            $selectedAchievementId,
+                                            $achievementOptions,
+                                            [
+                                                'class' => 'form-select achievement-form-achievement',
+                                                'data-target' => 'achievement-winner-title-' . (int)$analysisModel->id,
+                                            ]
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <?= Html::dropDownList(
+                                            'achievement_form[' . (int)$analysisModel->id . '][winner_title_id]',
+                                            $selectedWinnerTitleId,
+                                            ['' => 'No winner title'],
+                                            [
+                                                'class' => 'form-select achievement-form-winner-title',
+                                                'id' => 'achievement-winner-title-' . (int)$analysisModel->id,
+                                                'data-selected' => (string)$selectedWinnerTitleId,
+                                                'disabled' => !$hasWinnerTitleSelection,
+                                            ]
+                                        ) ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?= Html::submitButton('<i class="bi bi-check2-circle"></i> Save Achievement Form', ['class' => 'btn btn-primary']) ?>
+                <?php ActiveForm::end(); ?>
+            <?php else: ?>
+                <span class="text-muted">No participants or achievements found for the current filter.</span>
+            <?php endif; ?>
+        </div>
+    </div>
 
 
     <div class="card">
