@@ -79,11 +79,7 @@ class CertificateExcellence
 
         $sideMargin = $this->nameSideMargin($margin_name, $size);
         $this->drawNameBoundary($margin_name, $sideMargin, 18);
-        $this->writeTextBlock(
-            $margin_name,
-            '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>',
-            $sideMargin
-        );
+        $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
     }
 
     public function html_award()
@@ -165,6 +161,26 @@ EOD;
         }
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function writeNameBlock($topSpacer, $html, $sideMargin)
+    {
+        $left = max(0, (float)$sideMargin);
+        $width = $this->pdf->getPageWidth() - ($left * 2);
+        if($width <= 0){
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $topSpacer = max(0, $this->pdfTop($topSpacer));
+        $content = '<table border="0" cellpadding="0" cellspacing="0" width="100%">';
+        if($topSpacer > 0){
+            $content .= '<tr><td height="' . $topSpacer . '"></td></tr>';
+        }
+        $content .= '<tr><td align="' . $this->align . '">' . $html . '</td></tr></table>';
+
+        $this->pdf->SetFont('iniriaserif', '', 0);
+        $this->pdf->writeHTMLCell($width, 0, $left, 0, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
     }
 
     protected function nameSideMargin($nameTop, $fontSize)
