@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = [
 ];
 $this->params['breadcrumbs'][] = $this->title;
 $openAnalysisCard = Yii::$app->session->remove('managerAnalysisOpenCard');
-if(!in_array($openAnalysisCard, ['filter', 'achievement-form', 'achievements-winners'], true)){
+if(!in_array($openAnalysisCard, ['filter', 'achievement-form'], true)){
     $openAnalysisCard = '';
 }
 
@@ -118,9 +118,6 @@ $clearFilterUrl = function()use($program, $programSub){
         $params['sub'] = $programSub->id;
     }
     return Url::to($params);
-};
-$achievementFilterUrl = function($achievementId)use($analysisUrl){
-    return $analysisUrl(['achievementId' => (int)$achievementId]);
 };
 $isStatActive = function($statFilter = null, $awardFilter = null) use($searchModel){
     return (string)$searchModel->statFilter === (string)$statFilter
@@ -318,7 +315,6 @@ $achievementValue = function($model, $asHtml = false){
         <?=Html::button('<i class="bi bi-download"></i> Excel Analysis', ['id' => 'dwl-exl','class' => 'btn btn-success'])?>
         <?= Html::button('<i class="bi bi-funnel"></i> Hide Filter Form', ['id' => 'toggle-filter-form', 'class' => 'btn btn-outline-secondary']) ?>
         <?= Html::button('<i class="bi bi-ui-checks"></i> Achievement Form', ['id' => 'toggle-achievement-form', 'class' => 'btn btn-outline-secondary']) ?>
-        <?= Html::button('<i class="bi bi-award"></i> Achievements & Winners', ['id' => 'toggle-achievements-winners', 'class' => 'btn btn-outline-secondary']) ?>
         <?php if($hasActiveFilters()): ?>
             <?= Html::a('<i class="bi bi-x-circle"></i> Clear Filter', $clearFilterUrl(), ['class' => 'btn btn-outline-secondary']) ?>
         <?php endif; ?>
@@ -493,12 +489,6 @@ $achievementValue = function($model, $asHtml = false){
                 button: $("#toggle-achievement-form"),
                 labelOpen: "<i class=\"bi bi-ui-checks\"></i> Achievement Form",
                 labelClosed: "<i class=\"bi bi-ui-checks\"></i> Achievement Form"
-            },
-            "achievements-winners": {
-                card: $("#achievements-winners-card"),
-                button: $("#toggle-achievements-winners"),
-                labelOpen: "<i class=\"bi bi-award\"></i> Achievements & Winners",
-                labelClosed: "<i class=\"bi bi-award\"></i> Achievements & Winners"
             }
         };
 
@@ -526,63 +516,6 @@ $achievementValue = function($model, $asHtml = false){
     
     <br />
 
-    <div class="card" id="achievements-winners-card">
-        <div class="card-header">Achievements & Winners</div>
-        <div class="card-body pt-4">
-            <?php if($achievementSummary): ?>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th style="min-width: 420px;">Achievement Name</th>
-                                <th style="width: 180px;">Number of Winner</th>
-                                <th style="min-width: 380px;">Awarded Participants</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach($achievementSummary as $aid => $row): ?>
-                            <tr>
-                                <td>
-                                    <?= Html::encode($row['name']) ?>
-                                </td>
-                                <td>
-                                    <?= Html::a(
-                                        '<span class="badge bg-primary">' . (int)$row['assigned_count'] . '</span>',
-                                        $achievementFilterUrl($aid),
-                                        ['title' => 'Filter by this achievement']
-                                    ) ?>
-                                    <span class="text-muted ms-2">/ <?= (int)$row['winner_count'] ?></span>
-                                </td>
-                                <td>
-                                    <?php
-                                    $participants = $assignedWinners[$aid] ?? [];
-                                    if($participants){
-                                        echo implode('<br />', $participants);
-                                    }else{
-                                        echo '<span class="text-muted">-</span>';
-                                    }
-                                    ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-3">
-                    <?php
-                    $suggestionUrl = Url::to(array_merge(
-                        ['manager-analysis-suggestion', 'id' => $role->program_id, 'sub' => $programSub ? $programSub->id : null],
-                        Yii::$app->request->queryParams
-                    ));
-                    ?>
-                    <?= Html::a('<i class="bi bi-lightbulb"></i> Show Suggestion', $suggestionUrl, ['class' => 'btn btn-outline-primary']) ?>
-                </div>
-            <?php else: ?>
-                <span class="text-muted">No achievements assigned.</span>
-            <?php endif; ?>
-        </div>
-    </div>
-
     <div class="card"  id="con-filter-form">
     <div class="card-header">Filter Form</div>
     <div class="card-body pt-4">
@@ -601,6 +534,16 @@ $achievementValue = function($model, $asHtml = false){
         <div class="card-header">Achievement Form</div>
         <div class="card-body pt-4">
             <?php if($analysisModels && $achievements): ?>
+                <?php
+                $suggestionUrlParams = ['manager-analysis-suggestion', 'id' => $role->program_id];
+                if($programSub){
+                    $suggestionUrlParams['sub'] = $programSub->id;
+                }
+                $suggestionUrl = Url::to(array_merge($suggestionUrlParams, Yii::$app->request->queryParams));
+                ?>
+                <div class="mb-3">
+                    <?= Html::a('<i class="bi bi-lightbulb"></i> Show Suggestion', $suggestionUrl, ['class' => 'btn btn-outline-primary']) ?>
+                </div>
                 <?= Html::beginForm('', 'post') ?>
                 <?= Html::hiddenInput('action_type', 'analysis-achievement-add') ?>
                 <div class="table-responsive">
@@ -608,6 +551,7 @@ $achievementValue = function($model, $asHtml = false){
                         <thead>
                             <tr>
                                 <th style="min-width: 280px;">Achievement</th>
+                                <th style="width: 180px;">Number of Winner</th>
                                 <th style="min-width: 340px;">Existing Groups</th>
                                 <th style="min-width: 260px;">Add Group</th>
                                 <th style="min-width: 240px;">Winner Title</th>
@@ -617,6 +561,10 @@ $achievementValue = function($model, $asHtml = false){
                         <tbody>
                             <?php foreach($achievements as $achievement): ?>
                                 <?php
+                                $achievementRow = $achievementSummary[(int)$achievement->id] ?? [
+                                    'assigned_count' => 0,
+                                    'winner_count' => (int)$achievement->winner_count,
+                                ];
                                 $winnerTitleOptions = ['' => 'No winner title'];
                                 if($hasWinnerTitleSelection && isset($winnerTitlesByAchievement[(int)$achievement->id])){
                                     foreach($winnerTitlesByAchievement[(int)$achievement->id] as $winnerTitle){
@@ -630,6 +578,14 @@ $achievementValue = function($model, $asHtml = false){
                                 ?>
                                 <tr>
                                     <td><?= Html::encode((string)$achievement->name) ?></td>
+                                    <td>
+                                        <?= Html::a(
+                                            '<span class="badge bg-primary">' . (int)$achievementRow['assigned_count'] . '</span>',
+                                            $achievementFilterUrl($achievement->id),
+                                            ['title' => 'Filter by this achievement']
+                                        ) ?>
+                                        <span class="text-muted ms-2">/ <?= (int)$achievementRow['winner_count'] ?></span>
+                                    </td>
                                     <td>
                                         <?php
                                         $existingGroups = $assignedWinners[(int)$achievement->id] ?? [];
