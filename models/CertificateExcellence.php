@@ -190,19 +190,20 @@ EOD;
         $defaultRight = $this->template->textRight(11);
         $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
         $fieldTop = $this->template->nameLimitY('field1_mt', 101);
-        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 18);
-        $lineHeight = max(6.5, (float)$fontSize * 0.42);
+        $availableHeight = max(8, (float)$fieldTop - (float)$nameTop - 8);
+        $lineHeight = max(8, (float)$fontSize * 1.15);
         $maxLines = max(1, (int)floor($availableHeight / $lineHeight));
         $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
         $nameLength = strlen($plainName);
 
         $candidates = [
-            $pageWidth * 0.30,
-            $pageWidth * 0.26,
-            $pageWidth * 0.22,
-            $pageWidth * 0.18,
-            $pageWidth * 0.14,
+            $pageWidth * 0.24,
+            $pageWidth * 0.20,
+            $pageWidth * 0.16,
+            $pageWidth * 0.12,
             $pageWidth * 0.10,
+            $pageWidth * 0.08,
+            $pageWidth * 0.06,
             $defaultSide,
         ];
 
@@ -213,7 +214,7 @@ EOD;
                 continue;
             }
 
-            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
+            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.55)));
             $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
             if($estimatedLines <= $maxLines){
                 return $side;
@@ -230,7 +231,7 @@ EOD;
         }
 
         $top = $this->pdfTop($nameTop);
-        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101)) - (float)$bottomPadding;
+        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101) - (float)$bottomPadding);
         $height = max(4, $bottom - $top);
         $left = max(0, (float)$sideMargin);
         $width = $this->pdf->getPageWidth() - ($left * 2);
@@ -239,7 +240,9 @@ EOD;
         }
 
         $this->pdf->SetDrawColor(220, 53, 69);
+        $this->pdf->SetLineWidth(0.4);
         $this->pdf->Rect($left, $top, $width, $height, 'D');
+        $this->pdf->SetLineWidth(0.2);
         $this->pdf->SetDrawColor(0, 0, 0);
     }
 
