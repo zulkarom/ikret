@@ -51,6 +51,9 @@ $analysisUrl = function($extra = []) use($program, $programSub){
 
     return Url::to($params);
 };
+$achievementFilterUrl = function($achievementId)use($analysisUrl){
+    return $analysisUrl(['achievementId' => (int)$achievementId]);
+};
 $achievementSummary = [];
 $assignedWinners = [];
 $participantOptions = ['' => 'Select Group'];
