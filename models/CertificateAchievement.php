@@ -75,7 +75,7 @@ class CertificateAchievement
             $size = min($size, 20.5);
         }
 
-        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>');
+        $this->writeTextBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $this->nameSideMargin($margin_name, $size));
     }
 
     public function html_achievement_sentence()
@@ -150,13 +150,18 @@ class CertificateAchievement
         return trim((string)$achievement->achieve->name);
     }
 
-    protected function writeTextBlock($top, $html)
+    protected function writeTextBlock($top, $html, $sideMargin = null)
     {
         $top = $this->pdfTop($top);
-        $left = $this->horizontalMargin('margin_left', 70);
-        $right = $this->horizontalMargin('margin_right', 11);
-        if ($right <= 0) {
+        if($sideMargin !== null){
+            $left = max(0, (float)$sideMargin);
             $right = $left;
+        }else{
+            $left = $this->horizontalMargin('margin_left', 70);
+            $right = $this->horizontalMargin('margin_right', 11);
+            if ($right <= 0) {
+                $right = $left;
+            }
         }
 
         $width = $this->pdf->getPageWidth() - $left - $right;
@@ -166,6 +171,44 @@ class CertificateAchievement
         }
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function nameSideMargin($nameTop, $fontSize)
+    {
+        $pageWidth = $this->pdf->getPageWidth();
+        $defaultLeft = $this->horizontalMargin('margin_left', 70);
+        $defaultRight = $this->horizontalMargin('margin_right', 11);
+        $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
+        $fieldTop = $this->template->textTop('field1_mt', 101);
+        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 8);
+        $lineHeight = max(6.5, (float)$fontSize * 0.42);
+        $maxLines = max(1, (int)floor($availableHeight / $lineHeight));
+        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
+        $nameLength = strlen($plainName);
+
+        $candidates = [
+            $pageWidth * 0.34,
+            $pageWidth * 0.30,
+            $pageWidth * 0.26,
+            $pageWidth * 0.22,
+            $defaultSide,
+        ];
+
+        foreach($candidates as $side){
+            $side = max(0, min((float)$side, ($pageWidth / 2) - 20));
+            $width = $pageWidth - ($side * 2);
+            if($width <= 0){
+                continue;
+            }
+
+            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.18)));
+            $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
+            if($estimatedLines <= $maxLines){
+                return $side;
+            }
+        }
+
+        return $defaultSide;
     }
 
     protected function pdfTop($value)
