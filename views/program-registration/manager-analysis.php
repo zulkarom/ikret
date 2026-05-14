@@ -518,14 +518,21 @@ $achievementValue = function($model, $asHtml = false){
 
         $(".achievement-add-row").click(function(){
             var table = $(this).siblings(".achievement-sub-table");
-            if(parseInt(table.data("existing-count"), 10) > 0){
-                alert("This achievement already has an existing list. Please update the existing row instead.");
-                return;
-            }
+            var template = table.find(".achievement-template-row").first();
+            var nextIndex = parseInt(table.data("next-index"), 10) || 1;
+            var row = template.clone();
 
+            row.removeClass("achievement-template-row")
+                .addClass("achievement-added-row")
+                .show();
+            row.find("[name]").each(function(){
+                $(this).attr("name", $(this).attr("name").replace("__INDEX__", "extra_" + nextIndex));
+            });
+            row.find(".achievement-new-input").prop("disabled", false);
             table.find(".achievement-empty-row").hide();
-            table.find(".achievement-new-row").show();
-            table.find(".achievement-new-input").prop("disabled", false).first().focus();
+            template.before(row);
+            table.data("next-index", nextIndex + 1);
+            row.find(".achievement-new-input").first().focus();
         });
 
         setAnalysisCard(defaultOpenCard);
@@ -593,6 +600,7 @@ $achievementValue = function($model, $asHtml = false){
                                     }
                                 }
                                 $existingAchievementRows = $assignedAchievementRows[$achievementId] ?? [];
+                                $emptyWinnerSlotCount = max(0, (int)$achievementRow['winner_count'] - count($existingAchievementRows));
                                 ?>
                                 <tr>
                                     <td><?= Html::encode((string)$achievement->name) ?></td>
@@ -605,7 +613,7 @@ $achievementValue = function($model, $asHtml = false){
                                         <span class="text-muted ms-2">/ <?= (int)$achievementRow['winner_count'] ?></span>
                                     </td>
                                     <td>
-                                        <table class="table table-sm mb-2 achievement-sub-table" data-existing-count="<?= count($existingAchievementRows) ?>">
+                                        <table class="table table-sm mb-2 achievement-sub-table" data-next-index="<?= $emptyWinnerSlotCount + 1 ?>">
                                             <thead>
                                                 <tr>
                                                     <th>Participant</th>
@@ -637,15 +645,39 @@ $achievementValue = function($model, $asHtml = false){
                                                             </td>
                                                         </tr>
                                                     <?php endforeach; ?>
-                                                <?php else: ?>
+                                                <?php endif; ?>
+                                                <?php for($slotIndex = 1; $slotIndex <= $emptyWinnerSlotCount; $slotIndex++): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <?= Html::dropDownList(
+                                                                'achievement_form[' . $achievementId . '][rows][new_' . $slotIndex . '][program_reg_id]',
+                                                                '',
+                                                                $participantOptions,
+                                                                ['class' => 'form-select']
+                                                            ) ?>
+                                                        </td>
+                                                        <td>
+                                                            <?= Html::dropDownList(
+                                                                'achievement_form[' . $achievementId . '][rows][new_' . $slotIndex . '][winner_title_id]',
+                                                                '',
+                                                                $winnerTitleOptions,
+                                                                [
+                                                                    'class' => 'form-select',
+                                                                    'disabled' => !$hasWinnerTitleSelection,
+                                                                ]
+                                                            ) ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endfor; ?>
+                                                <?php if(!$existingAchievementRows && $emptyWinnerSlotCount === 0): ?>
                                                     <tr class="achievement-empty-row">
                                                         <td colspan="2" class="text-muted">No group added yet.</td>
                                                     </tr>
                                                 <?php endif; ?>
-                                                <tr class="achievement-new-row" style="display:none;">
+                                                <tr class="achievement-template-row" style="display:none;">
                                                     <td>
                                                         <?= Html::dropDownList(
-                                                            'achievement_form[' . $achievementId . '][rows][new][program_reg_id]',
+                                                            'achievement_form[' . $achievementId . '][rows][__INDEX__][program_reg_id]',
                                                             '',
                                                             $participantOptions,
                                                             ['class' => 'form-select achievement-new-input', 'disabled' => true]
@@ -653,12 +685,12 @@ $achievementValue = function($model, $asHtml = false){
                                                     </td>
                                                     <td>
                                                         <?= Html::dropDownList(
-                                                            'achievement_form[' . $achievementId . '][rows][new][winner_title_id]',
+                                                            'achievement_form[' . $achievementId . '][rows][__INDEX__][winner_title_id]',
                                                             '',
                                                             $winnerTitleOptions,
                                                             [
                                                                 'class' => $hasWinnerTitleSelection ? 'form-select achievement-new-input' : 'form-select',
-                                                                'disabled' => !$hasWinnerTitleSelection,
+                                                                'disabled' => true,
                                                             ]
                                                         ) ?>
                                                     </td>
