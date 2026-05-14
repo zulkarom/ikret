@@ -1,6 +1,7 @@
 <?php
 
 use kartik\export\ExportMenu;
+use kartik\select2\Select2;
 use app\models\ProgramRegistration;
 use yii\bootstrap5\ActiveForm;
 use yii\helpers\Html;
@@ -20,6 +21,10 @@ $this->params['breadcrumbs'][] = [
     'url' => ['/program-registration/manager-dashboard', 'id' => $program->id, 'sub' => $programSub ? $programSub->id : null]
 ];
 $this->params['breadcrumbs'][] = $this->title;
+$openAnalysisCard = Yii::$app->session->remove('managerAnalysisOpenCard');
+if(!in_array($openAnalysisCard, ['filter', 'achievement-form', 'achievements-winners'], true)){
+    $openAnalysisCard = '';
+}
 
 $analysisModels = (clone $dataProvider->query)->all();
 $analysisUrl = function($extra = []) use($program, $programSub){
@@ -475,26 +480,46 @@ $achievementValue = function($model, $asHtml = false){
             $("#w0-xls")[0].click();
         });
 
-        $("#toggle-filter-form").html("<i class=\"bi bi-funnel\"></i> Show Filter Form");
-        $("#con-filter-form").hide();
-        $("#toggle-filter-form").click(function(){
-            var $target = $("#con-filter-form");
-            $target.toggle();
-            var isVisible = $target.is(":visible");
-            $(this).html((isVisible ? "<i class=\"bi bi-funnel\"></i> Hide Filter Form" : "<i class=\"bi bi-funnel\"></i> Show Filter Form"));
+        var defaultOpenCard = ' . json_encode((string)$openAnalysisCard) . ';
+        var analysisCards = {
+            "filter": {
+                card: $("#con-filter-form"),
+                button: $("#toggle-filter-form"),
+                labelOpen: "<i class=\"bi bi-funnel\"></i> Hide Filter Form",
+                labelClosed: "<i class=\"bi bi-funnel\"></i> Show Filter Form"
+            },
+            "achievement-form": {
+                card: $("#achievement-form-card"),
+                button: $("#toggle-achievement-form"),
+                labelOpen: "<i class=\"bi bi-ui-checks\"></i> Achievement Form",
+                labelClosed: "<i class=\"bi bi-ui-checks\"></i> Achievement Form"
+            },
+            "achievements-winners": {
+                card: $("#achievements-winners-card"),
+                button: $("#toggle-achievements-winners"),
+                labelOpen: "<i class=\"bi bi-award\"></i> Achievements & Winners",
+                labelClosed: "<i class=\"bi bi-award\"></i> Achievements & Winners"
+            }
+        };
+
+        function setAnalysisCard(openKey){
+            $.each(analysisCards, function(key, item){
+                var isOpen = key === openKey;
+                item.card.toggle(isOpen);
+                item.button
+                    .toggleClass("btn-secondary", isOpen)
+                    .toggleClass("btn-outline-secondary", !isOpen)
+                    .html(isOpen ? item.labelOpen : item.labelClosed);
+            });
+        }
+
+        $.each(analysisCards, function(key, item){
+            item.button.click(function(){
+                setAnalysisCard(item.card.is(":visible") ? "" : key);
+            });
         });
 
-        $("#toggle-achievement-form").html("<i class=\"bi bi-ui-checks\"></i> Achievement Form");
-        $("#achievement-form-card").hide();
-        $("#toggle-achievement-form").click(function(){
-            $("#achievement-form-card").toggle();
-        });
-
-        $("#toggle-achievements-winners").html("<i class=\"bi bi-award\"></i> Achievements & Winners");
-        $("#achievements-winners-card").hide();
-        $("#toggle-achievements-winners").click(function(){
-            $("#achievements-winners-card").toggle();
-        });
+        setAnalysisCard(defaultOpenCard);
         ');
         ?>
 
@@ -616,12 +641,19 @@ $achievementValue = function($model, $asHtml = false){
                                         ?>
                                     </td>
                                     <td>
-                                        <?= Html::dropDownList(
-                                            'achievement_form[' . (int)$achievement->id . '][program_reg_id]',
-                                            '',
-                                            $participantOptions,
-                                            ['class' => 'form-select']
-                                        ) ?>
+                                        <?= Select2::widget([
+                                            'name' => 'achievement_form[' . (int)$achievement->id . '][program_reg_id]',
+                                            'value' => '',
+                                            'data' => $participantOptions,
+                                            'options' => [
+                                                'id' => 'achievement-group-' . (int)$achievement->id,
+                                                'placeholder' => 'Select Group',
+                                            ],
+                                            'pluginOptions' => [
+                                                'allowClear' => true,
+                                                'width' => '100%',
+                                            ],
+                                        ]) ?>
                                     </td>
                                     <td>
                                         <?= Html::dropDownList(

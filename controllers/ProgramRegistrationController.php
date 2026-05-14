@@ -3885,6 +3885,7 @@ class ProgramRegistrationController extends Controller
 
         $post = $this->request->post();
         if($this->request->isPost && (string)($post['action_type'] ?? '') === 'analysis-achievement-add'){
+            Yii::$app->session->set('managerAnalysisOpenCard', 'achievement-form');
             $assignment = (array)($post['achievement_form'] ?? []);
             $allowedAchievementIds = $achievements ? array_map('intval', ArrayHelper::getColumn($achievements, 'id')) : [];
             $conflicts = [];
