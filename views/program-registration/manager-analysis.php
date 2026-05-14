@@ -97,6 +97,26 @@ if(isset($analysisModels) && $analysisModels){
         }
     }
 }
+foreach($assignedAchievementRows as &$assignedAchievementRow){
+    usort($assignedAchievementRow, function($a, $b) use($participantOptions){
+        $aOrder = $a->winnerTitle ? (int)$a->winnerTitle->winner_order : PHP_INT_MAX;
+        $bOrder = $b->winnerTitle ? (int)$b->winnerTitle->winner_order : PHP_INT_MAX;
+        if($aOrder !== $bOrder){
+            return $aOrder <=> $bOrder;
+        }
+
+        $aTitle = $a->winnerTitle ? trim((string)$a->winnerTitle->title_name) : '';
+        $bTitle = $b->winnerTitle ? trim((string)$b->winnerTitle->title_name) : '';
+        if($aTitle !== $bTitle){
+            return strcasecmp($aTitle, $bTitle);
+        }
+
+        $aParticipant = $participantOptions[(int)$a->program_reg_id] ?? '';
+        $bParticipant = $participantOptions[(int)$b->program_reg_id] ?? '';
+        return strcasecmp($aParticipant, $bParticipant);
+    });
+}
+unset($assignedAchievementRow);
 
 if(isset($achievements) && $achievements){
     foreach($achievements as $a){
