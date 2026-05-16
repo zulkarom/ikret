@@ -226,7 +226,7 @@ EOD;
                     return Html::encode(strtoupper($name));
                 }, $names);
 
-                return ['<span style="font-size:' . $lineFontSize . 'px; line-height:0.82;">' . implode('<br>', $lines) . '</span>', $lineHeightTotal];
+                return ['<span style="font-size:' . $lineFontSize . 'px; line-height:0.92;">' . implode('<br>', $lines) . '</span>', $lineHeightTotal];
             }
         }
 
@@ -310,7 +310,7 @@ EOD;
 
     protected function nameLineHeight($fontSize)
     {
-        return max(4.5, (float)$fontSize * 0.32);
+        return max(4.5, (float)$fontSize * 0.36);
     }
 
     protected function estimatedNameTextHeight($width, $fontSize)

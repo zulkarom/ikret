@@ -2,6 +2,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\Html;
 
 class Certificate
 {
@@ -71,7 +72,7 @@ class Certificate
             $size = min($size, 21);
         }
 
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>');
+        $this->writeNameBlock($top, $size);
     }
 
     public function html_program()
@@ -100,6 +101,77 @@ class Certificate
         }
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function writeNameBlock($top, $fontSize)
+    {
+        $topSetting = (float)$top;
+        $top = $this->pdfTop($top);
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
+        }
+
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $html = $this->preferredNameHtml($width, $fontSize, $this->configuredNameAreaHeight($topSetting));
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function preferredNameHtml($width, $fontSize, $nameAreaHeight)
+    {
+        $names = $this->memberNames();
+        $lineHeightTotal = count($names) * $this->nameLineHeight($fontSize);
+
+        if(count($names) > 1 && $lineHeightTotal <= max(1, $nameAreaHeight)){
+            $this->pdf->SetFont('iniriaserif', '', max(1, (float)$fontSize * 0.63));
+            $allNamesFitOneLine = true;
+            foreach($names as $name){
+                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
+                    $allNamesFitOneLine = false;
+                    break;
+                }
+            }
+
+            if($allNamesFitOneLine){
+                $lines = array_map(function($name) {
+                    return Html::encode(strtoupper($name));
+                }, $names);
+
+                return '<span style="font-size:' . $fontSize . 'px; line-height:0.92;">' . implode('<br>', $lines) . '</span>';
+            }
+        }
+
+        return '<span style="font-size:' . $fontSize . 'px; line-height:1;">' . Html::encode(strtoupper($this->model->memberStr)) . '</span>';
+    }
+
+    protected function configuredNameAreaHeight($top)
+    {
+        if(method_exists($this->template, 'nameLimitY')){
+            return max(8, (float)$this->template->nameLimitY('field1_mt', 101) - (float)$top);
+        }
+
+        return 8;
+    }
+
+    protected function memberNames()
+    {
+        $names = array_map('trim', preg_split('/,|<br\s*\/?>/i', (string)$this->model->memberStr));
+        $names = array_filter($names, function($name) {
+            return $name !== '';
+        });
+
+        return array_values($names);
+    }
+
+    protected function nameLineHeight($fontSize)
+    {
+        return max(4.5, (float)$fontSize * 0.36);
     }
 
     protected function pdfTop($value)
