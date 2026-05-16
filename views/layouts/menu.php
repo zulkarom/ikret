@@ -63,28 +63,6 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'Committee Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
           }
 
-          //head
-          $head = UserRole::find()->alias('a')
-          ->joinWith(['committee c'])
-          ->where(['a.user_id' => Yii::$app->user->identity->id, 
-          'a.role_name' => 'committee', 
-          'a.status' => 10,
-          'a.is_leader' => 1,
-          'c.is_jawatankuasa' => 1
-          ])
-          ->one();
-          $canApprove = UserRole::find()->alias('a')
-          ->joinWith(['committee c'])
-          ->where(['a.user_id' => Yii::$app->user->identity->id, 
-          'a.role_name' => 'committee', 
-          'a.status' => 10,
-          'c.can_approve' => 1
-          ])
-          ->one();
-          if($head || $canApprove){
-            $menu[] = ['name' => 'Committee Request', 'url' => ['/committee/action-committee'], 'icon' => 'bi bi-brightness-high-fill'];
-          }
-          
         }
 
         if(Yii::$app->user->identity->isManager){
@@ -235,6 +213,7 @@ use yii\helpers\Url;
             $userAccessMenu = [];
             $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
             $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
+            $userAccessMenu[] = ['name' => 'Committee Request', 'url' => ['/committee/action-committee']];
             $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];
             $userAccessMenu[] = ['name' => 'Committee Summary', 'url' => ['/committee/summary']];
 
