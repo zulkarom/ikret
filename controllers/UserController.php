@@ -101,7 +101,7 @@ class UserController extends Controller
         ];
 
         $roles = UserRole::find()->alias('ur')
-            ->joinWith(['user u'])
+            ->joinWith(['user u', 'program p', 'programSub ps'])
             ->where([
                 'ur.status' => 10,
                 'ur.role_name' => $rolesToShow,

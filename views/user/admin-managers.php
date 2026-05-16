@@ -35,7 +35,8 @@ $order = [
                         <tr>
                             <th style="width: 220px;">Role</th>
                             <th>Name</th>
-                            <th style="width: 240px;">Email</th>
+                            <th style="width: 220px;">Program</th>
+                            <th style="width: 220px;">Sub</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,16 +56,22 @@ $order = [
                                     echo '<td rowspan="' . (int)$rowspan . '" class="fw-semibold">' . Html::encode($roleLabel) . '</td>';
                                 }
                                 $name = $ur->user ? $ur->user->fullname : '';
-                                $email = $ur->user ? $ur->user->email : '';
                                 $userLink = $ur->user ? Html::a(Html::encode($name), ['/user/view', 'id' => $ur->user->id]) : Html::encode($name);
+                                $programText = '-';
+                                $subText = '-';
+                                if($roleName === 'manager'){
+                                    $programText = $ur->program ? $ur->program->program_name : '-';
+                                    $subText = $ur->programSub ? $ur->programSub->sub_name : '-';
+                                }
                                 echo '<td>' . $userLink . '</td>';
-                                echo '<td>' . Html::encode($email) . '</td>';
+                                echo '<td>' . Html::encode($programText) . '</td>';
+                                echo '<td>' . Html::encode($subText) . '</td>';
                                 echo '</tr>';
                             }
                         }
 
                         if(!$hasAny){
-                            echo '<tr><td colspan="3" class="text-muted text-center">No admin or manager roles found.</td></tr>';
+                            echo '<tr><td colspan="4" class="text-muted text-center">No admin or manager roles found.</td></tr>';
                         }
                         ?>
                     </tbody>
