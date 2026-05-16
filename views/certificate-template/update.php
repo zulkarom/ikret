@@ -74,6 +74,12 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
 
                     <?= $form->errorSummary($model, ['class' => 'alert alert-danger']) ?>
 
+                    <div class="form-group mb-3">
+                        <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'name' => 'submit_action', 'value' => 'save']) ?>
+                        <?= Html::submitButton('Save and Back', ['class' => 'btn btn-primary', 'name' => 'submit_action', 'value' => 'save-back']) ?>
+                        <?= Html::a('Back', ['index'], ['class' => 'btn btn-secondary']) ?>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <?= $form->field($model, 'template_name')->textInput(['maxlength' => true]) ?>
@@ -87,6 +93,14 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
                     </div>
 
                     <?= $form->field($model, 'template_upload')->fileInput()->hint('Upload JPG or PNG. Current file is kept when no new file is selected.') ?>
+
+                    <?php if($model->hasAttribute('hide_background')): ?>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <?= $form->field($model, 'hide_background')->checkbox()->hint('Generate certificate text and overlays without the uploaded background image.') ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (!empty($model->template_file)): ?>
                         <div class="mb-3">

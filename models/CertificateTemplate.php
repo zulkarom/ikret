@@ -12,6 +12,7 @@ use Yii;
  * @property float|null $name_mt
  * @property float|null $name_limit_y
  * @property int|null $show_name_border
+ * @property int|null $hide_background
  * @property float|null $name_size
  * @property float|null $field1_mt
  * @property float|null $field1_size
@@ -60,6 +61,9 @@ class CertificateTemplate extends \yii\db\ActiveRecord
         if($this->hasAttribute('show_name_border')){
             $integerAttributes[] = 'show_name_border';
         }
+        if($this->hasAttribute('hide_background')){
+            $integerAttributes[] = 'hide_background';
+        }
 
         return [
             [$numberAttributes, 'number'],
@@ -82,6 +86,7 @@ class CertificateTemplate extends \yii\db\ActiveRecord
             'name_mt' => 'Name Mt',
             'name_limit_y' => 'Name Bottom Limit',
             'show_name_border' => 'Show Name Boundary',
+            'hide_background' => 'Hide Background',
             'name_size' => 'Name Size',
             'field1_mt' => 'Field1 Mt',
             'field1_size' => 'Field1 Size',
@@ -189,5 +194,19 @@ class CertificateTemplate extends \yii\db\ActiveRecord
     public function showNameBorder()
     {
         return $this->hasAttribute('show_name_border') && (int)$this->show_name_border === 1;
+    }
+
+    public function hideBackground()
+    {
+        return $this->hasAttribute('hide_background') && (int)$this->hide_background === 1;
+    }
+
+    public function backgroundFile()
+    {
+        if($this->hideBackground() || empty($this->template_file)){
+            return null;
+        }
+
+        return 'images/' . $this->template_file;
     }
 }

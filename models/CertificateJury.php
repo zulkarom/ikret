@@ -28,7 +28,7 @@ class CertificateJury
         $this->pdf = new StartPdf($o, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
         
-        $this->pdf->image_background = 'images/' . $this->template->template_file;
+        $this->pdf->image_background = $this->template->backgroundFile();
 
         
 

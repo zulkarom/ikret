@@ -16,7 +16,7 @@ class CertificateAchievement
     public $height;
     public $align = 'center';
     public $achievementId;
-    protected $nameBoundary = null;
+    protected $nameLimitLine = null;
 
     public $frontend = false;
 
@@ -31,7 +31,7 @@ class CertificateAchievement
         $this->pdf = new StartPdf($o, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
         
-        $this->pdf->image_background = 'images/' . $this->template->template_file;
+        $this->pdf->image_background = $this->template->backgroundFile();
 
         
 
@@ -58,7 +58,7 @@ class CertificateAchievement
             $this->html_achievement_sentence();
             $this->html_achievement_name();
             $this->html_program();
-            $this->drawStoredNameBoundary();
+            $this->drawStoredNameLimitLine();
             
         } else {
             $html = $this->template->custom_html;
@@ -77,8 +77,11 @@ class CertificateAchievement
             $size = min($size, 20.5);
         }
 
-        $sideMargin = $this->nameSideMargin($margin_name, $size);
-        $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->memberStr) . '</span>', $sideMargin);
+        $sideMargin = $this->oneNamePerLineSideMargin($margin_name, $size);
+        if($sideMargin === null){
+            $sideMargin = $this->nameSideMargin($margin_name, $size);
+        }
+        $this->writeNameBlock($margin_name, '<span style="font-size:' . $size . 'px; line-height:1;">' . Html::encode(strtoupper($this->model->memberStr)) . '</span>', $sideMargin, $size);
     }
 
     public function html_achievement_sentence()
@@ -176,8 +179,9 @@ class CertificateAchievement
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
     }
 
-    protected function writeNameBlock($top, $html, $sideMargin)
+    protected function writeNameBlock($top, $html, $sideMargin, $fontSize)
     {
+        $nameTopSetting = (float)$top;
         $top = $this->pdfTop($top);
         $left = max(0, (float)$sideMargin);
         $width = $this->pdf->getPageWidth() - ($left * 2);
@@ -188,14 +192,163 @@ class CertificateAchievement
 
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
         $nameAreaHeight = max(8, $limitBottom - $top);
+        $layoutAreaHeight = max($nameAreaHeight, (float)$this->template->nameLimitY('field1_mt', 101) - $nameTopSetting);
+        [$html, $nameTextHeight] = $this->preferredNameHtml($width, $fontSize, $layoutAreaHeight, $html);
+        $bottomSpacerHeight = max(0, $nameAreaHeight - $nameTextHeight);
         $showNameBorder = $this->template->showNameBorder();
         $tableBorder = $showNameBorder ? '1' : '0';
         $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
         $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
-        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" height="' . $nameAreaHeight . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
+        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr>';
+        if($bottomSpacerHeight > 0){
+            $content .= $this->nameBoundarySpacerRow($bottomSpacerHeight, $cellStyle);
+        }
+        $content .= '</table>';
 
         $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->nameLimitLine = [$left, $width, $limitBottom];
+    }
+
+    protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
+    {
+        $names = $this->memberNames();
+        $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
+        $lineHeight = $this->nameLineHeight($lineFontSize);
+        $lineHeightTotal = count($names) * $lineHeight;
+
+        if(count($names) > 1 && $lineHeightTotal <= max(1, $nameAreaHeight)){
+            $this->pdf->SetFont('iniriaserif', '', max(1, (float)$lineFontSize * 0.63));
+            $allNamesFitOneLine = true;
+            foreach($names as $name){
+                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
+                    $allNamesFitOneLine = false;
+                    break;
+                }
+            }
+
+            if($allNamesFitOneLine){
+                $lines = array_map(function($name) {
+                    return Html::encode(strtoupper($name));
+                }, $names);
+
+                return ['<span style="font-size:' . $lineFontSize . 'px; line-height:0.82;">' . implode('<br>', $lines) . '</span>', $lineHeightTotal];
+            }
+        }
+
+        return [$commaHtml, $this->estimatedNameTextHeight($width, $fontSize)];
+    }
+
+    protected function memberNames()
+    {
+        $names = array_map('trim', explode(',', (string)$this->model->memberStr));
+        $names = array_filter($names, function($name) {
+            return $name !== '';
+        });
+
+        return array_values($names);
+    }
+
+    protected function oneNamePerLineSideMargin($nameTop, $fontSize)
+    {
+        $names = $this->memberNames();
+        if(count($names) <= 1){
+            return null;
+        }
+
+        $limitBottom = $this->template->nameLimitY('field1_mt', 101);
+        $nameAreaHeight = max(8, (float)$limitBottom - (float)$nameTop);
+        $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
+        $lineHeightTotal = count($names) * $this->nameLineHeight($lineFontSize);
+        if($lineHeightTotal > max(1, $nameAreaHeight)){
+            return null;
+        }
+
+        $pageWidth = $this->pdf->getPageWidth();
+        $defaultLeft = $this->horizontalMargin('margin_left', 70);
+        $defaultRight = $this->horizontalMargin('margin_right', 11);
+        $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
+        $candidates = [
+            $defaultSide,
+            $pageWidth * 0.06,
+            $pageWidth * 0.08,
+            $pageWidth * 0.10,
+            $pageWidth * 0.12,
+            $pageWidth * 0.14,
+            $pageWidth * 0.16,
+            $pageWidth * 0.18,
+            $pageWidth * 0.20,
+        ];
+
+        $this->pdf->SetFont('iniriaserif', '', max(1, (float)$lineFontSize * 0.63));
+        foreach($candidates as $side){
+            $side = max(0, min((float)$side, ($pageWidth / 2) - 20));
+            $width = $pageWidth - ($side * 2);
+            if($width <= 0){
+                continue;
+            }
+
+            $allNamesFitOneLine = true;
+            foreach($names as $name){
+                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
+                    $allNamesFitOneLine = false;
+                    break;
+                }
+            }
+
+            if($allNamesFitOneLine){
+                return $side;
+            }
+        }
+
+        return null;
+    }
+
+    protected function oneNamePerLineFontSize($nameAreaHeight, $fontSize)
+    {
+        $names = $this->memberNames();
+        if(count($names) <= 1){
+            return (float)$fontSize;
+        }
+
+        return (float)$fontSize;
+    }
+
+    protected function nameLineHeight($fontSize)
+    {
+        return max(4.5, (float)$fontSize * 0.32);
+    }
+
+    protected function estimatedNameTextHeight($width, $fontSize)
+    {
+        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
+        $nameLength = strlen($plainName);
+        $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
+        $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
+
+        return $estimatedLines * max(6.5, (float)$fontSize * 0.42);
+    }
+
+    protected function nameBoundarySpacerRow($height, $cellStyle)
+    {
+        $height = max(1, (float)$height);
+        $style = $cellStyle . 'font-size:1px; line-height:' . $height . 'px; color:#ffffff;';
+
+        return '<tr><td height="' . $height . '" style="' . $style . '">&nbsp;</td></tr>';
+    }
+
+    protected function drawStoredNameLimitLine()
+    {
+        if(!$this->template->showNameBorder() || $this->nameLimitLine === null){
+            return;
+        }
+
+        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        $this->pdf->SetDrawColor(255, 0, 0);
+        $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 0, 0);
+        $this->pdf->SetLineWidth(0.2);
     }
 
     protected function nameSideMargin($nameTop, $fontSize)
@@ -205,18 +358,27 @@ class CertificateAchievement
         $defaultRight = $this->horizontalMargin('margin_right', 11);
         $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
         $fieldTop = $this->template->nameLimitY('field1_mt', 101);
-        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 8);
-        $lineHeight = max(6.5, (float)$fontSize * 0.42);
-        $maxLines = max(1, (int)floor($availableHeight / $lineHeight));
-        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
-        $nameLength = strlen($plainName);
+        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 2);
 
         $candidates = [
+            $pageWidth * 0.46,
+            $pageWidth * 0.44,
+            $pageWidth * 0.42,
+            $pageWidth * 0.40,
+            $pageWidth * 0.38,
+            $pageWidth * 0.36,
+            $pageWidth * 0.34,
+            $pageWidth * 0.32,
             $pageWidth * 0.30,
+            $pageWidth * 0.28,
             $pageWidth * 0.26,
+            $pageWidth * 0.24,
             $pageWidth * 0.22,
+            $pageWidth * 0.20,
             $pageWidth * 0.18,
+            $pageWidth * 0.16,
             $pageWidth * 0.14,
+            $pageWidth * 0.12,
             $pageWidth * 0.10,
             $defaultSide,
         ];
@@ -228,52 +390,24 @@ class CertificateAchievement
                 continue;
             }
 
-            $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
-            $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
-            if($estimatedLines <= $maxLines){
+            if($this->measuredNameTextHeight($width, $fontSize) <= $availableHeight){
                 return $side;
             }
         }
 
-        return $defaultSide;
+        return max($defaultSide, min($pageWidth * 0.30, ($pageWidth / 2) - 20));
     }
 
-    protected function drawNameBoundary($nameTop, $sideMargin, $bottomPadding)
+    protected function measuredNameTextHeight($width, $fontSize)
     {
-        if(!$this->template->showNameBorder()){
-            return;
+        $plainName = strtoupper(trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr))));
+        $this->pdf->SetFont('iniriaserif', '', max(1, (float)$fontSize * 0.63));
+
+        if(method_exists($this->pdf, 'getStringHeight')){
+            return (float)$this->pdf->getStringHeight($width, $plainName, false, true, '', 0);
         }
 
-        $top = $this->pdfTop($nameTop);
-        $bottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
-        $height = max(8, $bottom - $top);
-        $left = max(0, (float)$sideMargin);
-        $width = $this->pdf->getPageWidth() - ($left * 2);
-        if($width <= 0){
-            return;
-        }
-
-        $this->pdf->SetDrawColor(255, 0, 0);
-        $this->pdf->SetTextColor(255, 0, 0);
-        $this->pdf->SetLineWidth(0.8);
-        $this->pdf->Rect($left, $top, $width, $height, 'D');
-        $this->pdf->Line($left, $top, $left + $width, $top);
-        $this->pdf->Line($left, $top + $height, $left + $width, $top + $height);
-        $this->pdf->SetFont('helvetica', '', 6);
-        $this->pdf->Text($left + 1, max(0, $top - 3), 'NAME AREA');
-        $this->pdf->SetLineWidth(0.2);
-        $this->pdf->SetDrawColor(0, 0, 0);
-        $this->pdf->SetTextColor(0, 0, 0);
-    }
-
-    protected function drawStoredNameBoundary()
-    {
-        if($this->nameBoundary === null){
-            return;
-        }
-
-        [$nameTop, $sideMargin, $bottomPadding] = $this->nameBoundary;
-        $this->drawNameBoundary($nameTop, $sideMargin, $bottomPadding);
+        return $this->estimatedNameTextHeight($width, $fontSize);
     }
 
     protected function pdfTop($value)
