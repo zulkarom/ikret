@@ -192,13 +192,12 @@ class CertificateAchievement
 
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
         $nameAreaHeight = max(8, $limitBottom - $top);
-        $layoutAreaHeight = max($nameAreaHeight, (float)$this->template->nameLimitY('field1_mt', 101) - $nameTopSetting);
-        [$html, $nameTextHeight] = $this->preferredNameHtml($width, $fontSize, $layoutAreaHeight, $html);
+        [$html, $nameTextHeight] = $this->preferredNameHtml($width, $fontSize, $nameAreaHeight, $html);
         $bottomSpacerHeight = max(0, $nameAreaHeight - $nameTextHeight);
         $showNameBorder = $this->template->showNameBorder();
-        $tableBorder = $showNameBorder ? '1' : '0';
-        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
-        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
+        $tableBorder = '0';
+        $tableStyle = '';
+        $cellStyle = 'color:#000000;';
         $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr>';
         if($bottomSpacerHeight > 0){
             $content .= $this->nameBoundarySpacerRow($bottomSpacerHeight, $cellStyle);
@@ -207,7 +206,7 @@ class CertificateAchievement
 
         $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
-        $this->nameLimitLine = [$left, $width, $limitBottom];
+        $this->nameLimitLine = [$left, $width, $top, $limitBottom];
     }
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
@@ -256,8 +255,8 @@ class CertificateAchievement
             return null;
         }
 
-        $limitBottom = $this->template->nameLimitY('field1_mt', 101);
-        $nameAreaHeight = max(8, (float)$limitBottom - (float)$nameTop);
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+        $nameAreaHeight = max(8, $limitBottom - $this->pdfTop($nameTop));
         $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
         $lineHeightTotal = count($names) * $this->nameLineHeight($lineFontSize);
         if($lineHeightTotal > max(1, $nameAreaHeight)){
@@ -343,12 +342,29 @@ class CertificateAchievement
             return;
         }
 
-        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        [$left, $width, $top, $limitBottom] = $this->nameLimitLine;
         $this->pdf->SetDrawColor(255, 0, 0);
         $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $top, $left + $width, $top);
         $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 102, 255);
+        $pageHeight = $this->pdf->getPageHeight();
+        [$marginLeft, $marginRight] = $this->guideMargins();
+        $this->pdf->Line($marginLeft, 0, $marginLeft, $pageHeight);
+        $this->pdf->Line($this->pdf->getPageWidth() - $marginRight, 0, $this->pdf->getPageWidth() - $marginRight, $pageHeight);
         $this->pdf->SetDrawColor(0, 0, 0);
         $this->pdf->SetLineWidth(0.2);
+    }
+
+    protected function guideMargins()
+    {
+        $left = $this->horizontalMargin('margin_left', 70);
+        $right = $this->horizontalMargin('margin_right', 11);
+        if($right <= 0){
+            $right = $left;
+        }
+
+        return [$left, $right];
     }
 
     protected function nameSideMargin($nameTop, $fontSize)

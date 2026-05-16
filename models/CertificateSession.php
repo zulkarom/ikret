@@ -140,13 +140,13 @@ class CertificateSession
 
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
         $showNameBorder = $this->template->showNameBorder();
-        $tableBorder = $showNameBorder ? '1' : '0';
-        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
-        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
+        $tableBorder = '0';
+        $tableStyle = '';
+        $cellStyle = 'color:#000000;';
         $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
-        $this->nameLimitLine = [$left, $width, $limitBottom];
+        $this->nameLimitLine = [$left, $width, $top, $limitBottom];
     }
 
     protected function drawStoredNameLimitLine()
@@ -155,12 +155,29 @@ class CertificateSession
             return;
         }
 
-        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        [$left, $width, $top, $limitBottom] = $this->nameLimitLine;
         $this->pdf->SetDrawColor(255, 0, 0);
         $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $top, $left + $width, $top);
         $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 102, 255);
+        $pageHeight = $this->pdf->getPageHeight();
+        [$marginLeft, $marginRight] = $this->guideMargins();
+        $this->pdf->Line($marginLeft, 0, $marginLeft, $pageHeight);
+        $this->pdf->Line($this->pdf->getPageWidth() - $marginRight, 0, $this->pdf->getPageWidth() - $marginRight, $pageHeight);
         $this->pdf->SetDrawColor(0, 0, 0);
         $this->pdf->SetLineWidth(0.2);
+    }
+
+    protected function guideMargins()
+    {
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
+        }
+
+        return [$left, $right];
     }
 
     protected function pdfTop($value)
