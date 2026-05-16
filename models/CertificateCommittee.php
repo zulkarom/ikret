@@ -14,6 +14,7 @@ class CertificateCommittee
     public $width;
     public $height;
     public $align = 'center';
+    protected $nameLimitLine = null;
 
     public $frontend = false;
 
@@ -56,6 +57,7 @@ class CertificateCommittee
             $this->html_name();
             $this->pdf->SetX($left);
             $this->html_position();
+            $this->drawStoredNameLimitLine();
             $this->pdf->SetXY($left,0);
             $this->pdf->SetFont('iniriaserif', '', 10);
             $this->pdf->SetXY($left,0);
@@ -71,18 +73,23 @@ class CertificateCommittee
 
         $margin_name = $this->template->textTop('name_mt', 0);
 
-        $html = '<table border="0">
+        $showNameBorder = $this->template->showNameBorder();
+        $tableBorder = $showNameBorder ? '1' : '0';
+        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
+        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
+
+        $html = '<table border="' . $tableBorder . '" style="' . $tableStyle . '">
 <tr>
 
     <td align="'.$this->align.'">';
 
-        $html .= '<table border="0" align="'.$this->align.'">';
+        $html .= '<table border="' . $tableBorder . '" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
             $size = $this->template->textSize('name_size', 27);
             $html .= '
-<tr><td height="' . $margin_name . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
+<tr><td height="' . $margin_name . '" style="' . $cellStyle . '"></td></tr>
+<tr><td align="'.$this->align.'" style="' . $cellStyle . 'font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
         }
 
 
@@ -98,6 +105,27 @@ $html
 EOD;
 
         $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        $left = $this->template->textLeft(70);
+        $right = $this->template->textRight(11);
+        if($right <= 0){
+            $right = $left;
+        }
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        $this->nameLimitLine = [$left, $width, $this->pdfTop($this->template->nameLimitY('field1_mt', 101))];
+    }
+
+    protected function drawStoredNameLimitLine()
+    {
+        if(!$this->template->showNameBorder() || $this->nameLimitLine === null){
+            return;
+        }
+
+        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        $this->pdf->SetDrawColor(255, 0, 0);
+        $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 0, 0);
+        $this->pdf->SetLineWidth(0.2);
     }
 
     public function html_position()

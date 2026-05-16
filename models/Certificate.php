@@ -15,6 +15,7 @@ class Certificate
     public $width;
     public $height;
     public $align = 'center';
+    protected $nameLimitLine = null;
 
     public $frontend = false;
 
@@ -54,6 +55,7 @@ class Certificate
         if ($preset == 1) {
             $this->html_name();
             $this->html_program();
+            $this->drawStoredNameLimitLine();
             $this->pdf->SetFont('iniriaserif', '', 10);
         } else {
             $this->writeTextBlock(0, $this->template->custom_html);
@@ -119,8 +121,16 @@ class Certificate
             $width = $this->pdf->getPageWidth();
         }
 
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
         $html = $this->preferredNameHtml($width, $fontSize, $this->configuredNameAreaHeight($topSetting));
-        $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+        $showNameBorder = $this->template->showNameBorder();
+        $tableBorder = $showNameBorder ? '1' : '0';
+        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
+        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
+        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
+
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->nameLimitLine = [$left, $width, $limitBottom];
     }
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight)
@@ -172,6 +182,20 @@ class Certificate
     protected function nameLineHeight($fontSize)
     {
         return max(4.5, (float)$fontSize * 0.36);
+    }
+
+    protected function drawStoredNameLimitLine()
+    {
+        if(!$this->template->showNameBorder() || $this->nameLimitLine === null){
+            return;
+        }
+
+        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        $this->pdf->SetDrawColor(255, 0, 0);
+        $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 0, 0);
+        $this->pdf->SetLineWidth(0.2);
     }
 
     protected function pdfTop($value)

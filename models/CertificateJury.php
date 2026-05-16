@@ -14,6 +14,7 @@ class CertificateJury
     public $width;
     public $height;
     public $align = 'center';
+    protected $nameLimitLine = null;
 
     public $frontend = false;
 
@@ -53,6 +54,7 @@ class CertificateJury
         if ($preset == 1) {
             $this->html_name();
             $this->html_position();
+            $this->drawStoredNameLimitLine();
             $this->pdf->SetFont('iniriaserif', '', 10);
         } else {
             $html = $this->template->custom_html;
@@ -68,7 +70,7 @@ class CertificateJury
 
         $top = $this->template->textTop('name_mt', 255);
         $size = $this->template->textSize('name_size', 28);
-        $this->writeTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</span>');
+        $this->writeNameTextBlock($top, '<span style="font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</span>');
     }
 
     public function html_position()
@@ -98,6 +100,46 @@ class CertificateJury
         }
 
         $this->pdf->writeHTMLCell($width, 0, $left, $top, '<div style="text-align:' . $this->align . '">' . $html . '</div>', 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
+
+    protected function writeNameTextBlock($top, $html)
+    {
+        $top = $this->pdfTop($top);
+        $left = $this->horizontalMargin('margin_left');
+        $right = $this->horizontalMargin('margin_right');
+        if ($right <= 0) {
+            $right = $left;
+        }
+
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if ($width <= 0) {
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+        $showNameBorder = $this->template->showNameBorder();
+        $tableBorder = $showNameBorder ? '1' : '0';
+        $tableStyle = $showNameBorder ? 'border:3px solid #ff0000;' : '';
+        $cellStyle = $showNameBorder ? 'border:1px solid #ff0000; color:#000000;' : '';
+        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '"><tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr></table>';
+
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->nameLimitLine = [$left, $width, $limitBottom];
+    }
+
+    protected function drawStoredNameLimitLine()
+    {
+        if(!$this->template->showNameBorder() || $this->nameLimitLine === null){
+            return;
+        }
+
+        [$left, $width, $limitBottom] = $this->nameLimitLine;
+        $this->pdf->SetDrawColor(255, 0, 0);
+        $this->pdf->SetLineWidth(0.5);
+        $this->pdf->Line($left, $limitBottom, $left + $width, $limitBottom);
+        $this->pdf->SetDrawColor(0, 0, 0);
+        $this->pdf->SetLineWidth(0.2);
     }
 
     protected function pdfTop($value)
