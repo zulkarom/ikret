@@ -212,6 +212,7 @@ use yii\helpers\Url;
           if($isSuperadmin){
             $userAccessMenu = [];
             $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
+            $userAccessMenu[] = ['name' => 'Admins & Managers', 'url' => ['/user/admin-managers']];
             $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
             $userAccessMenu[] = ['name' => 'Committee Request', 'url' => ['/committee/action-committee']];
             $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];

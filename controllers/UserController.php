@@ -86,6 +86,47 @@ class UserController extends Controller
         
     }
 
+    public function actionAdminManagers()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isSuperadmin){
+            throw new ForbiddenHttpException('You are not allowed to view this page.');
+        }
+
+        $rolesToShow = [
+            'superadmin',
+            'admin-registration',
+            'admin-jury',
+            'admin-certificate',
+            'manager',
+        ];
+
+        $roles = UserRole::find()->alias('ur')
+            ->joinWith(['user u'])
+            ->where([
+                'ur.status' => 10,
+                'ur.role_name' => $rolesToShow,
+            ])
+            ->orderBy([
+                'ur.role_name' => SORT_ASC,
+                'u.fullname' => SORT_ASC,
+                'ur.id' => SORT_ASC,
+            ])
+            ->all();
+
+        $groups = [];
+        foreach($roles as $role){
+            $key = (string)$role->role_name;
+            if(!isset($groups[$key])){
+                $groups[$key] = [];
+            }
+            $groups[$key][] = $role;
+        }
+
+        return $this->render('admin-managers', [
+            'groups' => $groups,
+        ]);
+    }
+
     public function actionJury(){
         if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminJury) return false;
 
