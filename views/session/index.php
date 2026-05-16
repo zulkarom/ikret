@@ -74,6 +74,17 @@ $canUpdateSession = Yii::$app->user->identity->isManager || Yii::$app->user->ide
                         },
                     ],
                     [
+                        'attribute' => 'has_session_certificate',
+                        'label' => 'Special Cert.',
+                        'format' => 'raw',
+                        'value' => function($model){
+                            if((int)$model->has_session_certificate === 1){
+                                return '<span class="badge bg-success">Yes</span>';
+                            }
+                            return '<span class="badge bg-secondary">No</span>';
+                        },
+                    ],
+                    [
                         'label' => 'Attendance',
                         'value' => function($model){
                             return (int)$model->getSessionAttendances()->count();

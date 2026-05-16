@@ -71,19 +71,17 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
 ?>
 
 <div class="certificate-template-update">
-    <div class="card mb-3">
-        <div class="card-body">
-            <?= Html::beginForm(Url::to(['update']), 'get', ['class' => 'row g-2 align-items-end']) ?>
-                <div class="col-md-6 col-lg-4">
-                    <?= Html::label('Jump to other template', 'certificate-template-jump', ['class' => 'form-label']) ?>
-                    <?= Html::dropDownList('id', $model->id, $templateOptions, [
-                        'id' => 'certificate-template-jump',
-                        'class' => 'form-control',
-                        'onchange' => 'this.form.submit();',
-                    ]) ?>
-                </div>
-            <?= Html::endForm() ?>
-        </div>
+    <div class="mb-3 d-flex align-items-center flex-wrap" style="gap:10px;">
+        <?= Html::a('Back', ['index'], ['class' => 'btn btn-secondary']) ?>
+        <?= Html::beginForm(Url::to(['update']), 'get', ['class' => 'd-flex align-items-center flex-wrap', 'style' => 'gap:8px;']) ?>
+            <?= Html::label('Jump to other template', 'certificate-template-jump', ['class' => 'mb-0']) ?>
+            <?= Html::dropDownList('id', $model->id, $templateOptions, [
+                'id' => 'certificate-template-jump',
+                'class' => 'form-control',
+                'style' => 'width:auto; min-width:320px;',
+                'onchange' => 'this.form.submit();',
+            ]) ?>
+        <?= Html::endForm() ?>
     </div>
 
     <div class="row">
@@ -99,7 +97,6 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
                     <div class="form-group mb-3">
                         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'name' => 'submit_action', 'value' => 'save']) ?>
                         <?= Html::submitButton('Save and Back', ['class' => 'btn btn-primary', 'name' => 'submit_action', 'value' => 'save-back']) ?>
-                        <?= Html::a('Back', ['index'], ['class' => 'btn btn-secondary']) ?>
                     </div>
 
                     <div class="row">
@@ -178,7 +175,6 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
                     <div class="form-group">
                         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'name' => 'submit_action', 'value' => 'save']) ?>
                         <?= Html::submitButton('Save and Back', ['class' => 'btn btn-primary', 'name' => 'submit_action', 'value' => 'save-back']) ?>
-                        <?= Html::a('Back', ['index'], ['class' => 'btn btn-secondary']) ?>
                     </div>
 
                     <?php ActiveForm::end(); ?>
