@@ -48,27 +48,14 @@ class CertificateCommittee
 
     public function writeData()
     { 
-        $left = $this->align === 'center' ? 0 : $this->template->textLeft(75);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            if($left > 0){
-                $this->pdf->SetXY($left,0);
-            }
             $this->html_name();
-            if($left > 0){
-                $this->pdf->SetX($left);
-            }
             $this->html_position();
             $this->drawStoredNameLimitLine();
-            if($left > 0){
-                $this->pdf->SetXY($left,0);
-            }
             $this->pdf->SetFont('iniriaserif', '', 10);
-            if($left > 0){
-                $this->pdf->SetXY($left,0);
-            }
         } else {
             $html = $this->template->custom_html;
         }
@@ -78,48 +65,21 @@ class CertificateCommittee
     public function html_name()
     {
 
-
-        $margin_name = $this->template->textTop('name_mt', 0);
-
-        $showNameBorder = $this->template->showNameBorder();
-        $tableBorder = '0';
-        $tableStyle = '';
-        $cellStyle = 'color:#000000;';
-
-        $html = '<table border="' . $tableBorder . '" width="100%" style="' . $tableStyle . '">
-<tr>
-
-    <td align="'.$this->align.'">';
-
-        $html .= '<table border="' . $tableBorder . '" width="100%" align="'.$this->align.'">';
-
-        if ($margin_name > 0) {
-            $size = $this->template->textSize('name_size', 27);
-            $html .= '
-<tr><td height="' . $margin_name . '" style="' . $cellStyle . '"></td></tr>
-<tr><td align="'.$this->align.'" style="' . $cellStyle . 'font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</td></tr>';
-        }
-
-
-
-        $html .= '</table>';
-
-        $html .= '</td>
-</tr>';
-        $html .= '</table>';
-
-$tbl = <<<EOD
-$html
-EOD;
-
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
-        $left = $this->template->textLeft(70);
-        $right = $this->template->textRight(11);
-        if($right <= 0){
-            $right = $left;
-        }
+        $top = $this->template->textTop('name_mt', 0);
+        $size = $this->template->textSize('name_size', 27);
+        [$left, $right] = $this->guideMargins();
         $width = $this->pdf->getPageWidth() - $left - $right;
-        $this->nameLimitLine = [$left, $width, $this->pdfTop($margin_name), $this->pdfTop($this->template->nameLimitY('field1_mt', 101))];
+        if($width <= 0){
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
+
+        $top = $this->pdfTop($top);
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+
+        $content = '<div style="text-align:' . $this->align . ';color:#000000;font-size:' . $size . 'px">' . strtoupper($this->model->user->fullname) . '</div>';
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->nameLimitLine = [$left, $width, $top, $limitBottom];
     }
 
     protected function drawStoredNameLimitLine()
@@ -170,34 +130,38 @@ EOD;
         /* echo $this->model->committee->com_name_en;
         die();
          */
-        //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0" width="100%"><tr>
-    <td align="'.$this->align.'">';
-        $html .= '<table border="0" width="100%" align="'.$this->align.'">';
-       
-            //$size = $this->template->field1_size;
+        $top = $this->template->textTop('field1_mt', 100);
+        $size = $this->template->textSize('field1_size', 23);
+        [$left, $right] = $this->guideMargins();
+        $width = $this->pdf->getPageWidth() - $left - $right;
+        if($width <= 0){
+            $left = 0;
+            $width = $this->pdf->getPageWidth();
+        }
 
-            $l = '';
+        $l = '';
 		if($this->model->committee->is_jawatankuasa == 1){
 			if($this->model->is_leader == 1){
 				$l = 'Head of ';
 			}
 		}
 
-            $html .= '
-<tr><td height="' . $this->template->textTop('field1_mt', 100) . '"></td></tr>
-<tr><td align="'.$this->align.'" style="font-size:' . $this->template->textSize('field1_size', 23) . 'px">
-' . strtoupper($l.$this->model->committee->com_name_en) . '</td></tr>';
-        
-        $html .= '</table>';
-        $html .= '</td></tr>';
-        $html .= '</table>';
+        $top = $this->pdfTop($top);
+        $content = '<div style="text-align:' . $this->align . ';font-size:' . $size . 'px">' . strtoupper($l . $this->model->committee->com_name_en) . '</div>';
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+    }
 
-$tbl = <<<EOD
-$html
-EOD;
+    protected function tcpdfAlign()
+    {
+        if ($this->align === 'left') {
+            return 'L';
+        }
 
-        $this->pdf->writeHTML($tbl, true, false, false, false, '');
+        if ($this->align === 'right') {
+            return 'R';
+        }
+
+        return 'C';
     }
 
     public function startPage()
@@ -232,9 +196,13 @@ EOD;
 
         //$right = $this->template->margin_right + 0;
 
+        $left = $this->template->textLeft(70);
         $right = $this->template->textRight(12);
+        if($right <= 0){
+            $right = $left;
+        }
 
-        $this->pdf->SetMargins(0, 0, $right);
+        $this->pdf->SetMargins($left, 0, $right);
         // $this->pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $this->pdf->SetHeaderMargin(0);
 
