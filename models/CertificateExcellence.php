@@ -178,21 +178,17 @@ EOD;
             $width = $this->pdf->getPageWidth();
         }
 
-        $topSpacer = max(0, $this->pdfTop($topSpacer));
+        $top = max(0, $this->pdfGuideTop($nameTopSetting));
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
-        $nameAreaHeight = max(8, $limitBottom - $topSpacer);
-        $layoutAreaHeight = max($nameAreaHeight, (float)$this->template->nameLimitY('field1_mt', 101) - $nameTopSetting);
+        $nameAreaHeight = max(8, $limitBottom - $top);
+        $layoutAreaHeight = $nameAreaHeight;
         [$html, $nameTextHeight] = $this->preferredNameHtml($width, $fontSize, $layoutAreaHeight, $html);
         $bottomSpacerHeight = max(0, $nameAreaHeight - $nameTextHeight);
-        $showNameBorder = $this->template->showNameBorder();
         $tableBorder = '0';
         $tableStyle = '';
         $cellStyle = 'color:#000000;';
 
         $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '">';
-        if($topSpacer > 0){
-            $content .= '<tr><td height="' . $topSpacer . '" style="' . $cellStyle . '"></td></tr>';
-        }
         $content .= '<tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr>';
         if($bottomSpacerHeight > 0){
             $content .= $this->nameBoundarySpacerRow($bottomSpacerHeight, $cellStyle);
@@ -200,8 +196,8 @@ EOD;
         $content .= '</table>';
 
         $this->pdf->SetFont('iniriaserif', '', 0);
-        $this->pdf->writeHTMLCell($width, 0, $left, 0, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
-        $this->nameLimitLine = [$left, $width, $this->pdfGuideTop($nameTopSetting), $limitBottom];
+        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->nameLimitLine = [$left, $width, $top, $limitBottom];
     }
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
