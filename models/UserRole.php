@@ -96,6 +96,7 @@ class UserRole extends \yii\db\ActiveRecord
         return [
             'participant' => 'Participant',
             'manager' => 'Manager', // need to have program id
+            'general-manager' => 'General Manager',
             'jury' => 'Jury',
             'committee' => 'Committee',
             'mentor' => 'Mentor',
@@ -123,6 +124,7 @@ class UserRole extends \yii\db\ActiveRecord
             return [
                 'participant' => 'Participant',
                 'manager' => 'Manager', 
+                'general-manager' => 'General Manager',
                 'jury' => 'Jury',
                 'committee' => 'Committee',
                 'mentor' => 'Mentor',

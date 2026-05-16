@@ -66,7 +66,13 @@ use yii\helpers\Url;
         }
 
         if(Yii::$app->user->identity->isManager){
-          if(Yii::$app->user->identity->isSuperadmin){
+          $isGeneralManager = UserRole::find()->where([
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'general-manager',
+            'status' => 10,
+          ])->exists();
+
+          if(Yii::$app->user->identity->isSuperadmin || $isGeneralManager){
             $programQuery = Program::find()->with('programSubs')->orderBy(['id' => SORT_ASC]);
             $programTable = Yii::$app->db->schema->getTableSchema(Program::tableName());
             if($programTable && $programTable->getColumn('is_active')){
@@ -213,6 +219,7 @@ use yii\helpers\Url;
             $userAccessMenu = [];
             $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
             $userAccessMenu[] = ['name' => 'Admins & Managers', 'url' => ['/user/admin-managers']];
+            $userAccessMenu[] = ['name' => 'Role List', 'url' => ['/user/role-list']];
             $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
             $userAccessMenu[] = ['name' => 'Committee Request', 'url' => ['/committee/action-committee']];
             $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];

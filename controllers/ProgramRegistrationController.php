@@ -2541,7 +2541,13 @@ class ProgramRegistrationController extends Controller
     {
         if(!Yii::$app->user->identity->isManager) return false;
 
-        if(Yii::$app->user->identity->isSuperadmin){
+        $isGeneralManager = UserRole::find()->where([
+            'user_id' => Yii::$app->user->identity->id,
+            'role_name' => 'general-manager',
+            'status' => 10,
+        ])->exists();
+
+        if(Yii::$app->user->identity->isSuperadmin || $isGeneralManager){
             $role = new UserRole([
                 'user_id' => Yii::$app->user->identity->id,
                 'role_name' => 'manager',
@@ -2576,7 +2582,7 @@ class ProgramRegistrationController extends Controller
                 $activeSubIds[(int)$sp->id] = true;
             }
 
-            if(Yii::$app->user->identity->isSuperadmin){
+            if(Yii::$app->user->identity->isSuperadmin || $isGeneralManager){
                 $roles = [new UserRole([
                     'user_id' => Yii::$app->user->identity->id,
                     'role_name' => 'manager',
@@ -3271,7 +3277,16 @@ class ProgramRegistrationController extends Controller
 
     protected function findManagerRole($id, $sub = null)
     {
-        if(!Yii::$app->user->isGuest && Yii::$app->user->identity->isSuperadmin){
+        $isGeneralManager = false;
+        if(!Yii::$app->user->isGuest){
+            $isGeneralManager = UserRole::find()->where([
+                'user_id' => Yii::$app->user->identity->id,
+                'role_name' => 'general-manager',
+                'status' => 10,
+            ])->exists();
+        }
+
+        if(!Yii::$app->user->isGuest && (Yii::$app->user->identity->isSuperadmin || $isGeneralManager)){
             $program = Program::findOne((int)$id);
             if(!$program || !$this->isActiveModel($program)){
                 return null;

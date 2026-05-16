@@ -127,6 +127,32 @@ class UserController extends Controller
         ]);
     }
 
+    public function actionRoleList()
+    {
+        if(Yii::$app->user->isGuest || !Yii::$app->user->identity->isSuperadmin){
+            throw new ForbiddenHttpException('You are not allowed to view this page.');
+        }
+
+        $roles = UserRole::listRoles();
+
+        $descriptions = [
+            'participant' => 'Access to attendance scanner page and participant certificates (when released/published).',
+            'manager' => 'Manage program registrations and manager dashboards for assigned program/sub.',
+            'jury' => 'Access to jury assignments and (when released/published) jury certificates.',
+            'committee' => 'Access to committee menu and (when released/published) committee certificates.',
+            'mentor' => 'Access to mentor pages (mentees and related mentor features).',
+            'admin-jury' => 'Admin access for jury management: jury list, profiles, applications, judging sessions and achievement config.',
+            'admin-registration' => 'Admin access for registration management: registrations, program/sub registration status, sessions and attendance list.',
+            'admin-certificate' => 'Admin access for certificate configuration and certificate-related listings (participants/juries/committees).',
+            'superadmin' => 'Full administrative access: user & access management, configuration, reports, and all admin features.',
+        ];
+
+        return $this->render('role-list', [
+            'roles' => $roles,
+            'descriptions' => $descriptions,
+        ]);
+    }
+
     public function actionJury(){
         if(!Yii::$app->user->identity->isManager && !Yii::$app->user->identity->isAdminJury) return false;
 

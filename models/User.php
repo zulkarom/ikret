@@ -571,7 +571,7 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     public function getIsManager(){
-        return $this->hasActiveRole(['manager', 'superadmin']);
+        return $this->hasActiveRole(['manager', 'general-manager', 'superadmin']);
     }
 
     public function getIsMentor(){
