@@ -50,14 +50,37 @@ $canUpdateSession = Yii::$app->user->identity->isManager || Yii::$app->user->ide
                     ],
                     [
                         'attribute' => 'datetime_start',
+                        'label' => 'Date / Time',
+                        'format' => 'raw',
                         'value' => function($model){
-                            return $model->formatLocalDateTime('datetime_start');
-                        },
-                    ],
-                    [
-                        'attribute' => 'datetime_end',
-                        'value' => function($model){
-                            return $model->formatLocalDateTime('datetime_end');
+                            $startValue = trim((string)$model->datetime_start);
+                            $endValue = trim((string)$model->datetime_end);
+                            if($startValue === '' || $endValue === ''){
+                                return Html::encode($model->formatLocalDateTime('datetime_start') ?: $model->formatLocalDateTime('datetime_end'));
+                            }
+
+                            try {
+                                $timezone = new \DateTimeZone('Asia/Kuala_Lumpur');
+                                $start = new \DateTimeImmutable($startValue, $timezone);
+                                $end = new \DateTimeImmutable($endValue, $timezone);
+
+                                if($start->format('Y-m-d') === $end->format('Y-m-d')){
+                                    return Html::encode($start->format('d M Y'))
+                                        . '<div class="small text-muted">'
+                                        . Html::encode($start->format('h:i A') . ' - ' . $end->format('h:i A'))
+                                        . '</div>';
+                                }
+
+                                return Html::encode($start->format('d M Y h:i A'))
+                                    . '<div class="small text-muted">'
+                                    . Html::encode($end->format('d M Y h:i A'))
+                                    . '</div>';
+                            } catch(\Exception $e) {
+                                return Html::encode($model->formatLocalDateTime('datetime_start'))
+                                    . '<div class="small text-muted">'
+                                    . Html::encode($model->formatLocalDateTime('datetime_end'))
+                                    . '</div>';
+                            }
                         },
                     ],
                     [
