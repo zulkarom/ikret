@@ -179,24 +179,15 @@ EOD;
         }
 
         $top = max(0, $this->pdfGuideTop($nameTopSetting));
+        $textTop = $top + 2;
         $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
-        $nameAreaHeight = max(8, $limitBottom - $top);
+        $nameAreaHeight = max(8, $limitBottom - $textTop);
         $layoutAreaHeight = $nameAreaHeight;
         [$html, $nameTextHeight] = $this->preferredNameHtml($width, $fontSize, $layoutAreaHeight, $html);
-        $bottomSpacerHeight = max(0, $nameAreaHeight - $nameTextHeight);
-        $tableBorder = '0';
-        $tableStyle = '';
-        $cellStyle = 'color:#000000;';
-
-        $content = '<table border="' . $tableBorder . '" cellpadding="0" cellspacing="0" width="100%" style="' . $tableStyle . '">';
-        $content .= '<tr><td align="' . $this->align . '" style="' . $cellStyle . '">' . $html . '</td></tr>';
-        if($bottomSpacerHeight > 0){
-            $content .= $this->nameBoundarySpacerRow($bottomSpacerHeight, $cellStyle);
-        }
-        $content .= '</table>';
+        $content = '<div style="text-align:' . $this->align . '">' . $html . '</div>';
 
         $this->pdf->SetFont('iniriaserif', '', 0);
-        $this->pdf->writeHTMLCell($width, 0, $left, $top, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
+        $this->pdf->writeHTMLCell($width, 0, $left, $textTop, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
         $this->nameLimitLine = [$left, $width, $top, $limitBottom];
     }
 
