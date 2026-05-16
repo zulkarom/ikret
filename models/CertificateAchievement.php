@@ -6,6 +6,7 @@ use yii\helpers\Html;
 
 class CertificateAchievement
 {
+    use CertificateNameLayoutTrait;
 
     public $model;
     public $template;
@@ -211,41 +212,12 @@ class CertificateAchievement
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
     {
-        $names = $this->memberNames();
-        $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
-        $lineHeight = $this->nameLineHeight($lineFontSize);
-        $lineHeightTotal = count($names) * $lineHeight;
-
-        if(count($names) > 1 && $lineHeightTotal <= max(1, $nameAreaHeight)){
-            $this->pdf->SetFont('iniriaserif', '', max(1, (float)$lineFontSize * 0.63));
-            $allNamesFitOneLine = true;
-            foreach($names as $name){
-                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
-                    $allNamesFitOneLine = false;
-                    break;
-                }
-            }
-
-            if($allNamesFitOneLine){
-                $lines = array_map(function($name) {
-                    return Html::encode(strtoupper($name));
-                }, $names);
-
-                return ['<span style="font-size:' . $lineFontSize . 'px; line-height:0.92;">' . implode('<br>', $lines) . '</span>', $lineHeightTotal];
-            }
-        }
-
-        return [$commaHtml, $this->estimatedNameTextHeight($width, $fontSize)];
+        return $this->certificatePreferredNameHtml($this->model->memberStr, $width, $fontSize, $nameAreaHeight, $commaHtml, 0.12);
     }
 
     protected function memberNames()
     {
-        $names = array_map('trim', explode(',', (string)$this->model->memberStr));
-        $names = array_filter($names, function($name) {
-            return $name !== '';
-        });
-
-        return array_values($names);
+        return $this->certificateNameList($this->model->memberStr);
     }
 
     protected function oneNamePerLineSideMargin($nameTop, $fontSize)
@@ -315,17 +287,12 @@ class CertificateAchievement
 
     protected function nameLineHeight($fontSize)
     {
-        return max(4.5, (float)$fontSize * 0.36);
+        return $this->certificateNameLineHeight($fontSize);
     }
 
     protected function estimatedNameTextHeight($width, $fontSize)
     {
-        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
-        $nameLength = strlen($plainName);
-        $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.12)));
-        $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
-
-        return $estimatedLines * max(6.5, (float)$fontSize * 0.42);
+        return $this->certificateEstimatedNameTextHeight($this->model->memberStr, $width, $fontSize, 0.12);
     }
 
     protected function nameBoundarySpacerRow($height, $cellStyle)

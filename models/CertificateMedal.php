@@ -1,7 +1,7 @@
 <?php
 namespace app\models;
 
-class CertificateMedal extends CertificateExcellence
+class CertificateMedal extends CertificateMedalBase
 {
     public function html_award()
     {

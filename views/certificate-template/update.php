@@ -2,12 +2,19 @@
 
 use app\models\CertificateTemplate;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
 /** @var yii\web\View $this */
 /** @var app\models\CertificateTemplate $model */
 
 $this->title = 'Update Certificate Config';
+
+$templateOptions = [];
+foreach (CertificateTemplate::find()->orderBy(['id' => SORT_ASC])->all() as $template) {
+    $name = trim((string)$template->template_name) !== '' ? ucwords((string)$template->template_name) : 'Template #' . $template->id;
+    $templateOptions[$template->id] = $template->id . ' - ' . $name;
+}
 
 $textConfig = [
     'section' => 'Additional Text',
@@ -64,6 +71,21 @@ $renderTextFieldPair = static function($form, $model, $fieldNo, $config){
 ?>
 
 <div class="certificate-template-update">
+    <div class="card mb-3">
+        <div class="card-body">
+            <?= Html::beginForm(Url::to(['update']), 'get', ['class' => 'row g-2 align-items-end']) ?>
+                <div class="col-md-6 col-lg-4">
+                    <?= Html::label('Jump to other template', 'certificate-template-jump', ['class' => 'form-label']) ?>
+                    <?= Html::dropDownList('id', $model->id, $templateOptions, [
+                        'id' => 'certificate-template-jump',
+                        'class' => 'form-control',
+                        'onchange' => 'this.form.submit();',
+                    ]) ?>
+                </div>
+            <?= Html::endForm() ?>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-lg-9">
             <div class="card">

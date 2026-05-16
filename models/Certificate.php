@@ -6,6 +6,7 @@ use yii\helpers\Html;
 
 class Certificate
 {
+    use CertificateNameLayoutTrait;
 
     public $model;
     public $template;
@@ -135,29 +136,9 @@ class Certificate
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight)
     {
-        $names = $this->memberNames();
-        $lineHeightTotal = count($names) * $this->nameLineHeight($fontSize);
+        [$html] = $this->certificatePreferredNameHtml($this->model->memberStr, $width, $fontSize, $nameAreaHeight, null, 0.12);
 
-        if(count($names) > 1 && $lineHeightTotal <= max(1, $nameAreaHeight)){
-            $this->pdf->SetFont('iniriaserif', '', max(1, (float)$fontSize * 0.63));
-            $allNamesFitOneLine = true;
-            foreach($names as $name){
-                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
-                    $allNamesFitOneLine = false;
-                    break;
-                }
-            }
-
-            if($allNamesFitOneLine){
-                $lines = array_map(function($name) {
-                    return Html::encode(strtoupper($name));
-                }, $names);
-
-                return '<span style="font-size:' . $fontSize . 'px; line-height:0.92;">' . implode('<br>', $lines) . '</span>';
-            }
-        }
-
-        return '<span style="font-size:' . $fontSize . 'px; line-height:1;">' . Html::encode(strtoupper($this->model->memberStr)) . '</span>';
+        return $html;
     }
 
     protected function configuredNameAreaHeight($top)
@@ -171,17 +152,12 @@ class Certificate
 
     protected function memberNames()
     {
-        $names = array_map('trim', preg_split('/,|<br\s*\/?>/i', (string)$this->model->memberStr));
-        $names = array_filter($names, function($name) {
-            return $name !== '';
-        });
-
-        return array_values($names);
+        return $this->certificateNameList($this->model->memberStr);
     }
 
     protected function nameLineHeight($fontSize)
     {
-        return max(4.5, (float)$fontSize * 0.36);
+        return $this->certificateNameLineHeight($fontSize);
     }
 
     protected function drawStoredNameLimitLine()

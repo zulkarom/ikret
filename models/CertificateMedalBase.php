@@ -4,8 +4,9 @@ namespace app\models;
 use Yii;
 use yii\helpers\Html;
 
-class CertificateExcellence
+class CertificateMedalBase
 {
+    use CertificateNameLayoutTrait;
 
     public $model;
     public $template;
@@ -193,41 +194,12 @@ EOD;
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
     {
-        $names = $this->memberNames();
-        $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
-        $lineHeight = $this->nameLineHeight($lineFontSize);
-        $lineHeightTotal = count($names) * $lineHeight;
-
-        if(count($names) > 1 && $lineHeightTotal <= max(1, $nameAreaHeight)){
-            $this->pdf->SetFont('iniriaserif', '', max(1, (float)$lineFontSize * 0.63));
-            $allNamesFitOneLine = true;
-            foreach($names as $name){
-                if($this->pdf->GetStringWidth(strtoupper($name)) > $width){
-                    $allNamesFitOneLine = false;
-                    break;
-                }
-            }
-
-            if($allNamesFitOneLine){
-                $lines = array_map(function($name) {
-                    return Html::encode(strtoupper($name));
-                }, $names);
-
-                return ['<span style="font-size:' . $lineFontSize . 'px; line-height:0.92;">' . implode('<br>', $lines) . '</span>', $lineHeightTotal];
-            }
-        }
-
-        return [$commaHtml, $this->estimatedNameTextHeight($width, $fontSize)];
+        return $this->certificatePreferredNameHtml($this->model->memberStr, $width, $fontSize, $nameAreaHeight, $commaHtml, 0.12);
     }
 
     protected function memberNames()
     {
-        $names = array_map('trim', explode(',', (string)$this->model->memberStr));
-        $names = array_filter($names, function($name) {
-            return $name !== '';
-        });
-
-        return array_values($names);
+        return $this->certificateNameList($this->model->memberStr);
     }
 
     protected function oneNamePerLineSideMargin($nameTop, $fontSize)
@@ -237,8 +209,8 @@ EOD;
             return null;
         }
 
-        $limitBottom = $this->template->nameLimitY('field1_mt', 101);
-        $nameAreaHeight = max(8, (float)$limitBottom - (float)$nameTop);
+        $limitBottom = $this->pdfTop($this->template->nameLimitY('field1_mt', 101));
+        $nameAreaHeight = max(8, $limitBottom - $this->pdfGuideTop($nameTop));
         $lineFontSize = $this->oneNamePerLineFontSize($nameAreaHeight, $fontSize);
         $lineHeightTotal = count($names) * $this->nameLineHeight($lineFontSize);
         if($lineHeightTotal > max(1, $nameAreaHeight)){
@@ -297,17 +269,12 @@ EOD;
 
     protected function nameLineHeight($fontSize)
     {
-        return max(4.5, (float)$fontSize * 0.36);
+        return $this->certificateNameLineHeight($fontSize);
     }
 
     protected function estimatedNameTextHeight($width, $fontSize)
     {
-        $plainName = trim(strip_tags(str_replace(['<br />', '<br>', '<br/>'], ' ', (string)$this->model->memberStr)));
-        $nameLength = strlen($plainName);
-        $estimatedCharsPerLine = max(18, (int)floor($width / max(1, (float)$fontSize * 0.55)));
-        $estimatedLines = max(1, (int)ceil($nameLength / $estimatedCharsPerLine));
-
-        return $estimatedLines * max(6.5, (float)$fontSize * 0.42);
+        return $this->certificateEstimatedNameTextHeight($this->model->memberStr, $width, $fontSize, 0.12);
     }
 
     protected function nameBoundarySpacerRow($height, $cellStyle)
@@ -356,7 +323,7 @@ EOD;
         $defaultRight = $this->template->textRight(11);
         $defaultSide = min($defaultLeft, $defaultRight > 0 ? $defaultRight : $defaultLeft);
         $fieldTop = $this->template->nameLimitY('field1_mt', 101);
-        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfTop($nameTop) - 2);
+        $availableHeight = max(8, $this->pdfTop($fieldTop) - $this->pdfGuideTop($nameTop) - 2);
 
         $candidates = [
             $pageWidth * 0.46,
