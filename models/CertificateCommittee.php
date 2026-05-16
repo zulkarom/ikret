@@ -48,19 +48,27 @@ class CertificateCommittee
 
     public function writeData()
     { 
-        $left = $this->template->textLeft(75);
+        $left = $this->align === 'center' ? 0 : $this->template->textLeft(75);
         $this->pdf->SetFont('iniriaserif', '', 10);
         //$this->pdf->SetTextColor(35, 22, 68);
         $preset = $this->template->set_type;
         if ($preset == 1) {
-            $this->pdf->SetXY($left,0);
+            if($left > 0){
+                $this->pdf->SetXY($left,0);
+            }
             $this->html_name();
-            $this->pdf->SetX($left);
+            if($left > 0){
+                $this->pdf->SetX($left);
+            }
             $this->html_position();
             $this->drawStoredNameLimitLine();
-            $this->pdf->SetXY($left,0);
+            if($left > 0){
+                $this->pdf->SetXY($left,0);
+            }
             $this->pdf->SetFont('iniriaserif', '', 10);
-            $this->pdf->SetXY($left,0);
+            if($left > 0){
+                $this->pdf->SetXY($left,0);
+            }
         } else {
             $html = $this->template->custom_html;
         }
@@ -78,12 +86,12 @@ class CertificateCommittee
         $tableStyle = '';
         $cellStyle = 'color:#000000;';
 
-        $html = '<table border="' . $tableBorder . '" style="' . $tableStyle . '">
+        $html = '<table border="' . $tableBorder . '" width="100%" style="' . $tableStyle . '">
 <tr>
 
     <td align="'.$this->align.'">';
 
-        $html .= '<table border="' . $tableBorder . '" align="'.$this->align.'">';
+        $html .= '<table border="' . $tableBorder . '" width="100%" align="'.$this->align.'">';
 
         if ($margin_name > 0) {
             $size = $this->template->textSize('name_size', 27);
@@ -145,15 +153,27 @@ EOD;
         return [$left, $right];
     }
 
+    protected function pdfTop($value)
+    {
+        $value = (float)$value;
+        $pageHeight = $this->pdf->getPageHeight();
+
+        if($value > $pageHeight){
+            return $value / 3.779527559;
+        }
+
+        return $value;
+    }
+
     public function html_position()
     {
         /* echo $this->model->committee->com_name_en;
         die();
          */
         //$margin_name = $this->template->field1_mt;
-        $html = '<table border="0"><tr>
+        $html = '<table border="0" width="100%"><tr>
     <td align="'.$this->align.'">';
-        $html .= '<table border="0" align="'.$this->align.'">';
+        $html .= '<table border="0" width="100%" align="'.$this->align.'">';
        
             //$size = $this->template->field1_size;
 

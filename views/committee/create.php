@@ -3,18 +3,25 @@
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\models\ProgramRegistration $model */
+/** @var app\models\Committee $model */
 
-$this->title = 'Create Program Registration';
-$this->params['breadcrumbs'][] = ['label' => 'Program Registrations', 'url' => ['index']];
+$this->title = 'Create Committee';
+$this->params['breadcrumbs'][] = ['label' => 'Committees', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="program-registration-create">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+<div class="committee-create">
+    <div class="pagetitle">
+        <h1><?= Html::encode($this->title) ?></h1>
+    </div>
 
-    <?= $this->render('_form', [
-        'model' => $model,
-    ]) ?>
-
+    <section class="section dashboard">
+        <div class="card">
+            <div class="card-body pt-4">
+                <?= $this->render('_form', [
+                    'model' => $model,
+                ]) ?>
+            </div>
+        </div>
+    </section>
 </div>

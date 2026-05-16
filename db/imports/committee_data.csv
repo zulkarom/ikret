@@ -1,0 +1,171 @@
+committee_name,committee_name_bm,is_jawatankuasa,is_student,is_pengarah,can_approve,cert_only,member_name,role,is_leader,username
+Advisor I,PENASIHAT I,0,0,0,1,0,Prof. Madya Dr. Dzulkifli bin Mukhtar,,,dzulkifli@umk.edu.my
+Advisor II,PENASIHAT II,0,0,0,1,0,Prof. Dr. Mohd Nor Hakimin bin Yusoff,,,hakimin@umk.edu.my
+Chairperson I,PENGERUSI I,0,0,0,1,0,Prof. Madya Dr. Wan Farha binti Wan Zukifl,,0,farha@umk.edu.my
+Chairperson II,PENGERUSI II,0,0,0,1,0,Dr. Nur Ain Ayunni binti Sabri,,0,ayunni.s@umk.edu.my
+Programme Director,PENGARAH PROGRAM,0,0,1,1,0,Dr. Zaminor binti Zamzamir@Zamzamin,,0,zaminor@umk.edu.my
+Secretary,SETIAUSAHA,0,0,0,1,0,Dr. Eni Noreni binti Mohamad Zain,,0,noreni@umk.edu.my
+Treasurer,BENDAHARI,0,0,0,1,0,Dr. Nur Shahirah Adilah binti Mohd Sairazi,,0,adilah.ms@umk.edu.my
+,,0,0,0,1,0,Pn. Nor Edawani Binti Shamsuddin,,0,
+,,0,0,0,1,0,Pn. Siti Noraishah binti Mat Husin,,0,
+COMEI Programme Director,PENGARAH PROGRAM COMEI,0,0,1,1,0,Dr. Fatihah binti Mohd,,0,fatihah.m@umk.edu.my
+AIFIF Programme Director,PENGARAH PROGRAM AIFIF,0,0,1,1,0,En. Syed Azlan Aljafree bin Syed Khadzil,,0,aljaffree.sk@umk.edu.my
+RISE Programme Director,PENGARAH PROGRAM RISE,0,0,1,1,0,Dr. Norzalizah binti Bahari,,0,norzalizah.b@umk.edu.my
+NEWeek Programme Director,PENGARAH PROGRAM NEWEEK,0,0,1,1,0,Pn. Yuhanis binti Mohamed Noor,,0,yuhanis.mn@umk.edu.my
+PCP Programme Director,PENGARAH PROGRAM PCP,0,0,1,1,0,Dr. Yusmazida binti Mohd Yusoff,,0,yusmazida.my@umk.edu.my
+IISEIC 2026 Director,PENGARAH IISEIC 2026,0,0,1,1,0,Pn. Nurul Hasliana binti Hamsani,,0,hasliana.h@umk.edu.my
+System Committee,JAWATANKUASA SISTEM,1,0,0,0,0,En. Zul Karami bin Che Musa,Head,1,zul@umk.edu.my
+System Committee,JAWATANKUASA SISTEM,1,0,0,0,0,Prof. Madya Dr. Mohd Zulkifli bin Muhammad,,0,zulkifli.m@umk.edu.my
+Publicity & Promotion Committee,JAWATANKUASA PUBLISITI & PROMOSI,1,0,0,0,0,Dr. Rikinohanis bin Ridzwan,Head,1,rikinorhakis@umk.edu.my
+,,1,0,0,0,0,Dr. Wan Mohd Nadzrol bin Mohd Nasir,,0,nazdrol@umk.edu.my
+,,1,0,0,0,0,Dr. Nur Syakirah binti Ahmad,,0,syakirah.a@umk.edu.my
+,,1,0,0,0,0,Pn. Nor Atekah binti Ismail,,0,
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,0,0,0,0,Dr. Nurul Fadzlyn binti Enche Nadzmy,Head,1,fadzlyn.en@umk.edu.my
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,0,0,0,0,Dr. Abdul Aziz bin Yaacob,,0,aziz.y@umk.edu.my
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,1,0,0,0,Muhammad Al Hakim Kamal Sharin,,0,A24A3800
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,1,0,0,0,Muhammad Nur Syamil Bin Suhaimi,,0,A24B3004
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,1,0,0,0,Muhammad Imran Danish Bin Khashairi,,0,A24B3756
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,1,0,0,0,Izzah Maisarah Binti Nor Azman,,0,A24B3768
+Registration Committee,JAWATANKUASA PENDAFTARAN,1,1,0,0,0,Nur Nadhirah Binti Hirman,,0,A24B3755
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,0,0,0,0,Dr. Nor Fazlida binti Hairani,Head,1,fazlirda.h@umk.edu.my
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,0,0,0,0,Dr. Mohamad Hazeem bin Mohamad Sidik,,0,hazeem.ms@umk.edu.my
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Norshafika Binti Mohd Nor,,0,A23A1869
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Muhammad Khairulsyafiq Bin Harif,,0,A25B4590
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Muhammad Danish Haikal Bin Mohamed Darus,,0,A25A4961
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Nurin Nazifa Afrina Binti Ahmad,,0,A25A4765
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Nur Atielia Erina Binti Ibrahim,,0,A25A5013
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Nur Adriana Batrisyia Binti Jesse Iman,,0,A25A4943
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Muhammad Syazwan Bin Sayuti,,0,A25A4463
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Nurul Huswatul Hasanah Binti Wardinal,,0,A25A4453
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Lee Kheng You,,0,A23A1608
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Muhammad Zulainnor Bin Zulkefli,,0,A23B1312
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Imran Bin Mohd Latiff,,0,A23A2372
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Asyraf Bin Abdullah Kosin,,0,A23A1881
+Souvenir Committee,JAWATANKUASA CENDERAHATI,1,1,0,0,0,Lee Xin Ying,,0,A23A2576
+Certificate & Montage Committee,JAWATANKUASA SIJIL & MONTAJ,1,0,0,0,0,Pn. Afifah Hanim binti Md Pazil,Head,1,hanim.mp@umk.edu.my
+Certificate & Montage Committee,JAWATANKUASA SIJIL & MONTAJ,1,0,0,0,0,Dr. Nur A�mirah binti Mohd Yaziz,,0,amirah.my@umk.edu.my
+Judging Committee,JAWATANKUASA PENJURIAN,1,0,0,0,0,Pn. Nik Madeeha binti Nik Mohd Munir,Head,1,nmadeeha@umk.edu.my
+Judging Committee,JAWATANKUASA PENJURIAN,1,0,0,0,0,Pn. Nik Noorhazila Bt Nik Mud,,0,noorhazila.nm@umk.edu.my
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Subaidah Binti Mansor,,0,A23A1840
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Noor Vaiza Putri Oktavia Binti M Sukir,,0,A23A2236
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nor Hazwani Binti Shafei,,0,A23A2205
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nur Adriana Iwani Binti Zaharudin,,0,A23A1796
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Noor Ashikin Binti Mariano Norte Junior,,0,A23A2351
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Aisyah Syuhada Binti Azrul,,0,A23A2477
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Fatin Nabilah Binti Omar,,0,A23A2286
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nuranis Hannani Binti Adnan,,0,A23A2272
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nur Fatin Insyirah Binti Hassim,,0,A23B1809
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Vehtaah Ganeswaran,,0,A24A3121
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Suubaventhini Sivanendran,,0,A24A3048
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Aleeya Natasya Binti Saparin,,0,A24A3841
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Riedzana Ayu Natasya Binti M Noor Hisham,,0,A23A2107
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nurul Aleeya Maisara Binti Yusli,,0,A23A2491
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nur Nabilah Binti Kamaruzi,,0,A23A1434
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Abdul Hadi Bin Khairiliza,,0,A23A1902
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nur Zul Alina Binti Mohd Zukhairi,,0,A23A2073
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nik Noor Aida Amisha Binti Azman,,0,A23A2319
+Judging Committee,JAWATANKUASA PENJURIAN,1,1,0,0,0,Nur Anis Binti Johari,,0,A23A1958
+Sponsorship & Industry Networking Committee,JAWATANKUASA PENAJAAN & JARINGAN INDUSTRI,1,0,0,0,0,Dr. Siti Som binti Husin,Head,1,sitisom.h@umk.edu.my
+Sponsorship & Industry Networking Committee,JAWATANKUASA PENAJAAN & JARINGAN INDUSTRI,1,0,0,0,0,Dr. Noor Raihani binti Zainol,,0,raihani@umk.edu.my
+Sponsorship & Industry Networking Committee,JAWATANKUASA PENAJAAN & JARINGAN INDUSTRI,1,0,0,0,0,Dr. Nor Asma binti Ahmad,,0,asma.a@umk.edu.my
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,0,0,0,0,Pn. Munirah binti Mahshar,Head,1,munirah@umk.edu.my
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,0,0,0,0,Pn. Azizah bin Musa,,0,azizah.m@umk.edu.my
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,1,0,0,0,Nurin Ibtisam Damia Binti Mohd.Rizal,,0,A25A4946
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,1,0,0,0,Atikah Zulaikha Binti Azmi,,0,A25A4860
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,1,0,0,0,Muhammad Amiirul Firdaus Bin Azriman,,0,A25B5485
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,1,0,0,0,Nur Aishah Binti Mohamad Firdaus,,0,A25A5301
+Refreshment Committee,JAWATANKUASA PERSEGARAN,1,1,0,0,0,Nurul Nazihah Binti Hamdan,,0,A23A2409
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,0,0,0,0,Dr. Lu Man Hong,Head,1,lmhong@umk.edu.my
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,0,0,0,0,Dr. Tan Wai Hong,,0,wai.hong@umk.edu.my
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,0,0,0,0,Dr. Azira Hanani binti Ab Rahman,,0,hanani@umk.edu.my
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Sameer Usaid Bin Sabarudin,,0,A25A5295
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Muhammad Harith Najmi Bin Muhamad Fauzi,,0,A25B4534
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nurul Aleeya Maisara Binti Yusli,,0,A23A2491
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nurul Waheeda Binti Muhammad Aidil Peter,,0,A23A1856
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nuraina Natasha Binti Mohd Rauzi,,0,A23B1373
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nurrul Syazwani Sahirah Binti Roswadi,,0,A23A1884
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nurain Najiha Binti Mohammad,,0,A23A1729
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nur Wahieda Amalien Binti Mohd Daud,,0,A23A2002
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Noor Yasmin Binti Md Zaini,,0,A23A2235
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Wan Nur Hassanatul Huda Binti Mohd Nazri,,0,A23A2390
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Mohamad Danial Ikwan Bin Mohar,,0,A23B1361
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Muhammad Asyraaf Bin Shukri,,0,A23A2434
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nurul Syafiqah Binti Rohaizat,,0,A23A1872
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nur Alya Maisarah Binti Zainol,,0,A23A1882
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nur Ain Arisa Binti Faumizi,,0,A23A1830
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Nur Anisha Syazwina Binti Arjunaidi,,0,A23A2175
+Venue Preparation & Cleanliness Committee,JAWATANKUASA PERSIAPAN TEMPAT & KEBERSIHAN,1,1,0,0,0,Siti Hatieja Binti Mohd Azlan,,0,A23A1762
+Technical & Photography Committee,JAWATANKUASA TEKNIKAL & JURUGAMBAR,1,0,0,0,0,Cik Nurul Azwa binti Mohamed Khadri,Head,1,azwa.mk@umk.edu.my
+Technical & Photography Committee,JAWATANKUASA TEKNIKAL & JURUGAMBAR,1,0,0,0,0,Dr. Hassanuddin bin Hassan,,0,hasann@umk.edu.my
+Technical & Photography Committee,JAWATANKUASA TEKNIKAL & JURUGAMBAR,1,1,0,0,0,Amiruddin Bin Azhari,,0,A24A3373
+Technical & Photography Committee,JAWATANKUASA TEKNIKAL & JURUGAMBAR,1,1,0,0,0,Aiman Irfan Bin Muhamad Azli,,0,A24A3385
+Technical & Photography Committee,JAWATANKUASA TEKNIKAL & JURUGAMBAR,1,1,0,0,0,Wan Muhammad Harith Bin Wan Mohd Zuhaidi,,0,A24A3420
+Logistics & Accommodation Committee,JAWATANKUASA LOGISTIK & PENGINAPAN,1,0,0,0,0,En. Muhamad Naqib bin Mat Yunoh,Head,1,naqib@umk.edu.my
+Logistics & Accommodation Committee,JAWATANKUASA LOGISTIK & PENGINAPAN,1,0,0,0,0,Dr. Nur Kamaliah binti Azis,,0,kamaliah.a@umk.edu.my
+Logistics & Accommodation Committee,JAWATANKUASA LOGISTIK & PENGINAPAN,1,1,0,0,0,Nurul Hazeerah Binti Lukman,,0,A24B3772
+Logistics & Accommodation Committee,JAWATANKUASA LOGISTIK & PENGINAPAN,1,1,0,0,0,Chermaine Chin,,0,A24A3272
+Logistics & Accommodation Committee,JAWATANKUASA LOGISTIK & PENGINAPAN,1,1,0,0,0,Nurin Hazwani Binti Ahmad Khairi,,0,A24B2918
+Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,0,0,0,0,Dr. Hazrina binti Hasbolah,Head,1,hazrina.h@umk.edu.my
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,0,0,0,0,Dr. Nor Syafiqah binti A. Samad,,0,nursyafiqah.as@umk.edu.my
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,0,0,0,0,Dr. Muhammad Firdaus bin Zakaria,,0,mfirdaus.z@umk.edu.my
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,0,0,0,0,Pn. Nurul Ashikin Binti Mohd Lukman,,0,
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,1,0,0,0,Putri Amirah Binti Danny,,0,A23A2364
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,1,0,0,0,Atika' Ilmi Binti Mohd Azlan,,0,A23A2063
+Opening Ceremony & Protocol Committee,JAWATANKUASA PERASMIAN & PROTOKOL,1,1,0,0,0,Michelle Claire Auther,,0,A23A2070
+Invitation Committee,JAWATANKUASA JEMPUTAN,1,0,0,0,0,Dr. Siti Rohana binti Mohamad,Head,1,rohana@umk.edu.my
+Invitation Committee,JAWATANKUASA JEMPUTAN,1,0,0,0,0,Dr. Siti Fariha binti Muhamad,,0,fariha@umk.edu.my
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,0,0,0,0,Dr. Nur Farahiah binti Azmi,Head,1,nurfarahiah@umk.edu.my
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,0,0,0,0,Dr. Tahirah binti Abdullah,,0,tahirah@umk.edu.my
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,0,0,0,0,Dr. Siti Salwani Abdullah,,0,salwani.a@umk.edu.my
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,1,0,0,0,Siti Halimatussa'Adiah Binti Hussin,,0,A23A1561
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,1,0,0,0,Amilia Ainanisha Binti Baharuddin,,0,A23A1708
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,1,0,0,0,Siti Nur Nabila Aisya Binti Kamarudin,,0,A23A1735
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,1,0,0,0,Nur Aqilah Syahira Samsud-Din,,0,A23A2149
+Exhibitor Committee,JAWATANKUASA PEMPAMER,1,1,0,0,0,Fatin Nur Aisyah,,0,A24A3012
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,0,0,0,0,Dr. Nor Hafiza binti Othman,,0,hafiza.o@umk.edu.my
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,0,0,0,0,Prof. Madya Dr Nurhaiza binti Nordin,,0,haiza@umk.edu.my
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,0,0,0,0,Prof. Madya Dr. Nurmaddia binti Nordin,,0,naddia.n@umk.edu.my
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,1,0,0,0,ADILA QISTINA BINTI AZHAR,,0,A24A3349
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,1,0,0,0,NUR ALYA SYAUQINA BINTI ADIT,,0,A23A2556
+Event Programme & Book Committee,JAWATANKUASA ATURCARA MAJLIS & BUKU,1,1,0,0,0,MUHAMMAD ARIF BIN MANSOR,,0,A24A3377
+Student Management Committee,JAWATANKUASA PENGURUSAN PELAJAR,1,0,0,0,0,Pn. Aimi Nadia binti Ibrahim @ Zakaria,Head,1,aiminadia.ibrahim@gmail.com
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,Dr Nurul Izyan Mat Daud,Head,1,izyan.md@umk.edu.my
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,Dr Fatihah binti Mohd,,0,fatihah.m@umk.edu.my
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,En Syed Azlan Aljafree bin Syed Khadzil,,0,aljaffree.sk@umk.edu.my
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,Dr. Norzalizah binti Bahari,,0,norzalizah.b@umk.edu.my
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,Pn. Yuhanis binti Mohamed Noor,,0,yuhanis.mn@umk.edu.my
+Competition Committee,JAWATANKUASA PERTANDINGAN,1,0,0,0,0,Cik Azlinda Shazneem binti Md Shuaib,,0,shazneem.ms@umk.edu.my
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Hafizah Binti Aszemi,,0,A25B5083
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Ainna Alieya,,0,A25B4013
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Achmetha Jasmine A/P Pragas,,0,A25A4240
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Adila Qistina Binti Azhar,,0,A24A3349
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Alya Syauqina Binti Adit,,0,A23A2556
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Arif Bin Mansor,,0,A24A3377
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Ainur Syafiza Binti Abdullah Jamel,,0,A24B3752
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Farishahida Binti Rosli,,0,A24A3055
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Noorizzati Binti Mohd Mojari,,0,A24A3241
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Shazwani Binti Azhar,,0,A24A3204
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Amni Khalilah Binti Mohd Adam,,0,A24B3745
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Hamizah Binti Baharin,,0,A24A3360
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nurul Izzati Binti Zaimi,,0,A24A3598
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Ayu Kassuma Marsella,,0,A24A3252
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Insyirah Binti Baharum,,0,A24A30256
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Aisyah Humaira Binti Mohd Shafian,,0,A24B2925
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Syawinda Binti Mat Zin,,0,A24A3450
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Ahmad Syazwan Bin Bustami,,0,A24A3470
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Goh Boon Leong,,0,A24A3468
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Kueh Wei Xiang,,0,A24A3522
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Eric Hii Hao,,0,A24A3220
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Sanan A/L Sarot,,0,A24A3069
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Arifuddin Bin Baso,,0,A24B3763
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Haziq Bin Norfauzi,,0,A24A3428
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Nurizham Bin Zulkiflee,,0,A24A3286
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Kamal Bin Mohd Zawawi,,0,A24B3753
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Irfan Naufal Bin Mohd Hazri,,0,A24A3805
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Erin Eliena Binti Daswir,,0,A24B3725
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Fikri Haziq Bin Firdaus,,0,A24B3726
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Mustaqeem Haziq Bin Mohamed Zamri,,0,A24B3730
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Muhammad Amir Haziq Bin Mohamad Nazri,,0,A24B3743
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Aina Syamimi Binti Shahrul Azli,,0,A24B3774
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Batrisha Binti Mahadi,,0,A24A3806
+Student Committee,JAWATANKUASA PELAJAR,1,1,0,0,0,Nur Anis Syahirah Binti Mohd Iskandar,,0,A24A3828

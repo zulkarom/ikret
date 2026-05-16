@@ -59,19 +59,6 @@ use yii\helpers\Url;
 
           
 
-          $staff = UserRole::find()->alias('a')
-          ->joinWith(['committee c'])
-          ->where(['a.user_id' => Yii::$app->user->identity->id, 
-          'a.role_name' => 'committee', 
-          'a.status' => 10,
-          'c.is_student' => 0,
-          'c.cert_only' => 0
-          ])
-          ->one();
-
-          if($staff){
-            $menu[] = ['name' => 'Letter of Appointment', 'url' => ['/committee/letter'], 'icon' => 'bi bi-file-earmark-medical'];
-          }
           if($certificatesReleased){
             $menu[] = ['name' => 'Committee Certificate', 'url' => ['/committee/certificate-page'], 'icon' => 'bi bi-award'];
           }
@@ -98,13 +85,6 @@ use yii\helpers\Url;
             $menu[] = ['name' => 'Committee Request', 'url' => ['/committee/action-committee'], 'icon' => 'bi bi-brightness-high-fill'];
           }
           
-        }
-
-        if(Yii::$app->user->identity->isMentor){
-          //$menu[] = ['name' => 'Mentor Menu', 'heading' => true];
-          if($certificatesReleased){
-            $menu[] = ['name' => 'Mentees & Certificates', 'url' => ['/program-registration/mentor-mentees'], 'icon' => 'bi bi-file-earmark-medical'];
-          }
         }
 
         if(Yii::$app->user->identity->isManager){
@@ -256,6 +236,7 @@ use yii\helpers\Url;
             $userAccessMenu[] = ['name' => 'All Users', 'url' => ['/user/all']];
             $userAccessMenu[] = ['name' => 'User Role Request', 'url' => ['/committee/request']];
             $userAccessMenu[] = ['name' => 'List of Committees', 'url' => ['/committee/index']];
+            $userAccessMenu[] = ['name' => 'Committee Summary', 'url' => ['/committee/summary']];
 
             $menu[] = ['name' => 'User & Access Management', 'url' => ['/'], 'icon' => 'bi bi-people', 'children' => $userAccessMenu];
           }
@@ -268,7 +249,6 @@ use yii\helpers\Url;
               ['name' => 'Call for Juries Config', 'url' => ['/jury-requirement/index']],
               ['name' => 'Judging Session', 'url' => ['/program/admin-judging-sessions']],
               ['name' => 'Achievement Config', 'url' => ['/certificate-template/achievement-config']],
-              ['name' => 'Achievement Summary', 'url' => ['/program-registration/achievement-summary']],
               ['name' => 'Achievement List', 'url' => ['/certificate-template/achievement-list']],
             ]];
           }

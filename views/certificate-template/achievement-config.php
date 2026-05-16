@@ -185,8 +185,8 @@ JS);
 
             <?php if($hasWinnerCountColumn && !$hasWinnerTitleAchievementColumn): ?>
                 <div class="alert alert-warning mt-3 mb-0">
-                    Winner title inputs need the achievement-based table. Please run <code>db/2026-05-10_create_program_winner_title.sql</code>
-                    <?php if($hasWinnerTitleTable): ?> or <code>db/2026-05-10_update_program_winner_title_depend_achievement.sql</code><?php endif; ?>.
+                    Winner title inputs need the achievement-based table. Please run <code>db/sql/2026-05-10_create_program_winner_title.sql</code>
+                    <?php if($hasWinnerTitleTable): ?> or <code>db/sql/2026-05-10_update_program_winner_title_depend_achievement.sql</code><?php endif; ?>.
                 </div>
             <?php endif; ?>
             <?php if($hasWinnerCountColumn && $hasWinnerTitleAchievementColumn): ?>

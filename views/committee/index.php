@@ -1,80 +1,84 @@
 <?php
 
-use app\models\Program;
-use app\models\ProgramRegistration;
-use yii\helpers\Html;
-use yii\helpers\Url;
+use app\models\Committee;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
-use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 
 /** @var yii\web\View $this */
-/** @var app\models\ProgramRegistrationSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Program Registrations';
+$this->title = 'Committees';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-  <div class="pagetitle">
-<h1>List of Registration</h1></div>
 
-    </div><!-- End Page Title -->
-
-    <section class="section dashboard">
-
-    <div class="card">
-            <div class="card-body pt-4">
-            <div class="table-responsive">
-
-    <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-                'pager' => [
-            'class' => 'yii\bootstrap5\LinkPager',
-        ],
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            [
-                'label' =>'Name',
-                'attribute' => 'fullnameSearch',
-                'value' => function($model){
-                    return $model->user->fullname;
-                }
-            ],
-            [
-                'label' =>'Program',
-                'attribute' => 'programx_id',
-                'filter' => Html::activeDropDownList($searchModel, 'programx_id', ArrayHelper::map(Program::find()->all(),'id', 'program_abbr'),['class'=> 'form-control','prompt' => 'Pilih Program']),
-                'value' => function($model){
-                    return $model->program->program_name;
-                }
-            ],
-            [
-                'label' =>'Date Time',
-                'attribute' => 'dateSearch',
-                'value' => function($model){
-                    return $model->submitted_at;
-                }
-            ],
-            ['class' => 'yii\grid\ActionColumn',
-                'contentOptions' => ['style' => 'width: 13%'],
-            'template' => '{view}',
-            //'visible' => false,
-            'buttons'=>[
-                'view'=>function ($url, $model) {
-                    return Html::a('<span class="bi bi-eye"></span> View',['view', 'id' => $model->id],['class'=>'btn btn-primary btn-sm']);
-                },
-            ],
-        
-        ],
-  
-        ],
-    ]); ?>
-
+<div class="pagetitle">
+    <h1><?= Html::encode($this->title) ?></h1>
 </div>
+
+<section class="section dashboard">
+    <div class="card">
+        <div class="card-body pt-4">
+            <p>
+                <?= Html::a('Create Committee', ['create'], ['class' => 'btn btn-success']) ?>
+                <?= Html::a('Import CSV', ['import'], ['class' => 'btn btn-primary']) ?>
+            </p>
+
+            <div class="table-responsive">
+                <?= GridView::widget([
+                    'dataProvider' => $dataProvider,
+                    'pager' => [
+                        'class' => 'yii\bootstrap5\LinkPager',
+                    ],
+                    'columns' => [
+                        ['class' => 'yii\grid\SerialColumn'],
+                        'com_name_en',
+                        'com_name',
+                        [
+                            'attribute' => 'is_jawatankuasa',
+                            'value' => function($model){
+                                return Committee::yesNoOptions()[(int)$model->is_jawatankuasa] ?? 'No';
+                            },
+                        ],
+                        [
+                            'attribute' => 'is_student',
+                            'value' => function($model){
+                                return Committee::yesNoOptions()[(int)$model->is_student] ?? 'No';
+                            },
+                        ],
+                        [
+                            'label' => 'Members',
+                            'value' => function($model){
+                                return $model->getUserRoles()->count();
+                            },
+                        ],
+                        [
+                            'class' => ActionColumn::class,
+                            'contentOptions' => ['style' => 'width: 22%'],
+                            'template' => '{view} {update} {delete}',
+                            'buttons' => [
+                                'view' => function ($url, $model) {
+                                    return Html::a('<span class="bi bi-eye"></span> View', ['view', 'id' => $model->id], ['class' => 'btn btn-primary btn-sm']);
+                                },
+                                'update' => function ($url, $model) {
+                                    return Html::a('<span class="bi bi-pencil"></span> Update', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']);
+                                },
+                                'delete' => function ($url, $model) {
+                                    return Html::a('<span class="bi bi-trash"></span>', ['delete', 'id' => $model->id], [
+                                        'class' => 'btn btn-danger btn-sm',
+                                        'title' => 'Delete',
+                                        'aria-label' => 'Delete',
+                                        'data' => [
+                                            'confirm' => 'Are you sure you want to delete this committee?',
+                                            'method' => 'post',
+                                        ],
+                                    ]);
+                                },
+                            ],
+                        ],
+                    ],
+                ]); ?>
             </div>
         </div>
-
-
-
-    </section>
+    </div>
+</section>

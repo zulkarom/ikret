@@ -1,11 +1,13 @@
 <?php
 
 use app\models\CertificateTemplate;
+use app\models\Committee;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
 /** @var yii\web\View $this */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var app\models\CommitteeCertificateSearch $searchModel */
 
 $this->title = 'All Committees';
 $this->params['breadcrumbs'][] = ['label' => 'Certificate Config', 'url' => ['index']];
@@ -30,6 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="table-responsive">
                 <?= GridView::widget([
                     'dataProvider' => $dataProvider,
+                    'filterModel' => $searchModel,
                     'pager' => [
                         'class' => 'yii\bootstrap5\LinkPager',
                     ],
@@ -40,6 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             'value' => function($model){
                                 return $model->user ? $model->user->fullname : '';
                             },
+                            'attribute' => 'fullname',
                         ],
                         [
                             'label' => 'Committee',
@@ -52,6 +56,32 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                 return $text;
                             },
+                            'attribute' => 'committee_id',
+                            'filter' => Html::activeDropDownList($searchModel, 'committee_id', Committee::listCommittees(), [
+                                'class' => 'form-control',
+                                'prompt' => '',
+                            ]),
+                        ],
+                        [
+                            'label' => 'Role',
+                            'value' => function($model){
+                                if(!$model->committee){
+                                    return '';
+                                }
+                                if((int)$model->committee->is_jawatankuasa !== 1){
+                                    return 'No Role';
+                                }
+                                return (int)$model->is_leader === 1 ? 'Leader' : 'Member';
+                            },
+                            'attribute' => 'committee_role',
+                            'filter' => Html::activeDropDownList($searchModel, 'committee_role', [
+                                'none' => 'No Role',
+                                'leader' => 'Leader',
+                                'member' => 'Member',
+                            ], [
+                                'class' => 'form-control',
+                                'prompt' => '',
+                            ]),
                         ],
                         [
                             'label' => 'Certificate',

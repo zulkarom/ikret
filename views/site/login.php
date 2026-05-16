@@ -189,6 +189,12 @@ function checkInlineEmail() {
             $('#inline-register-fullname-wrap').addClass('d-none');
             $('#inline-register-fullname').prop('required', false);
             $('#login-submit-button').text('Login');
+        } else if (response.importedStudentExists) {
+            status.text('Imported student account found. Fill in your full name to activate this email and set your password.').removeClass('text-success text-muted').addClass('text-warning');
+            usernameStatus.text('Your existing matric account will be updated.').removeClass('text-success text-muted').addClass('text-warning');
+            $('#inline-register-fullname-wrap').removeClass('d-none');
+            $('#inline-register-fullname').prop('required', true);
+            $('#login-submit-button').text('Activate & Login');
         } else {
             status.text('Email not found. Fill in your full name to register.').removeClass('text-success text-muted').addClass('text-warning');
             usernameStatus.text('Username not found. Enter your email to continue.').removeClass('text-success text-muted').addClass('text-warning');

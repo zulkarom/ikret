@@ -7,6 +7,7 @@
 -- Finds the manually-created duplicate account when the siswa email local-part
 -- contains the matric number:
 --   matric A25A5013 matches a25a5013@siswa.umk.edu.my
+--   matric A25A5013 matches a25a5013@siswa.edu.umk.my
 --   matric A25A5013 also matches any siswa email local-part containing a25a5013
 --
 -- Then:
@@ -39,7 +40,10 @@ SELECT
     END AS match_rank
 FROM `user` real_user
 INNER JOIN `user` duplicate_user
-    ON LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.umk.edu.my'
+    ON (
+        LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.umk.edu.my'
+        OR LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.edu.umk.my'
+    )
    AND LOCATE(
         LOWER(TRIM(real_user.username)),
         LOWER(TRIM(SUBSTRING_INDEX(duplicate_user.email, '@', 1)))
@@ -47,7 +51,10 @@ INNER JOIN `user` duplicate_user
 WHERE real_user.id <> duplicate_user.id
   AND TRIM(real_user.username) <> ''
   AND LOWER(TRIM(real_user.email)) = CONCAT(LOWER(TRIM(real_user.username)), '@dummy.com')
-  AND LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.umk.edu.my';
+  AND (
+      LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.umk.edu.my'
+      OR LOWER(TRIM(duplicate_user.email)) LIKE '%@siswa.edu.umk.my'
+  );
 
 ALTER TABLE `_student_account_merge_map`
     ADD PRIMARY KEY (`real_user_id`, `duplicate_user_id`),

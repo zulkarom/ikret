@@ -65,19 +65,28 @@ class RegisterForm extends Model
             return null;
         }
 
-        $username = strtolower(trim($this->username));
+        $username = trim((string)$this->username);
         $email = strtolower(trim($this->email));
+        $username = User::normalizeUsernameForRegistration($username);
 
         $user = $this->findExistingUser($username, $email);
         if ($user) {
-            if ($this->isDummyEmail($user->email)) {
-                $usernameOwner = $this->findUserByUsername($username);
-                if ($usernameOwner && (int)$usernameOwner->id !== (int)$user->id) {
-                    $this->addError('username', 'Username is already taken.');
-                    return null;
+            if (User::isDummyEmail($user->email)) {
+                $submittedUsernameIsEmail = strpos($username, '@') !== false;
+
+                if (!$submittedUsernameIsEmail) {
+                    $usernameOwner = $this->findUserByUsername($username);
+                    if ($usernameOwner && (int)$usernameOwner->id !== (int)$user->id) {
+                        $this->addError('username', 'Username is already taken.');
+                        return null;
+                    }
+                    $user->username = $username;
+                    $user->matric = $username;
+                } elseif (!$user->matric) {
+                    $user->matric = $user->username;
                 }
 
-                if (!$this->isDummyEmail($email) && $email !== strtolower((string)$user->email)) {
+                if (!User::isDummyEmail($email) && $email !== strtolower((string)$user->email)) {
                     $emailOwner = $this->findUserByEmail($email);
                     if ($emailOwner && (int)$emailOwner->id !== (int)$user->id) {
                         $this->addError('email', 'Email is already taken.');
@@ -158,14 +167,7 @@ class RegisterForm extends Model
 
     private function findExistingUser($username, $email)
     {
-        if (!$this->isDummyEmail($email)) {
-            $user = $this->findUserByEmail($email);
-            if ($user) {
-                return $user;
-            }
-        }
-
-        return $this->findUserByUsername($username);
+        return User::findAccountForRegistration($username, $email);
     }
 
     private function findUserByUsername($username)
@@ -178,8 +180,4 @@ class RegisterForm extends Model
         return User::findOne(['email' => $email]);
     }
 
-    private function isDummyEmail($email)
-    {
-        return substr(strtolower((string)$email), -10) === '@dummy.com';
-    }
 }

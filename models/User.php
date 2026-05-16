@@ -5,6 +5,7 @@ use Yii;
 use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\db\Expression;
 use yii\web\IdentityInterface;
 use backend\models\Entrepreneur;
 use backend\models\Supplier;
@@ -139,6 +140,227 @@ class User extends ActiveRecord implements IdentityInterface
             ['matric' => $matric, ],
             ['email' => $matric, ]
         ])->one();
+    }
+
+    public static function isDummyEmail($email)
+    {
+        return substr(strtolower((string)$email), -10) === '@dummy.com';
+    }
+
+    public static function isSiswaEmail($email)
+    {
+        $email = strtolower(trim((string)$email));
+        return substr($email, -17) === '@siswa.umk.edu.my'
+            || substr($email, -17) === '@siswa.edu.umk.my';
+    }
+
+    public static function normalizeUsernameForRegistration($username)
+    {
+        $username = trim((string)$username);
+        $matric = static::matricFromSiswaEmail($username);
+
+        return $matric ?: strtolower($username);
+    }
+
+    public static function dummyEmailForMatric($matric)
+    {
+        return strtolower(trim((string)$matric)) . '@dummy.com';
+    }
+
+    public static function findAccountForRegistration($username, $email = '')
+    {
+        $username = static::normalizeUsernameForRegistration($username);
+        $email = strtolower(trim((string)$email));
+
+        if ($email !== '' && !static::isDummyEmail($email)) {
+            $user = static::findOne(['email' => $email]);
+            if ($user) {
+                return $user;
+            }
+
+            $user = static::findImportedStudentBySiswaEmail($email);
+            if ($user) {
+                return $user;
+            }
+        }
+
+        if ($username !== '') {
+            $user = static::findOne(['username' => $username]);
+            if ($user) {
+                return $user;
+            }
+
+            $matric = static::matricFromText($username);
+            if ($matric) {
+                $user = static::findStudentByMatric($matric);
+                if ($user) {
+                    return $user;
+                }
+            }
+
+            if (!static::isDummyEmail($username)) {
+                $user = static::findImportedStudentBySiswaEmail($username);
+                if ($user) {
+                    return $user;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static function findStudentByMatric($matric)
+    {
+        $matric = static::matricFromText($matric);
+        if (!$matric) {
+            return null;
+        }
+
+        $dummyEmail = static::dummyEmailForMatric($matric);
+        $siswaEmail = strtolower($matric) . '@siswa.umk.edu.my';
+        $legacySiswaEmail = strtolower($matric) . '@siswa.edu.umk.my';
+
+        return static::find()
+            ->where(['or',
+                ['username' => $matric],
+                ['matric' => $matric],
+                ['email' => $dummyEmail],
+                ['email' => $siswaEmail],
+                ['email' => $legacySiswaEmail],
+            ])
+            ->orWhere('(LOWER(TRIM([[email]])) LIKE :siswaDomain OR LOWER(TRIM([[email]])) LIKE :legacySiswaDomain) AND LOCATE(:matricLower, LOWER(TRIM(SUBSTRING_INDEX([[email]], \'@\', 1)))) > 0', [
+                ':siswaDomain' => '%@siswa.umk.edu.my',
+                ':legacySiswaDomain' => '%@siswa.edu.umk.my',
+                ':matricLower' => strtolower($matric),
+            ])
+            ->orderBy(new Expression("
+                CASE
+                    WHEN LOWER(TRIM([[username]])) = :matricLower THEN 0
+                    WHEN LOWER(TRIM([[email]])) = :dummyEmail THEN 1
+                    WHEN LOWER(TRIM([[email]])) = :siswaEmail THEN 2
+                    WHEN LOWER(TRIM([[email]])) = :legacySiswaEmail THEN 3
+                    ELSE 3
+                END,
+                [[id]] ASC
+            "))
+            ->addParams([
+                ':matricLower' => strtolower($matric),
+                ':dummyEmail' => $dummyEmail,
+                ':siswaEmail' => $siswaEmail,
+                ':legacySiswaEmail' => $legacySiswaEmail,
+            ])
+            ->one();
+    }
+
+    public static function findOrCreateImportedStudentAccount($matric, $fullname)
+    {
+        $matric = strtoupper(trim((string)$matric));
+        if ($matric === '') {
+            return null;
+        }
+
+        $user = static::findAccountForRegistration($matric, static::dummyEmailForMatric($matric));
+        if (!$user) {
+            $user = new static();
+            $user->username = $matric;
+            $user->fullname = $fullname;
+            $user->matric = $matric;
+            $user->email = static::dummyEmailForMatric($matric);
+            $user->is_student = 1;
+            $user->is_internal = 1;
+            $user->status = self::STATUS_ACTIVE;
+            $user->setPassword($matric);
+            $user->generateAuthKey();
+
+            if (!$user->save(false)) {
+                return false;
+            }
+
+            return $user;
+        }
+
+        $dirty = [];
+        if (strtolower((string)$user->username) !== strtolower($matric)) {
+            $usernameOwner = static::findOne(['username' => $matric]);
+            if (!$usernameOwner || (int)$usernameOwner->id === (int)$user->id) {
+                $user->username = $matric;
+                $dirty[] = 'username';
+            }
+        }
+        if (!$user->matric || strtolower((string)$user->matric) !== strtolower($matric)) {
+            $user->matric = $matric;
+            $dirty[] = 'matric';
+        }
+        if ($user->is_student === null) {
+            $user->is_student = 1;
+            $dirty[] = 'is_student';
+        }
+        if ($user->is_internal === null) {
+            $user->is_internal = 1;
+            $dirty[] = 'is_internal';
+        }
+
+        if ($dirty) {
+            $dirty[] = 'updated_at';
+            $user->save(false, array_unique($dirty));
+        }
+
+        return $user;
+    }
+
+    public static function findImportedStudentBySiswaEmail($email)
+    {
+        $email = strtolower(trim((string)$email));
+        if (!static::isSiswaEmail($email)) {
+            return null;
+        }
+
+        $localPart = strtolower(trim(strtok($email, '@')));
+        if ($localPart === '') {
+            return null;
+        }
+
+        return static::find()
+            ->where('LOWER(TRIM([[email]])) = CONCAT(LOWER(TRIM([[username]])), :dummyDomain)', [
+                ':dummyDomain' => '@dummy.com',
+            ])
+            ->andWhere('LOCATE(LOWER(TRIM([[username]])), :localPart) > 0', [
+                ':localPart' => $localPart,
+            ])
+            ->orderBy(new Expression("
+                CASE
+                    WHEN LOWER(TRIM([[username]])) = :localPartExact THEN 0
+                    ELSE 1
+                END,
+                [[id]] ASC
+            "))
+            ->addParams([':localPartExact' => $localPart])
+            ->one();
+    }
+
+    public static function matricFromSiswaEmail($email)
+    {
+        $email = strtolower(trim((string)$email));
+        if (!static::isSiswaEmail($email)) {
+            return null;
+        }
+
+        $localPart = strtolower(trim(strtok($email, '@')));
+        if ($localPart === '') {
+            return null;
+        }
+
+        return static::matricFromText($localPart) ?: strtoupper($localPart);
+    }
+
+    public static function matricFromText($value)
+    {
+        $value = trim((string)$value);
+        if (preg_match('/[a-z][0-9]{2}[a-z][0-9]{4}/i', $value, $matches)) {
+            return strtoupper($matches[0]);
+        }
+
+        return null;
     }
 
     public static function listIsInternal(){

@@ -2923,29 +2923,11 @@ class ProgramRegistrationController extends Controller
                         throw new \RuntimeException('First member must have matric and name for group: ' . $groupName);
                     }
 
-                    // Check if user already exists
-                    $existingUser = User::findByUsername($firstMemberMatric);
-                    if($existingUser){
-                        $user = $existingUser;
-                        $this->cleanExistingUserFullname($user, $firstMemberMatric);
-                    }else{
-                        // Create new user
-                        $user = new User();
-                        $user->username = $firstMemberMatric;
-                        $user->fullname = $firstMemberName;
-                        $user->matric = $firstMemberMatric;
-                        // Use matric@dummy.com as email
-                        $user->email = strtolower($firstMemberMatric) . '@dummy.com';
-                        $user->is_student = 1;
-                        $user->is_internal = 1;
-                        $user->status = User::STATUS_ACTIVE;
-                        $user->setPassword($firstMemberMatric); // Use matric as password
-                        $user->generateAuthKey();
-
-                        if(!$user->save(false)){
-                            throw new \RuntimeException('Failed to create user account for matric: ' . $firstMemberMatric . '. Database error.');
-                        }
+                    $user = User::findOrCreateImportedStudentAccount($firstMemberMatric, $firstMemberName);
+                    if(!$user){
+                        throw new \RuntimeException('Failed to create user account for matric: ' . $firstMemberMatric . '. Database error.');
                     }
+                    $this->cleanExistingUserFullname($user, $firstMemberMatric);
 
                     foreach($groupRows as $memberRow){
                         $memberMatric = isset($memberRow['member_matrics']) ? trim((string)$memberRow['member_matrics']) : '';
@@ -2953,7 +2935,7 @@ class ProgramRegistrationController extends Controller
                             continue;
                         }
 
-                        $memberUser = User::findByUsername($memberMatric);
+                        $memberUser = User::findAccountForRegistration($memberMatric, User::dummyEmailForMatric($memberMatric));
                         if($memberUser){
                             $this->cleanExistingUserFullname($memberUser, $memberMatric);
                         }

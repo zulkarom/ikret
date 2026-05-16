@@ -10,6 +10,7 @@ use app\models\ProgramAchievement;
 use app\models\ProgramRegistration;
 use app\models\ProgramSub;
 use app\models\ProgramWinnerTitle;
+use app\models\CommitteeCertificateSearch;
 use app\models\SessionAttendanceSearch;
 use app\models\Setting;
 use app\models\UserRole;
@@ -259,20 +260,11 @@ class CertificateTemplateController extends Controller
 
     public function actionCommittees()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => UserRole::find()->alias('a')
-                ->joinWith(['user u', 'committee c'])
-                ->where([
-                    'a.role_name' => 'committee',
-                    'a.status' => 10,
-                ])
-                ->orderBy(['u.fullname' => SORT_ASC, 'c.com_name_en' => SORT_ASC]),
-            'pagination' => [
-                'pageSize' => 100,
-            ],
-        ]);
+        $searchModel = new CommitteeCertificateSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
 
         return $this->render('committees', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }

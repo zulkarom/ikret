@@ -136,7 +136,8 @@ class SiteController extends Controller
                 $existingEmailUser = $this->findInlineRegisterEmailUser();
                 if ($existingEmailUser) {
                     if ($existingEmailUser->validatePassword((string)$model->password)) {
-                        $username = strtolower(trim((string)$model->username));
+                        $usernameInput = trim((string)$model->username);
+                        $username = User::normalizeUsernameForRegistration($usernameInput);
                         $usernameOwner = User::findByUsernameOrEmail($username);
                         if ($usernameOwner && (int)$usernameOwner->id !== (int)$existingEmailUser->id) {
                             Yii::$app->session->addFlash('error', 'Username or email is already used by another account.');
@@ -172,6 +173,7 @@ class SiteController extends Controller
                 }
 
                 $user = $model->getUser();
+                $this->normalizeSiswaLoginUsername($user, $model->username);
                 if($user && $model->password === $user->username){
                     Yii::$app->session->addFlash('warning', "You are using the default password. Please change your password.");
                     return $this->redirect(['site/change-default-password', 'returnUrl' => $returnUrl]);
@@ -198,7 +200,7 @@ class SiteController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
 
         $username = trim((string)$username);
-        $user = $username === '' ? null : User::findByUsernameOrEmail($username);
+        $user = $username === '' ? null : User::findAccountForRegistration($username);
 
         return [
             'exists' => (bool)$user,
@@ -212,9 +214,11 @@ class SiteController extends Controller
 
         $email = strtolower(trim((string)$email));
         $user = $email === '' ? null : User::findByEmail($email);
+        $importedStudentUser = (!$user && $email !== '') ? User::findImportedStudentBySiswaEmail($email) : null;
 
         return [
             'exists' => (bool)$user,
+            'importedStudentExists' => (bool)$importedStudentUser,
         ];
     }
 
@@ -246,6 +250,27 @@ class SiteController extends Controller
         $registerModel->password_repeat = (string)$loginModel->password;
 
         return $registerModel;
+    }
+
+    private function normalizeSiswaLoginUsername($user, $usernameInput)
+    {
+        if (!$user) {
+            return;
+        }
+
+        $matric = User::matricFromSiswaEmail($usernameInput);
+        if (!$matric || strtolower((string)$user->username) === strtolower($matric)) {
+            return;
+        }
+
+        $usernameOwner = User::findByUsernameOrEmail($matric);
+        if ($usernameOwner && (int)$usernameOwner->id !== (int)$user->id) {
+            return;
+        }
+
+        $user->username = $matric;
+        $user->matric = $matric;
+        $user->save(false, ['username', 'matric', 'updated_at']);
     }
 
     public function actionDashboard()

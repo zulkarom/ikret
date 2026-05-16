@@ -2222,14 +2222,23 @@ class ProgramController extends Controller
             }
 
             if(!$isUpdate && empty($register->user_id) && $register->contact_email){
-                $publicUser = User::findByEmail($register->contact_email);
+                $contactEmail = strtolower(trim((string)$register->contact_email));
+                $publicUser = User::findAccountForRegistration($contactEmail, $contactEmail);
+                if($publicUser && User::isDummyEmail($publicUser->email)){
+                    $publicUser->email = $contactEmail;
+                    $publicUser->status = User::STATUS_ACTIVE;
+                    $publicUser->updated_at = time();
+                    $publicUser->save(false, ['email', 'status', 'updated_at']);
+                }
 
                 if(!$publicUser){
                     $publicUser = new User();
+                    $publicUsername = User::normalizeUsernameForRegistration($contactEmail);
                     $publicUser->scenario = 'create';
-                    $publicUser->email = $register->contact_email;
-                    $publicUser->username = $register->contact_email;
-                    $publicUser->fullname = $register->contact_person ?: $register->contact_email;
+                    $publicUser->email = $contactEmail;
+                    $publicUser->username = $publicUsername;
+                    $publicUser->matric = $publicUsername;
+                    $publicUser->fullname = $register->contact_person ?: $contactEmail;
                     $publicUser->status = User::STATUS_ACTIVE;
                     $publicUser->generateAuthKey();
                     $publicUser->setPassword(Yii::$app->security->generateRandomString(16));

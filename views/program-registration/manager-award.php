@@ -105,7 +105,7 @@ $this->title = 'Achievement Award';
               <?= Html::submitButton('<i class="bi bi-check2-circle"></i> Save Winner Title', ['class' => 'btn btn-primary btn-sm']) ?>
           <?php elseif($model->achievements && !$hasWinnerTitleSelection): ?>
               <div class="alert alert-warning mb-0">
-                  Winner title selection needs <code>db/2026-05-10_update_program_reg_achieve_add_winner_title.sql</code> and the achievement-based winner title table.
+                  Winner title selection needs <code>db/sql/2026-05-10_update_program_reg_achieve_add_winner_title.sql</code> and the achievement-based winner title table.
               </div>
           <?php endif; ?>
                   <?php ActiveForm::end(); ?>
