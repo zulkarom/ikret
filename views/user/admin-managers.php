@@ -34,9 +34,8 @@ $order = [
                     <thead>
                         <tr>
                             <th style="width: 220px;">Role</th>
+                            <th style="width: 260px;">Program/Sub</th>
                             <th>Name</th>
-                            <th style="width: 220px;">Program</th>
-                            <th style="width: 220px;">Sub</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,30 +47,54 @@ $order = [
                                 continue;
                             }
                             $hasAny = true;
-                            $rowspan = count($roles);
                             $roleLabel = $labels[$roleName] ?? $roleName;
-                            foreach($roles as $idx => $ur){
-                                echo '<tr>';
-                                if($idx === 0){
-                                    echo '<td rowspan="' . (int)$rowspan . '" class="fw-semibold">' . Html::encode($roleLabel) . '</td>';
-                                }
-                                $name = $ur->user ? $ur->user->fullname : '';
-                                $userLink = $ur->user ? Html::a(Html::encode($name), ['/user/view', 'id' => $ur->user->id]) : Html::encode($name);
-                                $programText = '-';
-                                $subText = '-';
+
+                            $byProgram = [];
+                            foreach($roles as $ur){
+                                $programSubText = '-';
                                 if($roleName === 'manager'){
-                                    $programText = $ur->program ? $ur->program->program_name : '-';
-                                    $subText = $ur->programSub ? $ur->programSub->sub_name : '-';
+                                    $programSubText = $ur->program ? (string)$ur->program->program_abbr : '-';
+                                    $subAbbr = $ur->programSub ? (string)$ur->programSub->sub_abbr : '';
+                                    if($subAbbr !== ''){
+                                        $programSubText .= ' / ' . $subAbbr;
+                                    }
                                 }
-                                echo '<td>' . $userLink . '</td>';
-                                echo '<td>' . Html::encode($programText) . '</td>';
-                                echo '<td>' . Html::encode($subText) . '</td>';
-                                echo '</tr>';
+                                if(!isset($byProgram[$programSubText])){
+                                    $byProgram[$programSubText] = [];
+                                }
+                                $byProgram[$programSubText][] = $ur;
+                            }
+
+                            $roleRowspan = 0;
+                            foreach($byProgram as $urs){
+                                $roleRowspan += count($urs);
+                            }
+
+                            $rolePrinted = false;
+                            foreach($byProgram as $programSubText => $urs){
+                                $programRowspan = count($urs);
+                                foreach($urs as $pIdx => $ur){
+                                    echo '<tr>';
+
+                                    if(!$rolePrinted){
+                                        echo '<td rowspan="' . (int)$roleRowspan . '" class="fw-semibold">' . Html::encode($roleLabel) . '</td>';
+                                        $rolePrinted = true;
+                                    }
+
+                                    if($pIdx === 0){
+                                        echo '<td rowspan="' . (int)$programRowspan . '">' . Html::encode($programSubText) . '</td>';
+                                    }
+
+                                    $name = $ur->user ? $ur->user->fullname : '';
+                                    $userLink = $ur->user ? Html::a(Html::encode($name), ['/user/view', 'id' => $ur->user->id]) : Html::encode($name);
+                                    echo '<td>' . $userLink . '</td>';
+                                    echo '</tr>';
+                                }
                             }
                         }
 
                         if(!$hasAny){
-                            echo '<tr><td colspan="4" class="text-muted text-center">No admin or manager roles found.</td></tr>';
+                            echo '<tr><td colspan="3" class="text-muted text-center">No admin or manager roles found.</td></tr>';
                         }
                         ?>
                     </tbody>
