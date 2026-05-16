@@ -201,7 +201,7 @@ EOD;
 
         $this->pdf->SetFont('iniriaserif', '', 0);
         $this->pdf->writeHTMLCell($width, 0, $left, 0, $content, 0, 1, false, true, $this->tcpdfAlign(), true);
-        $this->nameLimitLine = [$left, $width, $topSpacer, $limitBottom];
+        $this->nameLimitLine = [$left, $width, $this->pdfGuideTop($nameTopSetting), $limitBottom];
     }
 
     protected function preferredNameHtml($width, $fontSize, $nameAreaHeight, $commaHtml)
@@ -433,6 +433,17 @@ EOD;
         }
 
         return $value;
+    }
+
+    protected function pdfGuideTop($value)
+    {
+        $value = (float)$value;
+
+        if($value > 200){
+            return $value / 3.779527559;
+        }
+
+        return $this->pdfTop($value);
     }
 
     protected function tcpdfAlign()
