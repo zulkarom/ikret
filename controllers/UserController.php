@@ -97,6 +97,7 @@ class UserController extends Controller
             'admin-registration',
             'admin-jury',
             'admin-certificate',
+            'general-manager',
             'manager',
         ];
 
@@ -138,6 +139,7 @@ class UserController extends Controller
         $descriptions = [
             'participant' => 'Access to attendance scanner page and participant certificates (when released/published).',
             'manager' => 'Manage program registrations and manager dashboards for assigned program/sub.',
+            'general-manager' => 'Manager access for all programs/subs (same scope as superadmin for manager dashboards).',
             'jury' => 'Access to jury assignments and (when released/published) jury certificates.',
             'committee' => 'Access to committee menu and (when released/published) committee certificates.',
             'mentor' => 'Access to mentor pages (mentees and related mentor features).',

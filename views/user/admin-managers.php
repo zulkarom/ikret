@@ -16,6 +16,7 @@ $order = [
     'admin-registration',
     'admin-jury',
     'admin-certificate',
+    'general-manager',
     'manager',
 ];
 ?>
